@@ -1,0 +1,286 @@
+@import "tailwindcss";
+
+/* Custom Theme Configuration */
+@theme {
+  --color-primary: #E3350D;
+  --color-primary-dark: #CC2D0A;
+  --color-primary-light: #FF4D2A;
+  --color-gold: #D4AF37;
+
+  --font-family-sans: 'NNNouvelle', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --width-container: 1200px;
+}
+
+/* Font Face - NNNouvelle */
+@font-face {
+  font-family: 'NNNouvelle';
+  src: url('./assets/fonts/NNNouvelle-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NNNouvelle';
+  src: url('./assets/fonts/NNNouvelle-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NNNouvelle';
+  src: url('./assets/fonts/NNNouvelle-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NNNouvelle';
+  src: url('./assets/fonts/NNNouvelle-SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NNNouvelle';
+  src: url('./assets/fonts/NNNouvelle-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  * {
+    font-family: 'NNNouvelle', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: 'NNNouvelle', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.6;
+    color: #374151;
+    background-color: white;
+    min-height: 100vh;
+    letter-spacing: 0.01em;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'NNNouvelle', system-ui, sans-serif;
+    font-weight: 500;
+    line-height: 1.25;
+    color: #111827;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    color: #6B7280;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 150ms;
+  }
+
+  a:hover {
+    color: var(--color-primary);
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  button {
+    font-family: 'NNNouvelle', system-ui, sans-serif;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+  }
+
+  input, textarea, select {
+    font-family: 'NNNouvelle', system-ui, sans-serif;
+  }
+
+  ul, ol {
+    list-style: none;
+  }
+
+  /* Lighter stroke weights for icons */
+  svg {
+    stroke-width: 1.5;
+  }
+}
+
+/* ── Admin Dark Theme (Supabase-inspired) ─────────────────── */
+body.admin-dark,
+.admin-dark {
+  background-color: #0f0f0f !important;
+  color: #f1f1f1;
+  color-scheme: dark;
+}
+
+/* Surface overrides */
+.admin-dark .bg-white    { background-color: #171717 !important; }
+.admin-dark .bg-gray-50  { background-color: #111111 !important; }
+.admin-dark .bg-gray-100 { background-color: #1c1c1c !important; }
+.admin-dark .bg-gray-200 { background-color: #2a2a2a !important; }
+
+/* Border overrides */
+.admin-dark .border-gray-100 { border-color: #1e1e1e !important; }
+.admin-dark .border-gray-200 { border-color: #282828 !important; }
+.admin-dark .border-gray-300 { border-color: #333 !important; }
+
+/* Text overrides */
+.admin-dark .text-gray-900 { color: #f1f1f1 !important; }
+.admin-dark .text-gray-800 { color: #e0e0e0 !important; }
+.admin-dark .text-gray-700 { color: #c4c4c4 !important; }
+.admin-dark .text-gray-600 { color: #a0a0a0 !important; }
+.admin-dark .text-gray-500 { color: #6b6b6b !important; }
+.admin-dark .text-gray-400 { color: #4a4a4a !important; }
+
+/* Hover overrides */
+.admin-dark .hover\:bg-gray-50:hover  { background-color: #1c1c1c !important; }
+.admin-dark .hover\:bg-gray-100:hover { background-color: #222 !important; }
+.admin-dark .hover\:text-gray-900:hover { color: #fff !important; }
+
+/* Table */
+.admin-dark thead     { border-bottom-color: #282828 !important; }
+.admin-dark tbody tr  { border-bottom-color: #1e1e1e; }
+.admin-dark tbody tr:hover { background-color: #1c1c1c !important; }
+.admin-dark th        { color: #6b6b6b !important; }
+
+/* Inputs, textareas, selects */
+.admin-dark input:not([type="color"]),
+.admin-dark textarea,
+.admin-dark select {
+  background-color: #1c1c1c !important;
+  border-color: #282828 !important;
+  color: #f1f1f1 !important;
+  color-scheme: dark;
+}
+.admin-dark input:not([type="color"])::placeholder,
+.admin-dark textarea::placeholder { color: #4a4a4a !important; }
+
+/* Focus ring → Supabase green */
+.admin-dark input:not([type="color"]):focus-visible,
+.admin-dark textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px #3ECF8E;
+  border-color: #3ECF8E !important;
+}
+
+/* Radix Select trigger */
+.admin-dark [role="combobox"] {
+  background-color: #1c1c1c !important;
+  border-color: #282828 !important;
+  color: #f1f1f1 !important;
+}
+
+/* Separators */
+.admin-dark [data-orientation="horizontal"] { background-color: #282828 !important; }
+
+/* Green accent helpers */
+.admin-dark .admin-green       { color: #3ECF8E; }
+.admin-dark .admin-green-bg    { background-color: rgba(62,207,142,0.12); }
+.admin-dark .admin-green-border{ border-color: #3ECF8E; }
+
+/* Success / error message banners */
+.admin-dark .bg-green-50  { background-color: rgba(62,207,142,0.1) !important; }
+.admin-dark .text-green-700 { color: #3ECF8E !important; }
+.admin-dark .bg-red-50    { background-color: rgba(239,68,68,0.1) !important; }
+.admin-dark .text-red-600 { color: #f87171 !important; }
+.admin-dark .text-red-700 { color: #f87171 !important; }
+
+/* Status badge colors */
+.admin-dark .bg-yellow-100 { background-color: rgba(234,179,8,0.15) !important; }
+.admin-dark .text-yellow-800 { color: #fbbf24 !important; }
+.admin-dark .bg-green-100  { background-color: rgba(62,207,142,0.15) !important; }
+.admin-dark .text-green-800 { color: #3ECF8E !important; }
+.admin-dark .bg-red-100    { background-color: rgba(239,68,68,0.15) !important; }
+.admin-dark .text-red-800  { color: #f87171 !important; }
+
+/* Dropdown menu red delete item */
+.admin-dark .hover\\:bg-red-50:hover { background-color: rgba(239,68,68,0.1) !important; }
+
+/* Badge variants */
+.admin-dark .bg-secondary { background-color: #282828 !important; color: #c4c4c4 !important; }
+.admin-dark .bg-destructive { background-color: rgba(239,68,68,0.15) !important; color: #f87171 !important; }
+
+/* Dialog overlay */
+.admin-dark [role="dialog"] { background-color: #171717 !important; border-color: #282828 !important; }
+
+/* SelectContent portal — Radix data attributes */
+.admin-dark [data-radix-select-content] {
+  background-color: #1c1c1c !important;
+  border-color: #282828 !important;
+  color: #c4c4c4 !important;
+}
+.admin-dark [data-radix-select-item][data-highlighted] {
+  background-color: #282828 !important;
+  color: #f1f1f1 !important;
+}
+
+/* Dialog content */
+.admin-dark [data-radix-dialog-content] {
+  background-color: #171717 !important;
+  border-color: #282828 !important;
+  color: #f1f1f1 !important;
+}
+
+/* Dropdown menu portals */
+.admin-dark [data-radix-popper-content-wrapper] [role="menu"],
+.admin-dark [data-radix-dropdown-menu-content] {
+  background-color: #1c1c1c !important;
+  border-color: #282828 !important;
+}
+.admin-dark [role="menuitem"] { color: #c4c4c4 !important; }
+.admin-dark [role="menuitem"]:hover,
+.admin-dark [role="menuitem"][data-highlighted] {
+  background-color: #282828 !important;
+  color: #f1f1f1 !important;
+}
+
+/* Focus:bg-gray-100 used by SelectItem */
+.admin-dark .focus\:bg-gray-100:focus { background-color: #282828 !important; }
+
+/* Switch */
+.admin-dark [role="switch"] { background-color: #282828 !important; border-color: #333 !important; }
+.admin-dark [role="switch"][data-state="checked"] { background-color: #3ECF8E !important; }
+
+@layer utilities {
+  .container {
+    width: 100%;
+    max-width: var(--width-container);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
+}
