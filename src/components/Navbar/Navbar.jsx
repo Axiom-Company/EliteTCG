@@ -54,6 +54,7 @@ const Navbar = () => {
     { name: 'Create Listing', href: '/seller/create-listing', desc: 'List your cards for sale', sellerOnly: false },
     { name: 'Seller Dashboard', href: '/seller/dashboard', desc: 'Manage your listings', sellerOnly: true },
     { name: 'Become a Seller', href: '/become-seller', desc: 'Start selling today', sellerOnly: false, hideIfSeller: true },
+    { name: 'Track Order', href: '/orders/track', desc: 'Track your delivery status' },
   ];
 
   const closeAll = () => {
@@ -222,6 +223,20 @@ const Navbar = () => {
                     </p>
                   </div>
                   <div className="p-1.5">
+                    <Link
+                      to="/orders"
+                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsUserOpen(false)}
+                    >
+                      My Orders
+                    </Link>
+                    <Link
+                      to="/orders/track"
+                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsUserOpen(false)}
+                    >
+                      Track Order
+                    </Link>
                     {isSeller && (
                       <Link
                         to="/seller/dashboard"

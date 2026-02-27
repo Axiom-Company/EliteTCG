@@ -33,6 +33,10 @@ import Checkout from './pages/checkout/Checkout';
 import PaymentSuccess from './pages/checkout/PaymentSuccess';
 import PaymentCancel from './pages/checkout/PaymentCancel';
 
+// Order pages
+import OrderTracking from './pages/orders/OrderTracking';
+import OrderHistory from './pages/orders/OrderHistory';
+
 // Customer Auth Provider
 import { CustomerAuthProvider } from './contexts/CustomerAuthContext';
 
@@ -83,6 +87,8 @@ function App() {
           <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />
           <Route path="/payment/success" element={<MainLayout><PaymentSuccess /></MainLayout>} />
           <Route path="/payment/cancel" element={<MainLayout><PaymentCancel /></MainLayout>} />
+          <Route path="/orders" element={<MainLayout><OrderHistory /></MainLayout>} />
+          <Route path="/orders/track" element={<MainLayout><OrderTracking /></MainLayout>} />
           <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
         <CartDrawer />

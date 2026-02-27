@@ -1,6 +1,9 @@
 import { useState, useCallback } from 'react';
+import { PAYMENTS_API_URL } from '@/config/api';
 
 const API_BASE = 'http://localhost:3001/api';
+const FASTAPI_BASE = PAYMENTS_API_URL;
+const ADMIN_API_KEY = import.meta.env.VITE_FASTAPI_ADMIN_KEY || '';
 
 // Get token from localStorage
 const getToken = () => localStorage.getItem('admin_token');
@@ -142,6 +145,62 @@ export const uploadApi = {
   deleteImage: (filename) => apiFetch(`/upload/${filename}`, { method: 'DELETE' }),
 };
 
+// ── FastAPI fetch wrapper (CourierGuy / PayFast backend, API-key auth) ──
+
+const fastApiFetch = async (endpoint, options = {}) => {
+  const config = {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Admin-Api-Key': ADMIN_API_KEY,
+      ...options.headers,
+    },
+  };
+
+  const response = await fetch(`${FASTAPI_BASE}${endpoint}`, config);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+    throw new Error(error.detail || 'Request failed');
+  }
+
+  return response.json();
+};
+
+// Dashboard API (FastAPI backend)
+export const dashboardApi = {
+  getStats: () => fastApiFetch('/dashboard/admin'),
+};
+
+// Orders API (FastAPI backend)
+export const ordersApi = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return fastApiFetch(`/orders/admin${query ? `?${query}` : ''}`);
+  },
+  get: (id) => fastApiFetch(`/orders/admin/${id}`),
+  updateStatus: (id, status) =>
+    fastApiFetch(`/orders/admin/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    }),
+  addTracking: (id, trackingNumber) =>
+    fastApiFetch(`/orders/admin/${id}/tracking`, {
+      method: 'PUT',
+      body: JSON.stringify({ tracking_number: trackingNumber }),
+    }),
+  updateNotes: (id, notes) =>
+    fastApiFetch(`/orders/admin/${id}/notes`, {
+      method: 'PUT',
+      body: JSON.stringify({ notes }),
+    }),
+  bookCourier: (orderId) =>
+    fastApiFetch('/shipping/admin/book', {
+      method: 'POST',
+      body: JSON.stringify({ order_id: orderId }),
+    }),
+};
+
 // Custom hook for API calls with loading/error state
 export const useApiCall = () => {
   const [loading, setLoading] = useState(false);
@@ -164,4 +223,4 @@ export const useApiCall = () => {
   return { loading, error, execute, setError };
 };
 
-export default { authApi, productsApi, setsApi, categoriesApi, configApi, preordersApi, discountsApi };
+export default { authApi, productsApi, setsApi, categoriesApi, configApi, preordersApi, discountsApi, ordersApi, dashboardApi };

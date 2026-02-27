@@ -39,7 +39,15 @@ app.use(helmet({
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (curl, mobile, etc.)
+    if (!origin) return callback(null, true);
+    // Allow any localhost port in development
+    if (/^http:\/\/localhost:\d+$/.test(origin)) return callback(null, true);
+    // Allow configured frontend URL
+    if (origin === process.env.FRONTEND_URL) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 

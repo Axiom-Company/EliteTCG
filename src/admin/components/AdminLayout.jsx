@@ -19,6 +19,7 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'products', label: 'Products' },
+    { id: 'orders', label: 'Orders' },
     { id: 'inventory', label: 'Inventory' },
     { id: 'sets', label: 'Sets' },
     { id: 'categories', label: 'Categories' },
