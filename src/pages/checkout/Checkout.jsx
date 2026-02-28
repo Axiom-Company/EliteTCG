@@ -5,7 +5,6 @@ import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { getImageUrl } from '../../config/api';
 import { getShippingQuote } from '../../services/shippingApi';
 import { createDirectOrder } from '../../services/orderApi';
-import courierGuyLogo from '../../assets/images/The-courier-guy.webp';
 
 const provinces = [
   'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
@@ -281,7 +280,6 @@ const Checkout = () => {
                       }`}>
                         {shippingMethod === 'courier_guy' && <div className="w-2.5 h-2.5 rounded-full bg-gray-900" />}
                       </div>
-                      <img src={courierGuyLogo} alt="Courier Guy" className="w-8 h-8 object-contain shrink-0 rounded" />
                       <div>
                         <p className="font-medium text-gray-900 text-sm">Courier Guy Delivery</p>
                         <p className="text-xs text-gray-500 mt-1">Door-to-door delivery across South Africa</p>
@@ -312,11 +310,6 @@ const Checkout = () => {
                         shippingMethod === 'collection' ? 'border-gray-900' : 'border-gray-300'
                       }`}>
                         {shippingMethod === 'collection' && <div className="w-2.5 h-2.5 rounded-full bg-gray-900" />}
-                      </div>
-                      <div className="w-8 h-8 shrink-0 flex items-center justify-center">
-                        <svg className="w-7 h-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72" />
-                        </svg>
                       </div>
                       <div>
                         <p className="font-medium text-gray-900 text-sm">Local Collection</p>

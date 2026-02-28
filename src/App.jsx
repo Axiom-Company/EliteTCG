@@ -40,6 +40,9 @@ import OrderHistory from './pages/orders/OrderHistory';
 // Customer Auth Provider
 import { CustomerAuthProvider } from './contexts/CustomerAuthContext';
 
+// Toast
+import { Toaster } from 'sonner';
+
 // Cart Provider and Components
 import { CartProvider } from './contexts/CartContext';
 import CartDrawer from './components/Cart/CartDrawer';
@@ -72,6 +75,15 @@ const MainLayout = ({ children }) => (
   </div>
 );
 
+const NavbarLayout = ({ children }) => (
+  <div className="flex flex-col min-h-screen">
+    <Navbar />
+    <main className="flex-1">
+      {children}
+    </main>
+  </div>
+);
+
 function App() {
   return (
     <CustomerAuthProvider>
@@ -80,8 +92,8 @@ function App() {
           <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
           <Route path="/products" element={<MainLayout><Products /></MainLayout>} />
           <Route path="/product/:id" element={<MainLayout><ProductPage /></MainLayout>} />
-          <Route path="/login" element={<MainLayout><Login /></MainLayout>} />
-          <Route path="/register" element={<MainLayout><Register /></MainLayout>} />
+          <Route path="/login" element={<NavbarLayout><Login /></NavbarLayout>} />
+          <Route path="/register" element={<NavbarLayout><Register /></NavbarLayout>} />
           <Route path="/become-seller" element={<MainLayout><BecomeSeller /></MainLayout>} />
           <Route path="/marketplace" element={<MainLayout><MarketplaceBrowse /></MainLayout>} />
           <Route path="/marketplace/:id" element={<MainLayout><ListingDetail /></MainLayout>} />
@@ -95,6 +107,12 @@ function App() {
           <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
         <CartDrawer />
+        <Toaster
+          position="bottom-right"
+          mobilePosition="top-center"
+          theme="dark"
+          icons={{ error: null, success: null, warning: null, info: null, loading: null }}
+        />
       </CartProvider>
     </CustomerAuthProvider>
   );
