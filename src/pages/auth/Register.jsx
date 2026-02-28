@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
-import pikachuImage from 'images/pikachu.png';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -61,25 +60,8 @@ const Register = () => {
   };
 
   return (
-    <section className="min-h-[80vh] flex">
-      {/* Left - Yellow section with Pikachu */}
-      <div className="hidden lg:flex w-1/2 bg-[#FFCB32] items-center justify-center relative overflow-hidden transform skew-x-6 origin-bottom-right">
-        <div className="transform -skew-x-6 text-center px-12 z-10">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Join EliteTCG</h2>
-          <p className="text-gray-800 text-lg mb-8">
-            Create an account to buy, sell, and collect rare Pokemon cards
-          </p>
-          <img
-            src={pikachuImage}
-            alt="Pikachu"
-            className="w-64 h-auto mx-auto drop-shadow-lg"
-          />
-        </div>
-      </div>
-
-      {/* Right - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-16">
-        <div className="w-full max-w-md">
+    <section className="min-h-[80vh] flex items-center justify-center px-6 py-16">
+      <div className="w-full max-w-md">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Create account</h1>
           <p className="text-gray-600 mb-8">Join EliteTCG and start collecting</p>
 
@@ -218,13 +200,12 @@ const Register = () => {
             </button>
           </form>
 
-          <p className="mt-8 text-center text-gray-600">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-gray-900 hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </div>
+        <p className="mt-8 text-center text-gray-600">
+          Already have an account?{' '}
+          <Link to="/login" className="font-medium text-gray-900 hover:underline">
+            Sign in
+          </Link>
+        </p>
       </div>
     </section>
   );
