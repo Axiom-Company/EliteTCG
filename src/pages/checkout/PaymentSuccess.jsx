@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
-
-const API_BASE_URL = 'http://localhost:3001';
+import { trackOrder } from '../../services/orderApi';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -12,40 +11,45 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     const fetchOrder = async () => {
-      // Clear cart if redirected from checkout
       if (sessionStorage.getItem('clearCartOnSuccess') === 'true') {
         clearCart();
         sessionStorage.removeItem('clearCartOnSuccess');
       }
 
-      // Get order ID from URL params or session storage
-      const orderId = searchParams.get('order_id') || sessionStorage.getItem('lastOrderId');
-      const orderNumber = sessionStorage.getItem('lastOrderNumber');
+      const orderNumber = searchParams.get('order_number') || sessionStorage.getItem('lastOrderNumber');
+      const email = searchParams.get('email') || sessionStorage.getItem('lastOrderEmail');
 
-      if (orderId) {
+      if (orderNumber && email) {
         try {
-          const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}`);
-          if (res.ok) {
-            const data = await res.json();
-            setOrder(data.order);
-          }
-        } catch (err) {
-          console.error('Error fetching order:', err);
+          const data = await trackOrder(orderNumber, email);
+          setOrder(data);
+        } catch {
+          if (orderNumber) setOrder({ order_number: orderNumber });
         }
       } else if (orderNumber) {
-        // Just show the order number if we can't fetch details
         setOrder({ order_number: orderNumber });
       }
 
       setLoading(false);
-
-      // Clear session storage
-      sessionStorage.removeItem('lastOrderId');
       sessionStorage.removeItem('lastOrderNumber');
+      sessionStorage.removeItem('lastOrderEmail');
     };
 
     fetchOrder();
   }, [searchParams, clearCart]);
+
+  const statusLabel = (status) => {
+    const map = {
+      pending_payment: 'Pending Payment',
+      paid: 'Payment Received',
+      confirmed: 'Confirmed',
+      shipped: 'Shipped',
+      in_transit: 'In Transit',
+      out_for_delivery: 'Out for Delivery',
+      delivered: 'Delivered',
+    };
+    return map[status] || status;
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -58,14 +62,12 @@ const PaymentSuccess = () => {
         </div>
 
         <h1 className="text-2xl font-medium text-gray-900 mb-2">Thank you for your order!</h1>
-        <p className="text-gray-600 mb-8">
-          Your payment has been processed successfully.
-        </p>
+        <p className="text-gray-600 mb-8">Your payment has been processed successfully.</p>
 
         {loading ? (
           <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-48 mx-auto"></div>
-            <div className="h-4 bg-gray-200 rounded w-32 mx-auto"></div>
+            <div className="h-4 bg-gray-200 rounded w-48 mx-auto" />
+            <div className="h-4 bg-gray-200 rounded w-32 mx-auto" />
           </div>
         ) : order ? (
           <div className="bg-gray-50 rounded-2xl p-6 mb-8 text-left">
@@ -74,16 +76,30 @@ const PaymentSuccess = () => {
                 <span className="text-sm text-gray-600">Order Number</span>
                 <span className="text-sm font-medium text-gray-900">{order.order_number}</span>
               </div>
-              {order.total_amount && (
+              {order.total_zar && (
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Total</span>
-                  <span className="text-sm font-medium text-gray-900">R{Number(order.total_amount).toLocaleString()}</span>
+                  <span className="text-sm font-medium text-gray-900">R{Number(order.total_zar).toLocaleString()}</span>
                 </div>
               )}
-              {order.status && (
+              {order.order_status && (
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Status</span>
-                  <span className="text-sm font-medium text-green-600 capitalize">{order.status}</span>
+                  <span className="text-sm font-medium text-green-600">{statusLabel(order.order_status)}</span>
+                </div>
+              )}
+              {order.shipping_method && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Shipping</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {order.shipping_method === 'courier_guy' ? 'Courier Guy Delivery' : 'Local Collection'}
+                  </span>
+                </div>
+              )}
+              {order.courier_tracking_number && (
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Tracking</span>
+                  <span className="text-sm font-medium text-gray-900">{order.courier_tracking_number}</span>
                 </div>
               )}
             </div>
@@ -91,26 +107,26 @@ const PaymentSuccess = () => {
         ) : null}
 
         <div className="space-y-3">
-          <p className="text-sm text-gray-500">
-            We've sent a confirmation email with your order details.
-          </p>
-          <p className="text-sm text-gray-500">
-            We'll email you again when your order ships.
-          </p>
+          <p className="text-sm text-gray-500">We've sent a confirmation email with your order details.</p>
+          {order?.shipping_method === 'courier_guy' && (
+            <p className="text-sm text-gray-500">You'll receive tracking information once your order ships via Courier Guy.</p>
+          )}
         </div>
 
         <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+          {order?.order_number && (
+            <Link
+              to={`/orders/track?order=${order.order_number}`}
+              className="px-8 py-3 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
+            >
+              Track Your Order
+            </Link>
+          )}
           <Link
             to="/products"
-            className="px-8 py-3 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
-          >
-            Continue Shopping
-          </Link>
-          <Link
-            to="/"
             className="px-8 py-3 border border-gray-200 text-gray-700 text-sm font-medium rounded-full hover:bg-gray-50 transition-colors"
           >
-            Back to Home
+            Continue Shopping
           </Link>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import AdminLayout from './components/AdminLayout';
 import AdminLogin from './components/AdminLogin';
-import { Dashboard, Settings, Products, Sets, Categories } from './pages';
+import { Dashboard, Settings, Products, Sets, Categories, Orders } from './pages';
 import SellerApplications from './pages/SellerApplications';
 
 // Placeholder pages for now
@@ -31,6 +31,8 @@ const AdminContent = () => {
         return <Dashboard />;
       case 'products':
         return <Products />;
+      case 'orders':
+        return <Orders />;
       case 'inventory':
         return <InventoryPage />;
       case 'sets':

@@ -3,3 +3,4 @@ export { default as Settings } from './Settings';
 export { default as Products } from './Products';
 export { default as Sets } from './Sets';
 export { default as Categories } from './Categories';
+export { default as Orders } from './Orders';

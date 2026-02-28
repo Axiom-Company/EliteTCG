@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 
 // Components for main public site
 import Navbar from './components/Navbar/Navbar';
@@ -33,6 +33,10 @@ import Checkout from './pages/checkout/Checkout';
 import PaymentSuccess from './pages/checkout/PaymentSuccess';
 import PaymentCancel from './pages/checkout/PaymentCancel';
 
+// Order pages
+import OrderTracking from './pages/orders/OrderTracking';
+import OrderHistory from './pages/orders/OrderHistory';
+
 // Customer Auth Provider
 import { CustomerAuthProvider } from './contexts/CustomerAuthContext';
 
@@ -43,9 +47,11 @@ import CartDrawer from './components/Cart/CartDrawer';
 // Admin Application
 import AdminApp from './admin/AdminApp';
 
-const HomePage = () => (
+const HomePage = () => {
+  const navigate = useNavigate();
+  return (
   <>
-    <Hero />
+    <Hero onShopClick={() => navigate('/products')} />
     <ShopBySet />
     <ShopByCategory />
     <FeaturedProducts />
@@ -53,7 +59,8 @@ const HomePage = () => (
     <PreOrders />
     {/* <TrustSection /> */}
   </>
-);
+  );
+};
 
 const MainLayout = ({ children }) => (
   <div className="flex flex-col min-h-screen">
@@ -83,6 +90,8 @@ function App() {
           <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />
           <Route path="/payment/success" element={<MainLayout><PaymentSuccess /></MainLayout>} />
           <Route path="/payment/cancel" element={<MainLayout><PaymentCancel /></MainLayout>} />
+          <Route path="/orders" element={<MainLayout><OrderHistory /></MainLayout>} />
+          <Route path="/orders/track" element={<MainLayout><OrderTracking /></MainLayout>} />
           <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
         <CartDrawer />
