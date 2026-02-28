@@ -65,6 +65,16 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [wishlist, setWishlist] = useState([]);
   const [addingToCart, setAddingToCart] = useState(null);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+
+  useEffect(() => {
+    if (mobileFilterOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileFilterOpen]);
 
   const toggleWishlist = (id, e) => {
     e.preventDefault();
@@ -177,31 +187,20 @@ const Products = () => {
     <div className="min-h-screen bg-white">
 
       {/* ── Page Header ── */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 py-5">
-          <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-3">
-            <Link to="/" className="hover:text-gray-700 transition-colors">Home</Link>
-            <ChevronRight className="w-3 h-3" />
-            {filters.category && (
-              <>
-                <Link to="/products" className="hover:text-gray-700 transition-colors">All Products</Link>
-                <ChevronRight className="w-3 h-3" />
-              </>
-            )}
-            <span className="text-gray-600">{activeCategoryLabel}</span>
-          </nav>
-          <div className="flex items-end justify-between">
-            <div>
-              <h1 className="text-2xl font-medium text-gray-900 tracking-tight">{activeCategoryLabel}</h1>
-              <p className="text-sm text-gray-400 mt-0.5">
-                {loading ? '—' : `${products.length} product${products.length !== 1 ? 's' : ''}`}
-              </p>
-            </div>
-            {/* Mobile filter hint */}
-            <div className="lg:hidden flex items-center gap-1.5 text-sm text-gray-500">
-              <SlidersHorizontal className="w-4 h-4" />
-              Filters
-            </div>
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-6 pt-4 pb-0">
+          <div className="flex items-center justify-between">
+            <nav className="flex items-center gap-1.5 text-xs text-gray-400">
+              <Link to="/" className="hover:text-gray-700 transition-colors">Home</Link>
+              <ChevronRight className="w-3 h-3" />
+              {filters.category && (
+                <>
+                  <Link to="/products" className="hover:text-gray-700 transition-colors">All Products</Link>
+                  <ChevronRight className="w-3 h-3" />
+                </>
+              )}
+              <span className="text-gray-600">{activeCategoryLabel}</span>
+            </nav>
           </div>
         </div>
       </div>
@@ -235,7 +234,7 @@ const Products = () => {
 
             {/* Categories */}
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2 px-1">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-gray-400 mb-2 px-1">
                 Categories
               </p>
               <nav className="space-y-0.5">
@@ -247,7 +246,7 @@ const Products = () => {
                       onClick={() => updateFilter('category', value)}
                       className={`w-full px-3 py-2.5 rounded-xl text-sm text-left transition-all duration-150 ${
                         isActive
-                          ? 'bg-gray-900 text-white font-medium'
+                          ? 'bg-gray-100 text-gray-900 font-medium'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
@@ -262,7 +261,7 @@ const Products = () => {
 
             {/* Sort */}
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2 px-1">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-gray-400 mb-2 px-1">
                 Sort By
               </p>
               <div className="space-y-0.5">
@@ -272,16 +271,13 @@ const Products = () => {
                     <button
                       key={value}
                       onClick={() => updateFilter('sort', value)}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all duration-150 flex items-center gap-2 ${
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all duration-150 ${
                         isActive
-                          ? 'text-gray-900 font-medium'
-                          : 'text-gray-500 hover:bg-white hover:text-gray-900'
+                          ? 'bg-gray-100 text-gray-900 font-medium'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
-                      {isActive && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#E3350D] shrink-0" />
-                      )}
-                      <span className={isActive ? '' : 'ml-3.5'}>{label}</span>
+                      {label}
                     </button>
                   );
                 })}
@@ -307,15 +303,23 @@ const Products = () => {
 
             {/* Mobile: search + category pills */}
             <div className="lg:hidden mb-5 space-y-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                <input
-                  type="text"
-                  value={filters.search}
-                  onChange={(e) => updateFilter('search', e.target.value)}
-                  placeholder="Search products…"
-                  className="w-full pl-9 pr-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E3350D]/20 focus:border-[#E3350D]/40"
-                />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={filters.search}
+                    onChange={(e) => updateFilter('search', e.target.value)}
+                    placeholder="Search products…"
+                    className="w-full pl-9 pr-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E3350D]/20 focus:border-[#E3350D]/40"
+                  />
+                </div>
+                <button
+                  onClick={() => setMobileFilterOpen(true)}
+                  className="flex items-center justify-center w-11 h-11 rounded-xl border border-gray-200 text-gray-500 hover:text-gray-900 hover:border-gray-400 transition-colors shrink-0"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                </button>
               </div>
               <div className="flex gap-2 overflow-x-auto pb-1 -mx-6 px-6 scrollbar-hide">
                 {categories.map(({ value, label }) => (
@@ -482,6 +486,92 @@ const Products = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Filter Drawer */}
+      {mobileFilterOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/30 z-40 lg:hidden"
+            onClick={() => setMobileFilterOpen(false)}
+          />
+          {/* Drawer */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 lg:hidden max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <p className="text-sm font-medium text-gray-900">Filters</p>
+              <button onClick={() => setMobileFilterOpen(false)}>
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
+            </div>
+            <div className="p-5 space-y-6">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={filters.search}
+                  onChange={(e) => updateFilter('search', e.target.value)}
+                  placeholder="Search products…"
+                  className="w-full pl-9 pr-8 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#E3350D]/20 focus:border-[#E3350D]/40 transition-all"
+                />
+                {filters.search && (
+                  <button onClick={() => updateFilter('search', '')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              {/* Categories */}
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-widest text-gray-400 mb-2 px-1">Categories</p>
+                <nav className="space-y-0.5">
+                  {categories.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => { updateFilter('category', value); setMobileFilterOpen(false); }}
+                      className={`w-full px-3 py-2.5 rounded-xl text-sm text-left transition-all duration-150 ${
+                        filters.category === value
+                          ? 'bg-gray-100 text-gray-900 font-medium'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+              <div className="border-t border-gray-100" />
+              {/* Sort */}
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-widest text-gray-400 mb-2 px-1">Sort By</p>
+                <div className="space-y-0.5">
+                  {sortOptions.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => { updateFilter('sort', value); setMobileFilterOpen(false); }}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all duration-150 ${
+                        filters.sort === value
+                          ? 'bg-gray-100 text-gray-900 font-medium'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {hasActiveFilters && (
+                <button
+                  onClick={() => { clearFilters(); setMobileFilterOpen(false); }}
+                  className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-900 transition-colors px-1"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Clear filters
+                </button>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
