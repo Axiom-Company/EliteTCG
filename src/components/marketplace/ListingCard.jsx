@@ -28,7 +28,7 @@ const ListingCard = ({ listing }) => {
   return (
     <Link
       to={`/marketplace/${listing.id}`}
-      className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-primary transition-all duration-200"
+      className="card-3d group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-primary"
     >
       {/* Image */}
       <div className="relative aspect-square bg-gray-100 overflow-hidden">

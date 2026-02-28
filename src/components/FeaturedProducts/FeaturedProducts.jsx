@@ -99,7 +99,7 @@ const FeaturedProducts = () => {
               <Link
                 key={product.id}
                 to={`/product/${product.slug || product.id}`}
-                className="flex flex-col bg-white rounded-lg border border-gray-200 overflow-hidden transition-all duration-250 hover:border-gray-400 group cursor-pointer"
+                className="card-3d flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-gray-300 group cursor-pointer"
               >
                 <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
                   {getImageUrl(product) ? (

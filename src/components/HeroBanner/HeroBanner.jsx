@@ -44,7 +44,6 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
   const [showOverlay, setShowOverlay] = useState(false);
   const [packReady, setPackReady] = useState(false);
   const [shimmeringCards, setShimmeringCards] = useState(new Set());
-  const [cardOrder, setCardOrder] = useState(() => CARD_DATA.map((_, i) => i));
   const [, forceUpdate] = useState(0);
 
   const bannerRef = useRef(null);
@@ -60,15 +59,6 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
   const isMobileRef = useRef(false);
   const spreadVwRef = useRef(150);
   const phaseRef = useRef(0);
-
-  const drag = useRef({
-    active: false,
-    slotIdx: -1,
-    originalSlot: -1,
-    startX: 0,
-    startY: 0,
-    holdTimer: null,
-  });
 
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
@@ -97,7 +87,6 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
 
   useEffect(() => () => {
     timers.current.forEach(clearTimeout);
-    if (drag.current.holdTimer) clearTimeout(drag.current.holdTimer);
   }, []);
 
   useEffect(() => {
@@ -207,24 +196,23 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
   }, []);
 
   const handleCardMouseEnter = useCallback((slotIdx) => {
-    if (phaseRef.current !== 4 || isMobileRef.current || drag.current.active) return;
+    if (phaseRef.current !== 4 || isMobileRef.current) return;
     hoveredSlot.current = slotIdx;
     const el = cardElRefs.current[slotIdx];
     if (!el) return;
     el.classList.add('hero-card--hovered');
     el.classList.remove('hero-card--idle');
-    el.style.transform = 'translateX(var(--card-x)) translateY(var(--card-y)) rotate(0deg) scale(1.2)';
+    el.style.transform = 'translateX(var(--card-x)) translateY(calc(var(--card-y) - 35px)) rotate(0deg) scale(1.24)';
     el.style.zIndex = '100';
     el.style.transition = 'transform 0.25s ease-out';
   }, []);
 
   const handleCardMouseMove = useCallback((e, slotIdx) => {
-    if (phaseRef.current !== 4 || hoveredSlot.current !== slotIdx || drag.current.active) return;
+    if (phaseRef.current !== 4 || hoveredSlot.current !== slotIdx) return;
     applyHoloLayers(slotIdx, e.clientX, e.clientY);
   }, [applyHoloLayers]);
 
   const handleCardMouseLeave = useCallback((slotIdx) => {
-    if (drag.current.active) return;
     hoveredSlot.current = null;
     const el = cardElRefs.current[slotIdx];
     if (el) {
@@ -236,115 +224,6 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
     }
     clearHoloLayers(slotIdx);
   }, [clearHoloLayers]);
-
-  const handlePointerDown = useCallback((e, slotIdx) => {
-    if (phaseRef.current !== 4 || isMobileRef.current) return;
-    const d = drag.current;
-    d.startX = e.clientX;
-    d.startY = e.clientY;
-    d.slotIdx = slotIdx;
-    d.originalSlot = slotIdx;
-
-    d.holdTimer = setTimeout(() => {
-      d.active = true;
-      const el = cardElRefs.current[slotIdx];
-      if (el) {
-        el.classList.add('hero-card--dragging');
-        el.classList.remove('hero-card--hovered', 'hero-card--idle');
-        el.style.transform = 'translateX(var(--card-x)) translateY(var(--card-y)) rotate(0deg) scale(1.1)';
-        el.style.zIndex = '200';
-        el.setPointerCapture(e.pointerId);
-      }
-      hoveredSlot.current = null;
-      clearHoloLayers(slotIdx);
-    }, 150);
-  }, [clearHoloLayers]);
-
-  const handlePointerMove = useCallback((e, slotIdx) => {
-    const d = drag.current;
-    if (!d.active || d.slotIdx !== slotIdx) return;
-
-    const el = cardElRefs.current[slotIdx];
-    if (!el) return;
-
-    const dx = e.clientX - d.startX;
-    const dy = e.clientY - d.startY;
-    el.style.transform =
-      `translateX(calc(var(--card-x) + ${dx}px)) translateY(calc(var(--card-y) + ${dy}px)) rotate(0deg) scale(1.1)`;
-
-    const bRect = bannerRef.current?.getBoundingClientRect();
-    if (!bRect) return;
-    const centerPx = e.clientX - bRect.left - bRect.width / 2;
-    const centerVw = (centerPx / window.innerWidth) * 100;
-
-    let closest = slotIdx;
-    let closestDist = Infinity;
-    for (let i = 0; i < TOTAL_CARDS; i++) {
-      const arc = computeArc(i, TOTAL_CARDS, spreadVwRef.current);
-      const dist = Math.abs(centerVw - arc.x);
-      if (dist < closestDist) { closestDist = dist; closest = i; }
-    }
-
-    if (closest !== slotIdx) {
-      setCardOrder((prev) => {
-        const next = [...prev];
-        const dragged = next[slotIdx];
-        next.splice(slotIdx, 1);
-        next.splice(closest, 0, dragged);
-        return next;
-      });
-      d.slotIdx = closest;
-      d.startX = e.clientX;
-      d.startY = e.clientY;
-    }
-  }, []);
-
-  const handlePointerUp = useCallback((e, slotIdx) => {
-    const d = drag.current;
-    if (d.holdTimer) { clearTimeout(d.holdTimer); d.holdTimer = null; }
-
-    if (!d.active) {
-      if (onCardClick) onCardClick(cardOrder[slotIdx]);
-      return;
-    }
-
-    d.active = false;
-    const el = cardElRefs.current[d.slotIdx];
-    if (el) {
-      el.classList.remove('hero-card--dragging');
-      el.classList.add('hero-card--idle');
-      el.style.transform = '';
-      el.style.zIndex = '';
-      el.style.transition = 'transform 0.3s ease-out';
-      try { el.releasePointerCapture(e.pointerId); } catch (_) { /* noop */ }
-    }
-    d.slotIdx = -1;
-  }, [cardOrder, onCardClick]);
-
-  const handlePointerCancel = useCallback((e) => {
-    const d = drag.current;
-    if (d.holdTimer) { clearTimeout(d.holdTimer); d.holdTimer = null; }
-    if (!d.active) return;
-    d.active = false;
-
-    const el = cardElRefs.current[d.slotIdx];
-    if (el) {
-      el.classList.remove('hero-card--dragging');
-      el.classList.add('hero-card--idle');
-      el.style.transform = '';
-      el.style.zIndex = '';
-      el.style.transition = 'transform 0.3s ease-out';
-    }
-    setCardOrder((prev) => {
-      if (d.slotIdx === d.originalSlot) return prev;
-      const next = [...prev];
-      const card = next[d.slotIdx];
-      next.splice(d.slotIdx, 1);
-      next.splice(d.originalSlot, 0, card);
-      return next;
-    });
-    d.slotIdx = -1;
-  }, []);
 
   const getSlotVars = useCallback((slotIdx) => {
     const arc = computeArc(slotIdx, TOTAL_CARDS, spreadVwRef.current);
@@ -445,8 +324,8 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
 
       {phase >= 2 && (
         <div className="hero-banner__cards">
-          {cardOrder.map((dataIdx, slotIdx) => {
-            const card = CARD_DATA[dataIdx];
+          {CARD_DATA.map((card, slotIdx) => {
+            const dataIdx = slotIdx;
             const isFlipped = flippedCards.has(dataIdx);
             const isEmerging = phase === 2;
             const isInteractive = phase === 4;
@@ -465,10 +344,7 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
                 onMouseEnter={() => handleCardMouseEnter(slotIdx)}
                 onMouseMove={(e) => handleCardMouseMove(e, slotIdx)}
                 onMouseLeave={() => handleCardMouseLeave(slotIdx)}
-                onPointerDown={(e) => handlePointerDown(e, slotIdx)}
-                onPointerMove={(e) => handlePointerMove(e, slotIdx)}
-                onPointerUp={(e) => handlePointerUp(e, slotIdx)}
-                onPointerCancel={handlePointerCancel}
+                onClick={() => onCardClick && onCardClick(dataIdx)}
               >
                 <div
                   ref={(el) => { innerRefs.current[slotIdx] = el; }}

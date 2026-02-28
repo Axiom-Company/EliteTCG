@@ -375,7 +375,7 @@ const Products = () => {
                     <Link
                       key={product.id}
                       to={`/product/${product.slug || product.id}`}
-                      className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all duration-200"
+                      className="card-3d group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-300"
                     >
                       {/* Image */}
                       <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">

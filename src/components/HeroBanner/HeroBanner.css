@@ -309,7 +309,6 @@
   transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1),
               opacity 0.3s ease,
               z-index 0s;
-  touch-action: none;
   user-select: none;
 }
 
@@ -367,15 +366,6 @@
   z-index: 100 !important;
   animation: none !important;
   transition: transform 0.08s linear;
-}
-
-/* Dragging state */
-.hero-card--dragging {
-  z-index: 200 !important;
-  animation: none !important;
-  opacity: 0.85;
-  cursor: grabbing;
-  transition: none !important;
 }
 
 /* ── Card Inner (flip container) ─────────────────────────── */
