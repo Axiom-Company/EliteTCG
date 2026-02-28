@@ -48,6 +48,8 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
 
   const bannerRef = useRef(null);
   const packWrapRef = useRef(null);
+  const packFoilRef = useRef(null);
+  const packSpecularRef = useRef(null);
   const cardElRefs = useRef([]);
   const innerRefs = useRef([]);
   const holoRefs = useRef([]);
@@ -98,7 +100,24 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
       const r = banner.getBoundingClientRect();
       const mx = ((e.clientX - r.left) / r.width - 0.5) * 2;
       const my = ((e.clientY - r.top) / r.height - 0.5) * 2;
-      el.style.transform = `rotateY(${mx * 7}deg) rotateX(${my * -5}deg)`;
+      el.style.transform = `rotateY(${mx * 12}deg) rotateX(${my * -8}deg)`;
+
+      const foil = packFoilRef.current;
+      if (foil) {
+        const angle = Math.round((mx + 1) * 180);
+        foil.style.background = `linear-gradient(${angle}deg,
+          rgba(255,50,50,0.08), rgba(255,180,50,0.1), rgba(255,255,80,0.12),
+          rgba(50,255,100,0.1), rgba(50,150,255,0.12), rgba(180,50,255,0.1),
+          rgba(255,50,150,0.08))`;
+      }
+
+      const specular = packSpecularRef.current;
+      if (specular) {
+        const posX = Math.round((mx + 1) * 50);
+        const posY = Math.round((my + 1) * 50);
+        specular.style.background = `radial-gradient(circle at ${posX}% ${posY}%,
+          rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 25%, transparent 55%)`;
+      }
     };
     window.addEventListener('mousemove', onMove, { passive: true });
     return () => window.removeEventListener('mousemove', onMove);
@@ -109,8 +128,18 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
     packClicked.current = true;
     setPhase(1);
 
+    if (bannerRef.current) {
+      bannerRef.current.classList.add('hero-banner--shake');
+      const tShake = setTimeout(() => {
+        bannerRef.current?.classList.remove('hero-banner--shake');
+      }, 500);
+      timers.current.push(tShake);
+    }
+
     const t1 = setTimeout(() => {
       setPhase(2);
+      const tOverlay = setTimeout(() => setShowOverlay(true), 100);
+      timers.current.push(tOverlay);
       const t2 = setTimeout(() => {
         setPhase(3);
         FLIP_ORDER.forEach((dataIdx, i) => {
@@ -130,13 +159,11 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
         });
         const t4 = setTimeout(() => {
           setPhase(4);
-          const t5 = setTimeout(() => setShowOverlay(true), 350);
-          timers.current.push(t5);
         }, FLIP_ORDER.length * 60 + 1000);
         timers.current.push(t4);
       }, 1000);
       timers.current.push(t2);
-    }, 600);
+    }, 800);
     timers.current.push(t1);
   }, [packReady]);
 
@@ -202,9 +229,25 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
     if (!el) return;
     el.classList.add('hero-card--hovered');
     el.classList.remove('hero-card--idle');
-    el.style.transform = 'translateX(var(--card-x)) translateY(calc(var(--card-y) - 35px)) rotate(0deg) scale(1.24)';
+    el.style.transform = 'translateX(var(--card-x)) translateY(calc(var(--card-y) - 35px)) rotate(0deg) scale(1.46)';
     el.style.zIndex = '100';
     el.style.transition = 'transform 0.25s ease-out';
+
+    // Taskbar-style neighbor magnification (40% of growth)
+    const prev = cardElRefs.current[slotIdx - 1];
+    const next = cardElRefs.current[slotIdx + 1];
+    if (prev) {
+      prev.classList.remove('hero-card--idle');
+      prev.style.transform = 'translateX(var(--card-x)) translateY(calc(var(--card-y) - 14px)) rotate(var(--card-rot)) scale(1.18)';
+      prev.style.transition = 'transform 0.25s ease-out';
+      prev.style.zIndex = '99';
+    }
+    if (next) {
+      next.classList.remove('hero-card--idle');
+      next.style.transform = 'translateX(var(--card-x)) translateY(calc(var(--card-y) - 14px)) rotate(var(--card-rot)) scale(1.18)';
+      next.style.transition = 'transform 0.25s ease-out';
+      next.style.zIndex = '99';
+    }
   }, []);
 
   const handleCardMouseMove = useCallback((e, slotIdx) => {
@@ -223,16 +266,29 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
       el.style.transition = 'transform 0.35s ease-out';
     }
     clearHoloLayers(slotIdx);
+
+    // Reset neighbors
+    const prev = cardElRefs.current[slotIdx - 1];
+    const next = cardElRefs.current[slotIdx + 1];
+    [prev, next].forEach((n) => {
+      if (!n) return;
+      if (phaseRef.current === 4) n.classList.add('hero-card--idle');
+      n.style.transform = '';
+      n.style.zIndex = '';
+      n.style.transition = 'transform 0.35s ease-out';
+    });
   }, [clearHoloLayers]);
 
   const getSlotVars = useCallback((slotIdx) => {
     const arc = computeArc(slotIdx, TOTAL_CARDS, spreadVwRef.current);
     const centerDist = Math.abs(slotIdx - (TOTAL_CARDS - 1) / 2);
     const z = Math.round(TOTAL_CARDS - centerDist);
+    const isDesktop = spreadVwRef.current === 150;
     return {
       '--card-x': `${arc.x}vw`,
       '--card-y': `${arc.y}px`,
       '--card-rot': `${arc.rot}deg`,
+      '--card-scale': isDesktop ? '0.98' : '1',
       '--card-z': z,
       '--emerge-delay': `${slotIdx * 60}ms`,
       '--bob-delay': `${slotIdx * 0.4}s`,
@@ -290,12 +346,26 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
               className="hero-banner__pack-half hero-banner__pack-half--right"
               style={{ backgroundImage: `url(${BOOSTER_PACK_SRC})` }}
             />
+            <div ref={packFoilRef} className="hero-banner__pack-foil" />
+            <div ref={packSpecularRef} className="hero-banner__pack-specular" />
           </div>
+
+          <div className={`hero-banner__pack-crack${phase === 1 ? ' hero-banner__pack-crack--active' : ''}`} />
 
           {phase === 0 && (
             <div className="hero-banner__pack-sparkles" aria-hidden="true">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <span key={i} className="sparkle" />
+              {Array.from({ length: isMobile ? 10 : 20 }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`sparkle sparkle--${i % 4}`}
+                  style={{
+                    '--sparkle-size': `${3 + (i % 6)}px`,
+                    '--sparkle-delay': `${(i * 0.35) % 3.5}s`,
+                    '--sparkle-duration': `${1.8 + (i % 4) * 0.5}s`,
+                    top: `${5 + ((i * 41 + 7) % 90)}%`,
+                    left: `${((i * 29 + 11) % 100)}%`,
+                  }}
+                />
               ))}
             </div>
           )}
@@ -306,15 +376,34 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
             </p>
           )}
 
-          {phase === 1 && <div className="hero-banner__flash" />}
+          {phase === 1 && (
+            <>
+              <div className="hero-banner__flash hero-banner__flash--core" />
+              <div className="hero-banner__flash hero-banner__flash--mid" />
+              <div className="hero-banner__flash hero-banner__flash--outer" />
+            </>
+          )}
+
+          {phase === 1 && (
+            <div className="hero-banner__shockwaves" aria-hidden="true">
+              <span className="shockwave shockwave--1" />
+              <span className="shockwave shockwave--2" />
+              <span className="shockwave shockwave--3" />
+            </div>
+          )}
 
           {phase === 1 && (
             <div className="hero-banner__burst" aria-hidden="true">
-              {Array.from({ length: 14 }).map((_, i) => (
+              {Array.from({ length: isMobile ? 16 : 30 }).map((_, i) => (
                 <span
                   key={i}
-                  className="burst-particle"
-                  style={{ '--angle': `${i * (360 / 14)}deg` }}
+                  className={`burst-particle burst-particle--${i % 5}`}
+                  style={{
+                    '--angle': `${i * 12 + (i % 3) * 5}deg`,
+                    '--distance': `${120 + (i % 4) * 50}px`,
+                    '--size': `${3 + (i % 5) * 2}px`,
+                    '--delay': `${(i % 4) * 0.04}s`,
+                  }}
                 />
               ))}
             </div>
@@ -386,7 +475,7 @@ const HeroBanner = ({ onShopClick, onCardClick }) => {
           <div className="hero-banner__overlay hero-banner__overlay--top">
             <h1 className="hero-banner__title">ELITE TCG</h1>
             <hr className="hero-banner__divider" />
-            <p className="hero-banner__tagline">{`Premium Pok\u00e9mon Singles \u2014 South Africa`}</p>
+            <p className="hero-banner__tagline">{`Premium Pok\u00e9mon Trading Cards \u2014 South Africa`}</p>
           </div>
 
           <div className="hero-banner__overlay hero-banner__overlay--bottom">

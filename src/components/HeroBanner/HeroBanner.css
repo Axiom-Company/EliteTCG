@@ -1,3 +1,9 @@
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
 /* ============================================================
    HeroBanner.css — Elite TCG Hero Banner V2
    14-card parabolic arc, 5-layer holographic hover,
@@ -106,15 +112,16 @@
 /* Pack glow */
 .hero-banner__pack-glow {
   position: absolute;
-  width: 320px;
-  height: 440px;
+  width: 360px;
+  height: 480px;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: radial-gradient(ellipse,
     rgba(212, 175, 55, 0.35) 0%,
-    rgba(200, 60, 20, 0.15) 40%,
+    rgba(139, 92, 246, 0.15) 30%,
+    rgba(59, 130, 246, 0.08) 50%,
     transparent 70%);
   animation: glowPulse 2.2s ease-in-out infinite;
   z-index: -1;
@@ -135,11 +142,76 @@
   transition: transform 0.1s ease-out;
   animation: packBob 3s ease-in-out infinite;
   transform-style: preserve-3d;
+  overflow: hidden;
+}
+
+/* Rotating border glow */
+.hero-banner__pack-img-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 10px;
+  z-index: -1;
+  background: conic-gradient(from var(--border-angle, 0deg), #D4AF37, #8B5CF6, #3B82F6, #D4AF37);
+  animation: borderRotate 3s linear infinite;
+  opacity: 0.7;
+  will-change: transform;
+}
+
+@keyframes borderRotate {
+  to { --border-angle: 360deg; }
+}
+
+/* Sweeping auto-shine */
+.hero-banner__pack-img-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.25) 45%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.25) 55%, transparent 70%);
+  transform: translateX(-150%);
+  animation: packShineSweep 4s ease-in-out 2s infinite;
+  will-change: transform;
+}
+
+@keyframes packShineSweep {
+  0%, 70%, 100% { transform: translateX(-150%); opacity: 0.7; }
+  35%           { transform: translateX(150%); opacity: 0.7; }
 }
 
 @keyframes packBob {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(-8px); }
+}
+
+/* Pack foil overlay */
+.hero-banner__pack-foil {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: overlay;
+  opacity: 0.6;
+  transition: background 0.05s linear;
+  background: linear-gradient(135deg, rgba(255,50,50,0.05), rgba(50,150,255,0.08), rgba(180,50,255,0.05));
+}
+
+/* Pack specular highlight */
+.hero-banner__pack-specular {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hero-banner__pack:not(.hero-banner__pack--ripping) .hero-banner__pack-specular {
+  opacity: 1;
 }
 
 /* Pack halves for rip */
@@ -156,26 +228,55 @@
 }
 
 .hero-banner__pack-half--left {
-  clip-path: inset(0 50% 0 0);
+  clip-path: polygon(0% 0%, 48% 0%, 52% 4%, 47% 8%, 53% 13%, 48% 18%, 52% 23%, 46% 28%, 51% 33%, 48% 38%, 53% 43%, 47% 48%, 52% 53%, 48% 58%, 53% 63%, 47% 68%, 52% 73%, 48% 78%, 53% 83%, 47% 88%, 52% 93%, 48% 97%, 50% 100%, 0% 100%);
 }
 
 .hero-banner__pack-half--right {
-  clip-path: inset(0 0 0 50%);
+  clip-path: polygon(48% 0%, 100% 0%, 100% 100%, 50% 100%, 48% 97%, 53% 93%, 47% 88%, 52% 83%, 48% 78%, 53% 73%, 47% 68%, 52% 63%, 48% 58%, 53% 53%, 47% 48%, 52% 43%, 48% 38%, 53% 33%, 47% 28%, 52% 23%, 48% 18%, 53% 13%, 47% 8%, 52% 4%);
 }
 
 /* Phase 1: ripping */
 .hero-banner__pack--ripping .hero-banner__pack-half--left {
-  transform: translateX(-80px) rotateY(-45deg) scale(0.85);
+  transform: translateX(-140px) translateY(-20px) rotateY(-55deg) rotateZ(-8deg) scale(0.75);
   opacity: 0;
+  transition: transform 0.7s cubic-bezier(0.22, 1.2, 0.36, 1), opacity 0.6s ease-in 0.15s;
 }
 
 .hero-banner__pack--ripping .hero-banner__pack-half--right {
-  transform: translateX(80px) rotateY(45deg) scale(0.85);
+  transform: translateX(140px) translateY(15px) rotateY(55deg) rotateZ(6deg) scale(0.75);
   opacity: 0;
+  transition: transform 0.7s cubic-bezier(0.22, 1.2, 0.36, 1), opacity 0.6s ease-in 0.15s;
 }
 
 .hero-banner__pack--ripping .hero-banner__pack-img-wrap {
   animation: none;
+}
+
+/* Energy crack */
+.hero-banner__pack-crack {
+  position: absolute;
+  top: 5%;
+  left: 50%;
+  width: 2px;
+  height: 90%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, transparent 0%, rgba(255,220,100,0.0) 10%, rgba(255,220,100,0.15) 30%, rgba(255,255,255,0.2) 50%, rgba(255,220,100,0.15) 70%, rgba(255,220,100,0.0) 90%, transparent 100%);
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hero-banner__pack-crack--active {
+  opacity: 1 !important;
+  animation: crackExpand 0.5s ease-out forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes crackExpand {
+  0%   { width: 2px; box-shadow: 0 0 8px rgba(255,220,100,0.6); }
+  40%  { width: 15px; box-shadow: 0 0 30px rgba(255,220,100,0.9), 0 0 60px rgba(255,180,50,0.4); }
+  100% { width: 60px; opacity: 0; box-shadow: 0 0 80px rgba(255,255,255,1), 0 0 120px rgba(212,175,55,0.6); }
 }
 
 /* "Click to open" prompt */
@@ -204,25 +305,24 @@
 
 .sparkle {
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: var(--sparkle-size, 4px);
+  height: var(--sparkle-size, 4px);
   border-radius: 50%;
-  background: #D4AF37;
-  animation: sparkleDrift 2.5s ease-in-out infinite;
+  animation: sparkleDrift var(--sparkle-duration, 2.5s) ease-in-out infinite;
+  animation-delay: var(--sparkle-delay, 0s);
+  will-change: transform, opacity;
 }
 
-.sparkle:nth-child(1) { top: 10%; left: 5%;  animation-delay: 0s; }
-.sparkle:nth-child(2) { top: 5%;  left: 50%; animation-delay: 0.4s; }
-.sparkle:nth-child(3) { top: 15%; left: 90%; animation-delay: 0.8s; }
-.sparkle:nth-child(4) { top: 50%; left: 0%;  animation-delay: 1.2s; }
-.sparkle:nth-child(5) { top: 55%; left: 95%; animation-delay: 0.2s; }
-.sparkle:nth-child(6) { top: 85%; left: 10%; animation-delay: 0.6s; }
-.sparkle:nth-child(7) { top: 90%; left: 55%; animation-delay: 1.0s; }
-.sparkle:nth-child(8) { top: 80%; left: 85%; animation-delay: 1.4s; }
+.sparkle--0 { background: radial-gradient(circle, #fff 40%, #D4AF37); }
+.sparkle--1 { background: radial-gradient(circle, #fff 30%, #60A5FA); }
+.sparkle--2 { background: radial-gradient(circle, #fff 50%, #D4AF37); clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+.sparkle--3 { background: radial-gradient(circle, #fff 30%, #A78BFA); }
 
 @keyframes sparkleDrift {
-  0%, 100% { opacity: 0; transform: scale(0.5); }
-  50%      { opacity: 1; transform: scale(1.2); }
+  0%, 100% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  20%      { opacity: 0.9; }
+  50%      { opacity: 1; transform: scale(1.3) rotate(180deg); }
+  80%      { opacity: 0.7; }
 }
 
 /* ── Phase 1: Flash + Burst ──────────────────────────────── */
@@ -232,20 +332,45 @@
   left: 50%;
   width: 200%;
   height: 200%;
-  transform: translate(-50%, -50%) scale(0.2);
-  background: radial-gradient(ellipse at center,
-    rgba(255, 255, 255, 0.95),
-    rgba(212, 175, 55, 0.4) 35%,
-    transparent 65%);
-  animation: flashBurst 0.65s ease-out forwards;
-  z-index: 20;
+  transform: translate(-50%, -50%) scale(0.1);
   pointer-events: none;
+  will-change: transform, opacity;
 }
 
-@keyframes flashBurst {
-  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+.hero-banner__flash--core {
+  z-index: 22;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(255,255,255,0.8) 15%, transparent 40%);
+  animation: flashCore 0.5s ease-out forwards;
+}
+
+.hero-banner__flash--mid {
+  z-index: 21;
+  background: radial-gradient(ellipse at center, rgba(212,175,55,0.6) 0%, rgba(212,175,55,0.3) 25%, transparent 55%);
+  animation: flashMid 0.65s ease-out 0.05s forwards;
+}
+
+.hero-banner__flash--outer {
+  z-index: 20;
+  background: radial-gradient(ellipse at center, rgba(139,92,246,0.3) 0%, rgba(59,130,246,0.15) 35%, transparent 65%);
+  animation: flashOuter 0.8s ease-out 0.08s forwards;
+}
+
+@keyframes flashCore {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.1); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+}
+
+@keyframes flashMid {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.15); }
   25%  { opacity: 1; }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(2); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+}
+
+@keyframes flashOuter {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+  30%  { opacity: 0.8; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.8); }
 }
 
 /* Energy burst particles */
@@ -261,23 +386,89 @@
 
 .burst-particle {
   position: absolute;
-  width: 5px;
-  height: 5px;
+  width: var(--size, 5px);
+  height: var(--size, 5px);
   border-radius: 50%;
-  background: #D4AF37;
   will-change: transform, opacity;
-  animation: burstOut 0.7s ease-out forwards;
+  animation: burstOut 0.8s ease-out var(--delay, 0s) forwards;
 }
 
-.burst-particle:nth-child(odd) {
-  background: rgba(255, 255, 255, 0.9);
-  width: 3px;
-  height: 3px;
-}
+.burst-particle--0 { background: #D4AF37; }
+.burst-particle--1 { background: rgba(255, 255, 255, 0.95); }
+.burst-particle--2 { background: #8B5CF6; height: calc(var(--size) * 2.5); border-radius: 40%; }
+.burst-particle--3 { background: #60A5FA; }
+.burst-particle--4 { background: #D4AF37; box-shadow: 0 0 6px rgba(212,175,55,0.8); }
 
 @keyframes burstOut {
-  0%   { transform: rotate(var(--angle)) translateX(0) scale(1.2); opacity: 1; }
-  100% { transform: rotate(var(--angle)) translateX(200px) scale(0); opacity: 0; }
+  0%   { transform: rotate(var(--angle)) translateX(0) scale(1.5); opacity: 1; }
+  60%  { opacity: 0.8; }
+  100% { transform: rotate(var(--angle)) translateX(var(--distance, 200px)) scale(0.2); opacity: 0; }
+}
+
+/* Shockwaves */
+.hero-banner__shockwaves {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  z-index: 19;
+  pointer-events: none;
+}
+
+.shockwave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 220, 100, 0.8);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.4), inset 0 0 15px rgba(212, 175, 55, 0.2);
+  will-change: transform, opacity;
+}
+
+.shockwave--1 {
+  animation: shockwaveExpand 0.8s ease-out 0.05s forwards;
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+.shockwave--2 {
+  animation: shockwaveExpand 0.8s ease-out 0.18s forwards;
+  border-color: rgba(212, 175, 55, 0.7);
+  width: 250px;
+  height: 250px;
+}
+
+.shockwave--3 {
+  animation: shockwaveExpand 0.9s ease-out 0.32s forwards;
+  border-color: rgba(139, 92, 246, 0.5);
+  width: 200px;
+  height: 200px;
+}
+
+@keyframes shockwaveExpand {
+  0%   { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(4); opacity: 0; }
+}
+
+/* Screen shake */
+.hero-banner--shake {
+  animation: screenShake 0.5s ease-out;
+}
+
+@keyframes screenShake {
+  0%    { transform: translate(0, 0); }
+  10%   { transform: translate(-4px, 2px); }
+  20%   { transform: translate(3px, -3px); }
+  30%   { transform: translate(-3px, 1px); }
+  40%   { transform: translate(2px, -2px); }
+  50%   { transform: translate(-2px, 1px); }
+  60%   { transform: translate(1px, -1px); }
+  70%   { transform: translate(-1px, 1px); }
+  80%   { transform: translate(1px, 0px); }
+  100%  { transform: translate(0, 0); }
 }
 
 /* ── Phase 2-4: Cards Container ──────────────────────────── */
@@ -305,7 +496,8 @@
   transform:
     translateX(var(--card-x, 0px))
     translateY(var(--card-y, 0px))
-    rotate(var(--card-rot, 0deg));
+    rotate(var(--card-rot, 0deg))
+    scale(var(--card-scale, 1));
   transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1),
               opacity 0.3s ease,
               z-index 0s;
@@ -330,7 +522,8 @@
     transform:
       translateX(var(--card-x))
       translateY(var(--card-y))
-      rotate(var(--card-rot));
+      rotate(var(--card-rot))
+      scale(var(--card-scale, 1));
   }
 }
 
@@ -345,13 +538,15 @@
     transform:
       translateX(var(--card-x))
       translateY(var(--card-y))
-      rotate(var(--card-rot));
+      rotate(var(--card-rot))
+      scale(var(--card-scale, 1));
   }
   50% {
     transform:
       translateX(var(--card-x))
       translateY(calc(var(--card-y) - 5px))
-      rotate(var(--card-rot));
+      rotate(var(--card-rot))
+      scale(var(--card-scale, 1));
   }
 }
 
@@ -578,7 +773,7 @@
 /* Title */
 .hero-banner__title {
   font-family: 'Orbitron', sans-serif;
-  font-size: clamp(28px, 4vw, 56px);
+  font-size: clamp(31px, 4.4vw, 62px);
   font-weight: 800;
   color: white;
   text-shadow:
@@ -661,6 +856,17 @@
     width: 260px;
     height: 360px;
   }
+
+  .shockwave { width: 200px; height: 200px; }
+  .shockwave--2 { width: 170px; height: 170px; }
+  .shockwave--3 { width: 140px; height: 140px; }
+
+  .hero-banner__pack--ripping .hero-banner__pack-half--left {
+    transform: translateX(-100px) translateY(-15px) rotateY(-50deg) rotateZ(-6deg) scale(0.8);
+  }
+  .hero-banner__pack--ripping .hero-banner__pack-half--right {
+    transform: translateX(100px) translateY(12px) rotateY(50deg) rotateZ(5deg) scale(0.8);
+  }
 }
 
 /* ── Responsive: Mobile ──────────────────────────────────── */
@@ -692,6 +898,17 @@
     padding: 12px 32px;
     font-size: 13px;
   }
+
+  .shockwave { width: 150px; height: 150px; }
+  .shockwave--2 { width: 120px; height: 120px; }
+  .shockwave--3 { width: 100px; height: 100px; }
+
+  .hero-banner__pack--ripping .hero-banner__pack-half--left {
+    transform: translateX(-70px) translateY(-10px) rotateY(-40deg) rotateZ(-5deg) scale(0.8);
+  }
+  .hero-banner__pack--ripping .hero-banner__pack-half--right {
+    transform: translateX(70px) translateY(8px) rotateY(40deg) rotateZ(4deg) scale(0.8);
+  }
 }
 
 /* ── Reduced Motion ────────────────────────────────────── */
@@ -701,7 +918,13 @@
   .hero-banner__pack-glow,
   .hero-banner__pack-img-wrap,
   .hero-card--idle,
-  .hero-card--emerging {
+  .hero-card--emerging,
+  .hero-banner__pack-foil,
+  .hero-banner__pack-specular,
+  .hero-banner__pack-crack,
+  .shockwave,
+  .hero-banner__flash,
+  .hero-banner--shake {
     animation: none !important;
   }
 
