@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 
 // Components for main public site
 import Navbar from './components/Navbar/Navbar';
@@ -47,9 +47,11 @@ import CartDrawer from './components/Cart/CartDrawer';
 // Admin Application
 import AdminApp from './admin/AdminApp';
 
-const HomePage = () => (
+const HomePage = () => {
+  const navigate = useNavigate();
+  return (
   <>
-    <Hero />
+    <Hero onShopClick={() => navigate('/products')} />
     <ShopBySet />
     <ShopByCategory />
     <FeaturedProducts />
@@ -57,7 +59,8 @@ const HomePage = () => (
     <PreOrders />
     {/* <TrustSection /> */}
   </>
-);
+  );
+};
 
 const MainLayout = ({ children }) => (
   <div className="flex flex-col min-h-screen">
