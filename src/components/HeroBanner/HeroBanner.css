@@ -1,49 +1,49 @@
 /* ============================================================
-   HeroBanner.css — Elite TCG Cinematic Hero Banner
-   All keyframes, 3D transforms, and animation rules
+   HeroBanner.css — Elite TCG Hero Banner V2
+   14-card parabolic arc, 5-layer holographic hover,
+   pack-open sequence, drag-to-reorder
    ============================================================ */
 
-/* ── Container ─────────────────────────────────────────────── */
+/* ── Outermost Wrapper (prevents horizontal scrollbar) ───── */
 .hero-banner {
   position: relative;
   width: 100%;
-  min-height: calc(100vh - 64px);
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   contain: layout style paint;
+  content-visibility: auto;
+  contain-intrinsic-size: 100vw 100vh;
 }
 
-/* ── Background ────────────────────────────────────────────── */
+/* ── Background Stack ────────────────────────────────────── */
 .hero-banner__bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #05060f 0%, #0a0e1a 33%, #0f1528 66%, #0a0e1a 100%);
   z-index: 0;
+  /* Layer 1: Base gradient */
+  background:
+    linear-gradient(180deg, #05060f 0%, #0a0e1a 40%, #0f1528 70%, #0a0e1a 100%);
 }
 
 /* Purple radial spotlight */
 .hero-banner__bg::before {
   content: '';
   position: absolute;
-  top: 10%;
-  left: 20%;
-  width: 60%;
-  height: 70%;
-  background: radial-gradient(ellipse at 50% 55%, rgba(100, 60, 180, 0.12) 0%, transparent 60%);
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 55%, rgba(100, 60, 180, 0.10) 0%, transparent 60%);
   pointer-events: none;
 }
 
-/* Gold center spotlight */
+/* Gold accent spotlight */
 .hero-banner__bg::after {
   content: '';
   position: absolute;
-  top: 25%;
-  left: 30%;
-  width: 40%;
-  height: 50%;
-  background: radial-gradient(ellipse at 50% 50%, rgba(255, 180, 50, 0.06) 0%, transparent 40%);
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(255, 180, 50, 0.05) 0%, transparent 40%);
   pointer-events: none;
 }
 
@@ -53,25 +53,27 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  opacity: 0.035;
+  opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 256px 256px;
 }
 
-/* ── Floating Particles ────────────────────────────────────── */
+/* ── Floating Particles ──────────────────────────────────── */
 .hero-banner__particles {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .particle {
   position: absolute;
   border-radius: 50%;
   opacity: 0;
+  will-change: transform, opacity;
   animation: particleFloat linear infinite;
 }
 
@@ -81,12 +83,12 @@
 
 @keyframes particleFloat {
   0%   { transform: translateY(0) scale(0); opacity: 0; }
-  8%   { opacity: 0.8; transform: translateY(-8vh) scale(1); }
-  85%  { opacity: 0.6; }
+  8%   { opacity: 0.7; transform: translateY(-8vh) scale(1); }
+  85%  { opacity: 0.5; }
   100% { transform: translateY(-105vh) scale(0.6); opacity: 0; }
 }
 
-/* ── Phase 0: Pack Appears ─────────────────────────────────── */
+/* ── Phase 0: Pack Appears ───────────────────────────────── */
 .hero-banner__pack {
   position: relative;
   z-index: 10;
@@ -101,7 +103,7 @@
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Pack glow behind */
+/* Pack glow */
 .hero-banner__pack-glow {
   position: absolute;
   width: 320px;
@@ -110,9 +112,13 @@
   left: 50%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(212, 175, 55, 0.35) 0%, rgba(200, 60, 20, 0.15) 40%, transparent 70%);
+  background: radial-gradient(ellipse,
+    rgba(212, 175, 55, 0.35) 0%,
+    rgba(200, 60, 20, 0.15) 40%,
+    transparent 70%);
   animation: glowPulse 2.2s ease-in-out infinite;
   z-index: -1;
+  will-change: transform, opacity;
 }
 
 @keyframes glowPulse {
@@ -120,7 +126,7 @@
   50%      { transform: translate(-50%, -50%) scale(1.18); opacity: 1; }
 }
 
-/* Pack image container */
+/* Pack image wrapper */
 .hero-banner__pack-img-wrap {
   position: relative;
   width: 240px;
@@ -128,6 +134,7 @@
   cursor: pointer;
   transition: transform 0.1s ease-out;
   animation: packBob 3s ease-in-out infinite;
+  transform-style: preserve-3d;
 }
 
 @keyframes packBob {
@@ -135,7 +142,7 @@
   50%      { transform: translateY(-8px); }
 }
 
-/* Pack halves for rip animation */
+/* Pack halves for rip */
 .hero-banner__pack-half {
   position: absolute;
   top: 0;
@@ -143,7 +150,8 @@
   height: 100%;
   background-size: cover;
   background-position: center;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease-in;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.5s ease-in;
   will-change: transform, opacity;
 }
 
@@ -155,14 +163,14 @@
   clip-path: inset(0 0 0 50%);
 }
 
-/* Phase 1: ripping state */
+/* Phase 1: ripping */
 .hero-banner__pack--ripping .hero-banner__pack-half--left {
-  transform: translateX(-90px) rotateY(-40deg) scale(0.85);
+  transform: translateX(-80px) rotateY(-45deg) scale(0.85);
   opacity: 0;
 }
 
 .hero-banner__pack--ripping .hero-banner__pack-half--right {
-  transform: translateX(90px) rotateY(40deg) scale(0.85);
+  transform: translateX(80px) rotateY(45deg) scale(0.85);
   opacity: 0;
 }
 
@@ -186,7 +194,7 @@
   50%      { opacity: 1; }
 }
 
-/* Pack sparkles (Phase 0) */
+/* Pack sparkles */
 .hero-banner__pack-sparkles {
   position: absolute;
   inset: -40px;
@@ -217,7 +225,7 @@
   50%      { opacity: 1; transform: scale(1.2); }
 }
 
-/* ── Phase 1: Flash + Burst ────────────────────────────────── */
+/* ── Phase 1: Flash + Burst ──────────────────────────────── */
 .hero-banner__flash {
   position: absolute;
   top: 50%;
@@ -225,7 +233,10 @@
   width: 200%;
   height: 200%;
   transform: translate(-50%, -50%) scale(0.2);
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95), rgba(212, 175, 55, 0.4) 35%, transparent 65%);
+  background: radial-gradient(ellipse at center,
+    rgba(255, 255, 255, 0.95),
+    rgba(212, 175, 55, 0.4) 35%,
+    transparent 65%);
   animation: flashBurst 0.65s ease-out forwards;
   z-index: 20;
   pointer-events: none;
@@ -254,6 +265,7 @@
   height: 5px;
   border-radius: 50%;
   background: #D4AF37;
+  will-change: transform, opacity;
   animation: burstOut 0.7s ease-out forwards;
 }
 
@@ -265,10 +277,10 @@
 
 @keyframes burstOut {
   0%   { transform: rotate(var(--angle)) translateX(0) scale(1.2); opacity: 1; }
-  100% { transform: rotate(var(--angle)) translateX(180px) scale(0); opacity: 0; }
+  100% { transform: rotate(var(--angle)) translateX(200px) scale(0); opacity: 0; }
 }
 
-/* ── Phase 2-4: Cards Container ────────────────────────────── */
+/* ── Phase 2-4: Cards Container ──────────────────────────── */
 .hero-banner__cards {
   position: absolute;
   inset: 0;
@@ -276,110 +288,117 @@
   align-items: center;
   justify-content: center;
   z-index: 10;
-  perspective: 1200px;
-  max-width: 1600px;
-  margin: 0 auto;
-  left: 0;
-  right: 0;
+  overflow: visible;
 }
 
-/* ── Individual Card ───────────────────────────────────────── */
+/* ── Individual Card ─────────────────────────────────────── */
 .hero-card {
   position: absolute;
   width: 180px;
   height: 252px;
   cursor: pointer;
-  transform-style: preserve-3d;
+  perspective: 800px;
   z-index: var(--card-z, 1);
   opacity: 1;
-  /* Default arc position */
+  contain: layout style paint;
+  will-change: auto;
   transform:
-    translateX(var(--card-x, 0))
-    translateY(var(--card-y, 0))
-    rotate(var(--card-rot, 0deg))
-    scale(var(--card-scale, 1));
+    translateX(var(--card-x, 0px))
+    translateY(var(--card-y, 0px))
+    rotate(var(--card-rot, 0deg));
   transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1),
               opacity 0.3s ease,
               z-index 0s;
+  touch-action: none;
+  user-select: none;
 }
 
 /* Phase 2: emerging from center */
 .hero-card--emerging {
   opacity: 0;
-  transform: translateX(0) translateY(0) rotate(0deg) scale(0.4);
-  animation: cardEmerge 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform: translateX(0px) translateY(0px) rotate(0deg) scale(0.3);
+  animation: cardEmerge 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   animation-delay: var(--emerge-delay, 0ms);
 }
 
 @keyframes cardEmerge {
   0% {
     opacity: 0;
-    transform: translateX(0) translateY(0) rotate(0deg) scale(0.4);
+    transform: translateX(0px) translateY(0px) rotate(0deg) scale(0.3);
   }
   100% {
     opacity: 1;
     transform:
       translateX(var(--card-x))
       translateY(var(--card-y))
-      rotate(var(--card-rot))
-      scale(var(--card-scale));
+      rotate(var(--card-rot));
   }
 }
 
-/* Floating bob in Phase 4 */
+/* Idle bob */
 .hero-card--idle {
   animation: cardBob 4s ease-in-out infinite;
   animation-delay: var(--bob-delay, 0s);
 }
 
 @keyframes cardBob {
-  0%, 100% { transform:
-    translateX(var(--card-x))
-    translateY(var(--card-y))
-    rotate(var(--card-rot))
-    scale(var(--card-scale)); }
-  50% { transform:
-    translateX(var(--card-x))
-    translateY(calc(var(--card-y) - 6px))
-    rotate(var(--card-rot))
-    scale(var(--card-scale)); }
-}
-
-/* Hovered card overrides */
-.hero-card--hovered {
-  z-index: 50 !important;
-  transition: transform 0.08s linear;
-  animation: none !important;
+  0%, 100% {
+    transform:
+      translateX(var(--card-x))
+      translateY(var(--card-y))
+      rotate(var(--card-rot));
+  }
+  50% {
+    transform:
+      translateX(var(--card-x))
+      translateY(calc(var(--card-y) - 5px))
+      rotate(var(--card-rot));
+  }
 }
 
 /* Neighbor shift */
-.hero-card--neighbor-left {
-  animation: none !important;
-}
+.hero-card--neighbor-left,
 .hero-card--neighbor-right {
   animation: none !important;
 }
 
-/* ── Card Inner (flip container) ───────────────────────────── */
+/* Hovered card: disables bob, enables fast tilt transitions */
+.hero-card--hovered {
+  z-index: 100 !important;
+  animation: none !important;
+  transition: transform 0.08s linear;
+}
+
+/* Dragging state */
+.hero-card--dragging {
+  z-index: 200 !important;
+  animation: none !important;
+  opacity: 0.85;
+  cursor: grabbing;
+  transition: none !important;
+}
+
+/* ── Card Inner (flip container) ─────────────────────────── */
 .hero-card__inner {
   position: relative;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
 .hero-card__inner--flipped {
   transform: rotateY(180deg);
 }
 
-/* ── Card Faces ────────────────────────────────────────────── */
+/* ── Card Faces ──────────────────────────────────────────── */
 .hero-card__face {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  border-radius: 10px;
+  border-radius: 11px;
   overflow: hidden;
 }
 
@@ -387,28 +406,32 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 10px;
+  border-radius: 11px;
   pointer-events: none;
   user-select: none;
+  -webkit-user-drag: none;
 }
 
 .hero-card__back {
-  /* Default face — no extra rotation */
+  /* Default face */
 }
 
 .hero-card__front {
   transform: rotateY(180deg);
 }
 
-/* Shimmer sweep on flip */
+/* ── Shimmer sweep on flip ───────────────────────────────── */
 .hero-card__shimmer {
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.6) 50%, transparent 65%);
+  background: linear-gradient(105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 65%);
   animation: shimmerSweep 0.8s ease-out forwards;
   pointer-events: none;
-  border-radius: 10px;
-  z-index: 2;
+  border-radius: 11px;
+  z-index: 10;
 }
 
 @keyframes shimmerSweep {
@@ -416,7 +439,7 @@
   100% { transform: translateX(120%); opacity: 0; }
 }
 
-/* ── Holographic Sheen (Phase 4 hover) ─────────────────────── */
+/* ── Holographic Sheen (used by JSX) ─────────────────────── */
 .hero-card__sheen {
   position: absolute;
   inset: 0;
@@ -433,7 +456,7 @@
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
-  border-radius: 10px;
+  border-radius: 11px;
   mix-blend-mode: overlay;
   z-index: 3;
 }
@@ -442,7 +465,7 @@
   opacity: 1;
 }
 
-/* ── Glow Shadow (Phase 4 hover) ───────────────────────────── */
+/* ── Glow Shadow (used by JSX) ───────────────────────────── */
 .hero-card__glow-shadow {
   position: absolute;
   bottom: -18px;
@@ -462,7 +485,80 @@
   opacity: 0.55;
 }
 
-/* ── Overlay Content ───────────────────────────────────────── */
+/* ── Layer 2: Holographic Rainbow Gradient Overlay ───────── */
+.hero-card__holo-rainbow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 11px;
+  opacity: 0;
+  mix-blend-mode: screen;
+  z-index: 3;
+  transition: opacity 0.3s ease;
+  /* Angle set dynamically via inline style */
+  background: linear-gradient(
+    var(--holo-angle, 0deg),
+    rgba(255, 50, 50, 0.15),
+    rgba(255, 180, 50, 0.15),
+    rgba(255, 255, 80, 0.15),
+    rgba(50, 255, 100, 0.15),
+    rgba(50, 150, 255, 0.15),
+    rgba(180, 50, 255, 0.15),
+    rgba(255, 50, 150, 0.15)
+  );
+}
+
+/* ── Layer 3: Moving Light/Sheen Reflection ──────────────── */
+.hero-card__light-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 11px;
+  opacity: 0;
+  z-index: 4;
+  transition: opacity 0.3s ease;
+  /* radial-gradient set dynamically via inline style */
+}
+
+/* ── Layer 4: Sparkle/Glitter Texture ────────────────────── */
+.hero-card__sparkle-texture {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 11px;
+  opacity: 0;
+  mix-blend-mode: overlay;
+  z-index: 5;
+  transition: opacity 0.3s ease;
+  background:
+    radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+    radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.5) 1px, transparent 1px);
+  background-size: 12px 12px, 17px 17px;
+}
+
+/* ── Layer 5: Edge Light / Border Glow ───────────────────── */
+/* Applied via inline box-shadow on the card inner */
+
+/* ── Hover state activates layers ────────────────────────── */
+.hero-card--hovered .hero-card__holo-rainbow {
+  opacity: 1;
+}
+
+.hero-card--hovered .hero-card__light-sheen {
+  opacity: 1;
+}
+
+.hero-card--hovered .hero-card__sparkle-texture {
+  opacity: 0.3;
+}
+
+/* Mouse-leave fade-out for layers */
+.hero-card__holo-rainbow,
+.hero-card__light-sheen {
+  transition: opacity 0.4s ease-out;
+}
+
+/* ── Overlay Content ─────────────────────────────────────── */
 .hero-banner__overlay {
   position: absolute;
   z-index: 30;
@@ -472,7 +568,7 @@
 }
 
 .hero-banner__overlay--top {
-  top: clamp(80px, 10vh, 130px);
+  top: clamp(60px, 8vh, 120px);
   left: 50%;
   transform: translateX(-50%);
 }
@@ -504,7 +600,7 @@
   line-height: 1.2;
 }
 
-/* Gold divider line */
+/* Gold divider */
 .hero-banner__divider {
   width: 100px;
   height: 2px;
@@ -525,7 +621,7 @@
 /* CTA Button */
 .hero-banner__cta {
   display: inline-block;
-  padding: 14px 42px;
+  padding: 14px 40px;
   font-size: 15px;
   font-weight: 600;
   color: white;
@@ -546,20 +642,24 @@
 
 .hero-banner__cta:hover {
   background-image:
-    linear-gradient(rgba(212, 175, 55, 0.12), rgba(139, 92, 246, 0.12)),
+    linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15)),
     linear-gradient(135deg, #D4AF37, #8B5CF6, #3B82F6);
   box-shadow:
     0 0 25px rgba(139, 92, 246, 0.35),
     0 0 50px rgba(212, 175, 55, 0.15);
   transform: scale(1.05);
-  color: white;
 }
 
-/* ── Responsive: Tablet ────────────────────────────────────── */
+.hero-banner__cta:focus-visible {
+  outline: 2px solid #D4AF37;
+  outline-offset: 3px;
+}
+
+/* ── Responsive: Tablet ──────────────────────────────────── */
 @media (max-width: 1024px) {
   .hero-card {
-    width: 150px;
-    height: 210px;
+    width: 140px;
+    height: 196px;
   }
 
   .hero-banner__pack-img-wrap {
@@ -573,11 +673,11 @@
   }
 }
 
-/* ── Responsive: Mobile ────────────────────────────────────── */
+/* ── Responsive: Mobile ──────────────────────────────────── */
 @media (max-width: 640px) {
   .hero-card {
-    width: 110px;
-    height: 154px;
+    width: 100px;
+    height: 140px;
   }
 
   .hero-banner__pack-img-wrap {
@@ -591,7 +691,7 @@
   }
 
   .hero-banner__overlay--top {
-    top: clamp(74px, 9vh, 100px);
+    top: clamp(50px, 7vh, 90px);
   }
 
   .hero-banner__overlay--bottom {
@@ -601,5 +701,26 @@
   .hero-banner__cta {
     padding: 12px 32px;
     font-size: 13px;
+  }
+}
+
+/* ── Reduced Motion ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .particle,
+  .sparkle,
+  .hero-banner__pack-glow,
+  .hero-banner__pack-img-wrap,
+  .hero-card--idle,
+  .hero-card--emerging {
+    animation: none !important;
+  }
+
+  .hero-card,
+  .hero-card__inner,
+  .hero-card__sheen,
+  .hero-card__glow-shadow,
+  .hero-card__holo-rainbow,
+  .hero-card__light-sheen {
+    transition: none !important;
   }
 }

@@ -1,6 +1,6 @@
 import React from 'react';
-import pikachuImage from 'images/pikachu.png';
-import tcgImage from 'images/tcg.png';
+import pikachuImage from 'images/pikachu.webp';
+import tcgImage from 'images/tcg.webp';
 
 // Social Icons (copied from Footer.jsx)
 const InstagramIcon = () => (
