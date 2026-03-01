@@ -1,14 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, LayoutGrid } from 'lucide-react';
-
-const API_BASE = 'http://localhost:3001';
-
-const getImageUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${API_BASE}${url}`;
-};
+import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const SetCardSkeleton = () => (
   <div className="bg-white rounded-2xl overflow-hidden animate-pulse">
@@ -27,7 +20,7 @@ const Sets = () => {
   useEffect(() => {
     const fetchSets = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/sets?limit=100`);
+        const res = await fetch(`${ELITE_API_URL}/api/sets?limit=100`);
         const data = await res.json();
         setSets(data.sets || []);
       } catch (err) {

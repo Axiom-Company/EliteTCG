@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
-const API_BASE = 'http://localhost:3001';
+import { ELITE_API_URL, getImageUrl } from '../../config/api';
 
 const FeaturedProducts = () => {
   const [products, setProducts] = useState([]);
@@ -81,9 +81,9 @@ const FeaturedProducts = () => {
                 className="card-3d flex flex-col bg-white rounded-2xl overflow-hidden group cursor-pointer"
               >
                 <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
-                  {getImageUrl(product) ? (
+                  {getImageUrl(product.images?.[0]) ? (
                     <img
-                      src={getImageUrl(product)}
+                      src={getImageUrl(product.images?.[0])}
                       alt={product.name}
                       className="max-w-[70%] max-h-[70%] object-contain"
                     />

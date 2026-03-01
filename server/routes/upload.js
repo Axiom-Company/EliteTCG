@@ -8,7 +8,6 @@ const router = Router();
 
 const BUCKET = 'images';
 
-// Use memory storage — files go to Supabase Storage, not local disk
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   if (allowedTypes.includes(file.mimetype)) {
@@ -18,7 +17,6 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Memory storage - buffer in RAM, no disk writes
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter,
@@ -43,40 +41,36 @@ const uploadToSupabase = async (buffer, mimetype, originalname, folder = 'produc
 router.post('/image', authenticateToken, requireRole('super_admin', 'admin', 'manager'), upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image file provided' });
-
     const { url, filename } = await uploadToSupabase(req.file.buffer, req.file.mimetype, req.file.originalname);
-
     res.json({ success: true, url, filename, originalName: req.file.originalname, size: req.file.size });
   } catch (error) {
     console.error('Upload error:', error);
     res.status(500).json({ error: 'Failed to upload image' });
   }
+});
 
 // Upload single image (seller)
 router.post('/seller-image', authenticateCustomer, requireSeller, upload.single('image'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No image file provided' });
-
     const { url, filename } = await uploadToSupabase(req.file.buffer, req.file.mimetype, req.file.originalname, 'seller');
-
     res.json({ success: true, url, filename, originalName: req.file.originalname, size: req.file.size });
   } catch (error) {
     console.error('Upload error:', error);
     res.status(500).json({ error: 'Failed to upload image' });
   }
+});
 
 // Upload multiple images (admin)
 router.post('/images', authenticateToken, requireRole('super_admin', 'admin', 'manager'), upload.array('images', 5), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No image files provided' });
-
     const images = await Promise.all(
       req.files.map(async (file) => {
         const { url, filename } = await uploadToSupabase(file.buffer, file.mimetype, file.originalname);
         return { url, filename, originalName: file.originalname, size: file.size };
       })
     );
-
     res.json({ success: true, images });
   } catch (error) {
     console.error('Upload error:', error);
@@ -88,18 +82,15 @@ router.post('/images', authenticateToken, requireRole('super_admin', 'admin', 'm
 router.delete('/:filename', authenticateToken, requireRole('super_admin', 'admin'), async (req, res) => {
   try {
     const { filename } = req.params;
-    // filename param may be just the name or include the folder prefix
     const filePath = filename.includes('/') ? filename : `products/${filename}`;
-
     const { error } = await supabaseAdmin.storage.from(BUCKET).remove([filePath]);
     if (error) throw error;
-
     res.json({ success: true, message: 'Image deleted' });
   } catch (error) {
     console.error('Delete error:', error);
     res.status(500).json({ error: 'Failed to delete image' });
   }
-);
+});
 
 // Error handling for multer
 router.use((error, req, res, next) => {

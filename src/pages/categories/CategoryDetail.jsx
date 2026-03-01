@@ -2,14 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChevronRight, Package, ArrowLeft, Heart } from 'lucide-react';
 import { useWishlist } from '../../contexts/WishlistContext';
-
-const API_BASE = 'http://localhost:3001';
-
-const getImageUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${API_BASE}${url}`;
-};
+import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const sortOptions = [
   { value: 'newest', label: 'Newest First' },
@@ -52,8 +45,8 @@ const CategoryDetail = () => {
       setLoading(true);
       try {
         const [catRes, productsRes] = await Promise.all([
-          fetch(`${API_BASE}/api/categories/${slug}`),
-          fetch(`${API_BASE}/api/products?category=${slug}&limit=100`),
+          fetch(`${ELITE_API_URL}/api/categories/${slug}`),
+          fetch(`${ELITE_API_URL}/api/products?category=${slug}&limit=100`),
         ]);
         const catData = await catRes.json();
         const productsData = await productsRes.json();
