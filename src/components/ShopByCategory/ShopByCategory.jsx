@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const API_BASE = 'http://localhost:3001';
+import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 // Default icon when no image
 const DefaultIcon = () => (
@@ -18,7 +17,7 @@ const ShopByCategory = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/categories`);
+        const response = await fetch(`${ELITE_API_URL}/api/categories`);
         const data = await response.json();
         setCategories(data.categories || []);
       } catch (error) {
@@ -30,11 +29,6 @@ const ShopByCategory = () => {
 
     fetchCategories();
   }, []);
-
-  const getImageUrl = (category) => {
-    if (!category.image) return null;
-    return category.image.startsWith('http') ? category.image : `${API_BASE}${category.image}`;
-  };
 
   if (loading) {
     return (
@@ -72,17 +66,12 @@ const ShopByCategory = () => {
               className="flex flex-col bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-250 hover:border-gray-300 group cursor-pointer"
             >
               <div className="relative h-40 bg-white flex items-center justify-center overflow-hidden">
-                {getImageUrl(category) ? (
-                  <img
-                    src={getImageUrl(category)}
-                    alt={category.name}
-                    className="max-w-[80%] max-h-[80%] object-contain transition-transform duration-300 group-hover:scale-110"
-                  />
-                ) : (
-                  <div className="text-gray-300">
-                    <DefaultIcon />
-                  </div>
-                )}
+                <img
+                  src={getImageUrl(category.image)}
+                  alt={category.name}
+                  className="max-w-[80%] max-h-[80%] object-contain transition-transform duration-300 group-hover:scale-110"
+                  onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+                />
               </div>
               <div className="p-3 text-center">
                 <h3 className="text-base font-medium text-gray-900 mb-1">{category.name}</h3>

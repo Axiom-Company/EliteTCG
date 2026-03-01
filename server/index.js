@@ -1,13 +1,12 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Load environment variables
 dotenv.config();
@@ -81,7 +80,7 @@ app.use('/api/customer/register', authLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded files statically
+// Serve uploaded product images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check
@@ -120,9 +119,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`
+// Start server (skip in Vercel serverless environment)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`
 ╔════════════════════════════════════════════╗
 ║                                            ║
 ║   EliteTCG API Server                      ║
@@ -140,21 +140,22 @@ app.listen(PORT, () => {
 ║   - POST /api/discounts/validate           ║
 ║                                            ║
 ╚════════════════════════════════════════════╝
-  `);
+    `);
 
-  // Background job: release expired listing reservations every 5 minutes
-  if (supabaseAdmin) {
-    setInterval(async () => {
-      try {
-        const { data, error } = await supabaseAdmin.rpc('release_expired_reservations');
-        if (!error && data > 0) {
-          console.log(`[Cleanup] Released ${data} expired reservation(s)`);
+    // Background job: release expired listing reservations every 5 minutes
+    if (supabaseAdmin) {
+      setInterval(async () => {
+        try {
+          const { data, error } = await supabaseAdmin.rpc('release_expired_reservations');
+          if (!error && data > 0) {
+            console.log(`[Cleanup] Released ${data} expired reservation(s)`);
+          }
+        } catch (err) {
+          console.error('[Cleanup] Reservation cleanup error:', err.message);
         }
-      } catch (err) {
-        console.error('[Cleanup] Reservation cleanup error:', err.message);
-      }
-    }, 5 * 60 * 1000);
-  }
-});
+      }, 5 * 60 * 1000);
+    }
+  });
+}
 
 export default app;

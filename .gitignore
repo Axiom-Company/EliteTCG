@@ -19,11 +19,7 @@ dist-ssr
 .env.production
 server/.env
 
-# Database schemas (sensitive - do not expose publicly)
-database/
-
-# Uploaded files (binary bloat, user content)
-server/uploads/
+# Temp build artifacts
 server/EliteTCG/
 
 # Editor directories and files

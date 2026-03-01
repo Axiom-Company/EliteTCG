@@ -35,6 +35,7 @@ import Products from './pages/products/Products';
 import Checkout from './pages/checkout/Checkout';
 import PaymentSuccess from './pages/checkout/PaymentSuccess';
 import PaymentCancel from './pages/checkout/PaymentCancel';
+import PayflexReturn from './pages/checkout/PayflexReturn';
 
 // Order pages
 import OrderTracking from './pages/orders/OrderTracking';
@@ -115,6 +116,7 @@ function App() {
           <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />
           <Route path="/payment/success" element={<MainLayout><PaymentSuccess /></MainLayout>} />
           <Route path="/payment/cancel" element={<MainLayout><PaymentCancel /></MainLayout>} />
+          <Route path="/checkout/payflex/return" element={<MainLayout><PayflexReturn /></MainLayout>} />
           <Route path="/orders" element={<MainLayout><OrderHistory /></MainLayout>} />
           <Route path="/orders/track" element={<MainLayout><OrderTracking /></MainLayout>} />
           <Route path="/admin/*" element={<AdminApp />} />
