@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { authenticateCustomer, optionalCustomerAuth } from '../middleware/auth.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import PayFast from '../utils/payfast.js';
+import { calculateCommission } from '../utils/commission.js';
 
 const router = Router();
 
@@ -82,10 +83,27 @@ router.post('/create-payment', optionalCustomerAuth, async (req, res) => {
       return res.status(400).json({ error: 'Payment requires database connection' });
     }
 
-    // Calculate amounts
+    // Reserve listing to prevent double-purchase (database row lock)
+    if (supabaseAdmin) {
+      const { data: reserveResult, error: reserveError } = await supabaseAdmin
+        .rpc('reserve_listing', {
+          p_listing_id: listing_id,
+          p_buyer_id: req.customer?.id || null,
+          p_quantity: quantity,
+        });
+
+      if (reserveError || !reserveResult?.success) {
+        return res.status(409).json({
+          error: reserveResult?.error || 'This listing is no longer available',
+        });
+      }
+    }
+
+    // Calculate amounts with tiered commission
     const unitPrice = listing.price;
     const subtotal = unitPrice * quantity;
-    const platformFee = subtotal * 0.10; // 10% platform fee
+    const commission = calculateCommission(subtotal);
+    const platformFee = commission.fee;
     const sellerAmount = subtotal - platformFee;
     const totalAmount = subtotal; // No additional fees for buyer
 
@@ -101,7 +119,7 @@ router.post('/create-payment', optionalCustomerAuth, async (req, res) => {
       unit_price: unitPrice,
       subtotal,
       platform_fee: platformFee,
-      platform_fee_percentage: 10,
+      platform_fee_percentage: commission.percentage || 0,
       seller_amount: sellerAmount,
       total_amount: totalAmount,
       currency: 'ZAR',
@@ -268,6 +286,12 @@ router.post('/notify', async (req, res) => {
           status: 'pending'
         });
 
+      // Mark listing reservation as sold
+      await supabaseAdmin
+        .from('marketplace_listings')
+        .update({ reserve_status: 'sold' })
+        .eq('id', order.listing_id);
+
       console.log('Payment completed for order:', order.order_number);
     } else if (paymentStatus === 'CANCELLED') {
       await supabaseAdmin
@@ -277,6 +301,16 @@ router.post('/notify', async (req, res) => {
           payment_status: 'failed'
         })
         .eq('id', orderId);
+
+      // Release listing reservation
+      await supabaseAdmin
+        .from('marketplace_listings')
+        .update({
+          reserve_status: 'available',
+          reserved_by: null,
+          reserved_at: null,
+        })
+        .eq('id', order.listing_id);
 
       console.log('Payment cancelled for order:', order.order_number);
     }
@@ -348,6 +382,48 @@ router.get('/order/:orderId', optionalCustomerAuth, async (req, res) => {
     }
   } catch (error) {
     console.error('Get order error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Buyer confirms delivery
+router.patch('/order/:orderId/confirm-delivery', authenticateCustomer, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    if (!supabaseAdmin) {
+      return res.status(400).json({ error: 'Database connection required' });
+    }
+
+    const { data: order, error } = await supabaseAdmin
+      .from('marketplace_orders')
+      .select('id, buyer_id, status')
+      .eq('id', orderId)
+      .single();
+
+    if (error || !order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    if (order.buyer_id !== req.customer.id) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+
+    if (order.status !== 'shipped' && order.status !== 'in_transit') {
+      return res.status(400).json({ error: `Cannot confirm delivery for order with status: ${order.status}` });
+    }
+
+    await supabaseAdmin
+      .from('marketplace_orders')
+      .update({
+        status: 'delivered',
+        delivered_at: new Date().toISOString(),
+      })
+      .eq('id', orderId);
+
+    res.json({ message: 'Delivery confirmed' });
+  } catch (error) {
+    console.error('Confirm delivery error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

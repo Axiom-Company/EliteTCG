@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
+import { ShieldCheck, Star, ChevronRight, MessageCircle, ShoppingBag } from 'lucide-react';
+import VerifiedBadge from '../../components/marketplace/VerifiedBadge';
+import PromotionBadge from '../../components/marketplace/PromotionBadge';
+import ReviewList from '../../components/marketplace/ReviewList';
 
 const API_BASE_URL = 'http://localhost:3001';
 
@@ -31,6 +35,7 @@ const conditionDescriptions = {
 
 const ListingDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { isAuthenticated, getToken } = useCustomerAuth();
 
   const [listing, setListing] = useState(null);
@@ -100,11 +105,11 @@ const ListingDetail = () => {
     <div className="max-w-6xl mx-auto px-6 py-12">
       {/* Breadcrumb */}
       <nav className="text-sm mb-8">
-        <ol className="flex items-center gap-2 text-gray-500">
+        <ol className="flex items-center gap-1.5 text-gray-500">
           <li><Link to="/" className="hover:text-gray-900">Home</Link></li>
-          <li>/</li>
+          <li><ChevronRight className="w-3.5 h-3.5" /></li>
           <li><Link to="/marketplace" className="hover:text-gray-900">Marketplace</Link></li>
-          <li>/</li>
+          <li><ChevronRight className="w-3.5 h-3.5" /></li>
           <li className="text-gray-900 truncate max-w-[200px]">{listing.title}</li>
         </ol>
       </nav>
@@ -145,13 +150,18 @@ const ListingDetail = () => {
 
         {/* Details */}
         <div>
-          {listing.status !== 'active' && (
-            <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 ${
-              listing.status === 'sold' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800'
-            }`}>
-              {listing.status === 'sold' ? 'Sold' : 'Paused'}
-            </span>
-          )}
+          <div className="flex items-center gap-2 mb-4">
+            {listing.promotion_tier && listing.promotion_expires_at && new Date(listing.promotion_expires_at) > new Date() && (
+              <PromotionBadge tier={listing.promotion_tier} />
+            )}
+            {listing.status !== 'active' && (
+              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                listing.status === 'sold' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                {listing.status === 'sold' ? 'Sold' : 'Paused'}
+              </span>
+            )}
+          </div>
 
           <h1 className="text-2xl font-bold text-gray-900 mb-2">{listing.title}</h1>
 
@@ -232,14 +242,30 @@ const ListingDetail = () => {
             </p>
           )}
 
-          {/* Contact Button */}
+          {/* Action Buttons */}
           {listing.status === 'active' && listing.seller && (
-            <button
-              onClick={() => setShowContactModal(true)}
-              className="w-full py-3 px-6 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors"
-            >
-              Contact Seller
-            </button>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    navigate('/login');
+                    return;
+                  }
+                  navigate(`/marketplace/checkout/${listing.id}`);
+                }}
+                className="w-full py-3 px-6 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                Buy Now
+              </button>
+              <button
+                onClick={() => setShowContactModal(true)}
+                className="w-full py-3 px-6 border border-gray-300 text-gray-700 font-medium rounded-full hover:border-gray-900 transition-colors flex items-center justify-center gap-2"
+              >
+                <MessageCircle className="w-5 h-5" />
+                Contact Seller
+              </button>
+            </div>
           )}
 
           {/* Seller Info */}
@@ -249,16 +275,35 @@ const ListingDetail = () => {
                 {listing.seller.display_name?.charAt(0) || 'S'}
               </div>
               <div>
-                <p className="font-medium text-gray-900">{listing.seller.display_name}</p>
-                <p className="text-sm text-gray-500">
-                  {listing.seller.location_city && `${listing.seller.location_city} · `}
-                  {listing.seller.total_sales || 0} sales
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-900">{listing.seller.display_name}</p>
+                  <VerifiedBadge isVerified={listing.seller.is_verified} />
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  {listing.seller.rating > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                      {listing.seller.rating}
+                      {listing.seller.review_count > 0 && ` (${listing.seller.review_count})`}
+                    </span>
+                  )}
+                  {listing.seller.location_city && (
+                    <span>{listing.seller.rating > 0 ? ' · ' : ''}{listing.seller.location_city}</span>
+                  )}
+                  <span>{listing.seller.location_city ? ' · ' : ''}{listing.seller.total_sales || 0} sales</span>
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Seller Reviews */}
+      {listing.seller && (
+        <div className="mt-12 border-t border-gray-200 pt-10">
+          <ReviewList sellerId={listing.seller.id} />
+        </div>
+      )}
 
       {/* Contact Modal */}
       {showContactModal && listing.seller && (

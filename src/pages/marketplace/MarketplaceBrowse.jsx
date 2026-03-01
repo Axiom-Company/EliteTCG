@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { Search, X, ChevronRight, Package, SlidersHorizontal } from 'lucide-react';
+import ListingCard from '../../components/marketplace/ListingCard';
 
 const API_BASE_URL = 'http://localhost:3001';
-
-// Helper to get full image URL
-const getImageUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${API_BASE_URL}${url}`;
-};
 
 const conditions = [
   { value: '', label: 'All Conditions' },
@@ -17,14 +12,14 @@ const conditions = [
   { value: 'excellent', label: 'Excellent' },
   { value: 'good', label: 'Good' },
   { value: 'played', label: 'Played' },
-  { value: 'poor', label: 'Poor' }
+  { value: 'poor', label: 'Poor' },
 ];
 
 const categories = [
   { value: '', label: 'All Categories' },
   { value: 'singles', label: 'Singles' },
   { value: 'sealed', label: 'Sealed Products' },
-  { value: 'accessories', label: 'Accessories' }
+  { value: 'accessories', label: 'Accessories' },
 ];
 
 const sortOptions = [
@@ -32,17 +27,20 @@ const sortOptions = [
   { value: 'oldest', label: 'Oldest First' },
   { value: 'price_low', label: 'Price: Low to High' },
   { value: 'price_high', label: 'Price: High to Low' },
-  { value: 'popular', label: 'Most Popular' }
+  { value: 'popular', label: 'Most Popular' },
 ];
 
-const conditionLabels = {
-  mint: 'Mint',
-  near_mint: 'Near Mint',
-  excellent: 'Excellent',
-  good: 'Good',
-  played: 'Played',
-  poor: 'Poor'
-};
+const CardSkeleton = () => (
+  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
+    <div className="aspect-square bg-gray-50" />
+    <div className="p-4 space-y-2.5">
+      <div className="h-3 bg-gray-100 rounded w-1/3" />
+      <div className="h-4 bg-gray-100 rounded w-4/5" />
+      <div className="h-4 bg-gray-100 rounded w-3/5" />
+      <div className="h-6 bg-gray-100 rounded w-2/5 mt-2" />
+    </div>
+  </div>
+);
 
 const MarketplaceBrowse = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -57,7 +55,7 @@ const MarketplaceBrowse = () => {
     min_price: searchParams.get('min_price') || '',
     max_price: searchParams.get('max_price') || '',
     sort: searchParams.get('sort') || 'newest',
-    page: parseInt(searchParams.get('page') || '1')
+    page: parseInt(searchParams.get('page') || '1'),
   };
 
   const updateFilter = (key, value) => {
@@ -77,7 +75,11 @@ const MarketplaceBrowse = () => {
     setSearchParams({ sort: 'newest' });
   };
 
-  const hasActiveFilters = filters.search || filters.condition || filters.category || filters.min_price || filters.max_price;
+  const hasActiveFilters =
+    filters.search || filters.condition || filters.category || filters.min_price || filters.max_price;
+
+  const activeConditionLabel =
+    conditions.find((c) => c.value === filters.condition)?.label ?? 'All Conditions';
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -112,242 +114,304 @@ const MarketplaceBrowse = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Filters Bar */}
-      <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md">
-              <input
-                type="text"
-                value={filters.search}
-                onChange={(e) => updateFilter('search', e.target.value)}
-                placeholder="Search cards..."
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-0 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all"
-              />
-              <svg
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+
+      {/* Page Header */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 py-5">
+          <nav className="flex items-center gap-1.5 text-xs text-gray-400 mb-3">
+            <Link to="/" className="hover:text-gray-700 transition-colors">Home</Link>
+            <ChevronRight className="w-3 h-3" />
+            <span className="text-gray-600">Marketplace</span>
+          </nav>
+          <div className="flex items-end justify-between">
+            <div>
+              <h1 className="text-2xl font-medium text-gray-900 tracking-tight">Marketplace</h1>
+              <p className="text-sm text-gray-400 mt-0.5">
+                {loading ? '\u2014' : `${pagination.total} listing${pagination.total !== 1 ? 's' : ''}`}
+              </p>
             </div>
-
-            {/* Filter Pills */}
-            <div className="flex flex-wrap items-center gap-3">
-              <select
-                value={filters.condition}
-                onChange={(e) => updateFilter('condition', e.target.value)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${
-                  filters.condition
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {conditions.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-
-              <select
-                value={filters.category}
-                onChange={(e) => updateFilter('category', e.target.value)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${
-                  filters.category
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {categories.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
-
-              {/* Price Range */}
-              <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
-                <span className="text-sm text-gray-500">R</span>
-                <input
-                  type="number"
-                  value={filters.min_price}
-                  onChange={(e) => updateFilter('min_price', e.target.value)}
-                  placeholder="Min"
-                  className="w-16 bg-transparent text-sm focus:outline-none"
-                />
-                <span className="text-gray-300">–</span>
-                <input
-                  type="number"
-                  value={filters.max_price}
-                  onChange={(e) => updateFilter('max_price', e.target.value)}
-                  placeholder="Max"
-                  className="w-16 bg-transparent text-sm focus:outline-none"
-                />
-              </div>
-
-              <select
-                value={filters.sort}
-                onChange={(e) => updateFilter('sort', e.target.value)}
-                className="px-4 py-2 bg-gray-100 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer"
-              >
-                {sortOptions.map((s) => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
-              </select>
-
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
-                >
-                  Clear all
-                </button>
-              )}
+            {/* Mobile filter hint */}
+            <div className="lg:hidden flex items-center gap-1.5 text-sm text-gray-500">
+              <SlidersHorizontal className="w-4 h-4" />
+              Filters
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Layout */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Results Count */}
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-sm text-gray-500">
-            {pagination.total} listing{pagination.total !== 1 ? 's' : ''} found
-          </p>
-        </div>
+        <div className="flex gap-8 items-start">
 
-        {/* Listings Grid */}
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin h-8 w-8 border-2 border-gray-900 border-t-transparent rounded-full" />
-          </div>
-        ) : listings.length === 0 ? (
-          <div className="py-20 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
+          {/* Sidebar */}
+          <aside className="hidden lg:flex flex-col gap-6 w-60 shrink-0 sticky top-22 self-start">
+
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+              <input
+                type="text"
+                value={filters.search}
+                onChange={(e) => updateFilter('search', e.target.value)}
+                placeholder="Search listings\u2026"
+                className="w-full pl-9 pr-8 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+              />
+              {filters.search && (
+                <button
+                  onClick={() => updateFilter('search', '')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
-            <p className="text-gray-900 font-medium mb-1">No listings found</p>
-            <p className="text-sm text-gray-500">Try adjusting your filters or check back later.</p>
+
+            {/* Conditions */}
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2 px-1">
+                Condition
+              </p>
+              <nav className="space-y-0.5">
+                {conditions.map(({ value, label }) => {
+                  const isActive = filters.condition === value;
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => updateFilter('condition', value)}
+                      className={`w-full px-3 py-2.5 rounded-xl text-sm text-left transition-all duration-150 ${
+                        isActive
+                          ? 'bg-gray-900 text-white font-medium'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            <div className="border-t border-gray-100" />
+
+            {/* Categories */}
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2 px-1">
+                Categories
+              </p>
+              <nav className="space-y-0.5">
+                {categories.map(({ value, label }) => {
+                  const isActive = filters.category === value;
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => updateFilter('category', value)}
+                      className={`w-full px-3 py-2.5 rounded-xl text-sm text-left transition-all duration-150 ${
+                        isActive
+                          ? 'bg-gray-900 text-white font-medium'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            <div className="border-t border-gray-100" />
+
+            {/* Sort */}
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2 px-1">
+                Sort By
+              </p>
+              <div className="space-y-0.5">
+                {sortOptions.map(({ value, label }) => {
+                  const isActive = filters.sort === value;
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => updateFilter('sort', value)}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-sm transition-all duration-150 flex items-center gap-2 ${
+                        isActive
+                          ? 'text-gray-900 font-medium'
+                          : 'text-gray-500 hover:bg-white hover:text-gray-900'
+                      }`}
+                    >
+                      {isActive && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                      )}
+                      <span className={isActive ? '' : 'ml-3.5'}>{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="border-t border-gray-100" />
+
+            {/* Price Range */}
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-2 px-1">
+                Price Range
+              </p>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">R</span>
+                  <input
+                    type="number"
+                    value={filters.min_price}
+                    onChange={(e) => updateFilter('min_price', e.target.value)}
+                    placeholder="Min"
+                    className="w-full pl-7 pr-2 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+                  />
+                </div>
+                <span className="text-gray-300 text-sm">&ndash;</span>
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">R</span>
+                  <input
+                    type="number"
+                    value={filters.max_price}
+                    onChange={(e) => updateFilter('max_price', e.target.value)}
+                    placeholder="Max"
+                    className="w-full pl-7 pr-2 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
             {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="mt-4 text-sm font-medium text-gray-900 hover:underline"
-              >
-                Clear all filters
-              </button>
+              <>
+                <div className="border-t border-gray-100" />
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-900 transition-colors px-1"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Clear filters
+                </button>
+              </>
             )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 lg:gap-8">
-            {listings.map((listing) => (
-              <Link
-                key={listing.id}
-                to={`/marketplace/${listing.id}`}
-                className="group"
-              >
-                {/* Image */}
-                <div className="relative aspect-[3/4] bg-gray-100 rounded-2xl overflow-hidden mb-3">
-                  {listing.images?.[0] ? (
-                    <img
-                      src={getImageUrl(listing.images[0])}
-                      alt={listing.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <svg className="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  )}
+          </aside>
 
-                  {/* Discount Badge */}
-                  {listing.compare_at_price && listing.compare_at_price > listing.price && (
-                    <span className="absolute top-3 right-3 px-2.5 py-1 bg-[#FFCB32] rounded-full text-xs font-medium text-gray-900">
-                      -{Math.round((1 - listing.price / listing.compare_at_price) * 100)}%
-                    </span>
-                  )}
-                </div>
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
 
-                {/* Info */}
-                <div>
-                  <h3 className="font-medium text-gray-900 truncate group-hover:text-gray-600 transition-colors">
-                    {listing.title}
-                  </h3>
-
-                  <p className="text-sm text-gray-500 truncate mt-1">
-                    {conditionLabels[listing.condition]}
-                    {listing.seller?.display_name && ` · ${listing.seller.display_name}`}
-                  </p>
-
-                  <div className="flex items-baseline gap-2 mt-2">
-                    <span className="text-lg font-bold text-gray-900">
-                      R{listing.price?.toLocaleString()}
-                    </span>
-                    {listing.compare_at_price && listing.compare_at_price > listing.price && (
-                      <span className="text-sm text-gray-400 line-through">
-                        R{listing.compare_at_price?.toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div className="mt-12 flex justify-center items-center gap-2">
-            <button
-              onClick={() => updateFilter('page', (filters.page - 1).toString())}
-              disabled={filters.page <= 1}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              Previous
-            </button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                let pageNum;
-                if (pagination.totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (filters.page <= 3) {
-                  pageNum = i + 1;
-                } else if (filters.page >= pagination.totalPages - 2) {
-                  pageNum = pagination.totalPages - 4 + i;
-                } else {
-                  pageNum = filters.page - 2 + i;
-                }
-
-                return (
+            {/* Mobile: search + category pills */}
+            <div className="lg:hidden mb-5 space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={filters.search}
+                  onChange={(e) => updateFilter('search', e.target.value)}
+                  placeholder="Search listings\u2026"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40"
+                />
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-6 px-6 scrollbar-hide">
+                {categories.map(({ value, label }) => (
                   <button
-                    key={pageNum}
-                    onClick={() => updateFilter('page', pageNum.toString())}
-                    className={`w-10 h-10 rounded-full text-sm font-medium transition-colors ${
-                      filters.page === pageNum
-                        ? 'bg-gray-900 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
+                    key={value}
+                    onClick={() => updateFilter('category', value)}
+                    className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
+                      filters.category === value
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
                     }`}
                   >
-                    {pageNum}
+                    {label}
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
 
-            <button
-              onClick={() => updateFilter('page', (filters.page + 1).toString())}
-              disabled={filters.page >= pagination.totalPages}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              Next
-            </button>
+            {/* Listings Grid */}
+            {loading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <CardSkeleton key={i} />
+                ))}
+              </div>
+            ) : listings.length === 0 ? (
+              <div className="py-24 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                  <Package className="w-7 h-7 text-gray-300" />
+                </div>
+                <p className="text-base font-medium text-gray-900 mb-1">Nothing here yet</p>
+                <p className="text-sm text-gray-400 mb-5">
+                  {filters.search
+                    ? `No listings matching "${filters.search}"`
+                    : 'Try a different filter or check back soon.'}
+                </p>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-sm font-medium text-gray-900 border border-gray-200 rounded-xl px-5 py-2.5 hover:bg-gray-50 transition-colors"
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                {listings.map((listing) => (
+                  <ListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="mt-12 flex justify-center items-center gap-2">
+                <button
+                  onClick={() => updateFilter('page', (filters.page - 1).toString())}
+                  disabled={filters.page <= 1}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (pagination.totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (filters.page <= 3) {
+                      pageNum = i + 1;
+                    } else if (filters.page >= pagination.totalPages - 2) {
+                      pageNum = pagination.totalPages - 4 + i;
+                    } else {
+                      pageNum = filters.page - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => updateFilter('page', pageNum.toString())}
+                        className={`w-10 h-10 rounded-full text-sm font-medium transition-colors ${
+                          filters.page === pageNum
+                            ? 'bg-gray-900 text-white'
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => updateFilter('page', (filters.page + 1).toString())}
+                  disabled={filters.page >= pagination.totalPages}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

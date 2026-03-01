@@ -44,7 +44,8 @@ const formatListing = (listing, sellerProfile = null) => ({
     contact_whatsapp: sellerProfile.show_whatsapp ? sellerProfile.contact_whatsapp : null,
     contact_email: sellerProfile.show_email ? sellerProfile.contact_email : null,
     location_city: sellerProfile.location_city,
-    location_province: sellerProfile.location_province
+    location_province: sellerProfile.location_province,
+    is_verified: sellerProfile.is_verified || false,
   } : null
 });
 
@@ -84,7 +85,8 @@ router.get('/listings', optionalCustomerAuth, async (req, res) => {
             show_whatsapp,
             show_email,
             location_city,
-            location_province
+            location_province,
+            is_verified
           )
         `, { count: 'exact' })
         .eq('status', 'active');
@@ -109,7 +111,10 @@ router.get('/listings', optionalCustomerAuth, async (req, res) => {
         query = query.eq('seller_id', seller_id);
       }
 
-      // Apply sorting
+      // Promoted listings first (active promotions only)
+      query = query.order('promotion_tier', { ascending: false, nullsFirst: false });
+
+      // Apply secondary sorting
       switch (sort) {
         case 'price_low':
           query = query.order('price', { ascending: true });
@@ -226,6 +231,7 @@ router.get('/listings/:id', optionalCustomerAuth, async (req, res) => {
             show_email,
             location_city,
             location_province,
+            is_verified,
             created_at
           )
         `)

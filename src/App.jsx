@@ -24,6 +24,9 @@ import SellerDashboard from './pages/seller/SellerDashboard';
 // Marketplace pages
 import MarketplaceBrowse from './pages/marketplace/MarketplaceBrowse';
 import ListingDetail from './pages/marketplace/ListingDetail';
+import MarketplaceCheckout from './pages/marketplace/MarketplaceCheckout';
+import MarketplacePaymentSuccess from './pages/marketplace/MarketplacePaymentSuccess';
+import MarketplacePaymentCancel from './pages/marketplace/MarketplacePaymentCancel';
 
 // Products pages
 import Products from './pages/products/Products';
@@ -46,6 +49,10 @@ import { Toaster } from 'sonner';
 // Cart Provider and Components
 import { CartProvider } from './contexts/CartContext';
 import CartDrawer from './components/Cart/CartDrawer';
+
+// PWA Components
+import InstallPrompt from './components/PWA/InstallPrompt';
+import UpdateNotification from './components/PWA/UpdateNotification';
 
 // Admin Application
 import AdminApp from './admin/AdminApp';
@@ -97,6 +104,9 @@ function App() {
           <Route path="/become-seller" element={<MainLayout><BecomeSeller /></MainLayout>} />
           <Route path="/marketplace" element={<MainLayout><MarketplaceBrowse /></MainLayout>} />
           <Route path="/marketplace/:id" element={<MainLayout><ListingDetail /></MainLayout>} />
+          <Route path="/marketplace/checkout/:listingId" element={<MainLayout><MarketplaceCheckout /></MainLayout>} />
+          <Route path="/marketplace/payment-success" element={<MainLayout><MarketplacePaymentSuccess /></MainLayout>} />
+          <Route path="/marketplace/payment-cancel" element={<MainLayout><MarketplacePaymentCancel /></MainLayout>} />
           <Route path="/seller/create-listing" element={<MainLayout><CreateListing /></MainLayout>} />
           <Route path="/seller/dashboard" element={<MainLayout><SellerDashboard /></MainLayout>} />
           <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />
@@ -113,6 +123,8 @@ function App() {
           theme="dark"
           icons={{ error: null, success: null, warning: null, info: null, loading: null }}
         />
+        <InstallPrompt />
+        <UpdateNotification />
       </CartProvider>
     </CustomerAuthProvider>
   );
