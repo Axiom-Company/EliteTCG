@@ -9,7 +9,7 @@ const formatProduct = (p) => {
   const inv = Array.isArray(p.inventory)
     ? (p.inventory[0] || { quantity: 0, low_stock_threshold: 5 })
     : (p.inventory || { quantity: 0, low_stock_threshold: 5 });
-  return { ...p, inventory: inv };
+  return { ...p, inventory: inv, currency: p.currency || 'ZAR' };
 };
 
 // GET all products
@@ -81,7 +81,6 @@ router.post('/', authenticateToken, requireRole('super_admin', 'admin'), async (
         description: productData.description || '',
         price: parseFloat(productData.price) || 0,
         compare_at_price: productData.compare_at_price ? parseFloat(productData.compare_at_price) : null,
-        currency: productData.currency || 'ZAR',
         category: productData.category || 'booster_box',
         badge: productData.badge || 'none',
         set_id: productData.set_id || null,
@@ -123,7 +122,7 @@ router.put('/:id', authenticateToken, requireRole('super_admin', 'admin', 'manag
   try {
     const { id } = req.params;
     // Strip inventory/quantity fields — those go through the inventory endpoint
-    const { initial_quantity, low_stock_threshold, inventory, ...productUpdates } = req.body;
+    const { initial_quantity, low_stock_threshold, inventory, currency, ...productUpdates } = req.body;
 
     const { data, error } = await supabaseAdmin
       .from('products')

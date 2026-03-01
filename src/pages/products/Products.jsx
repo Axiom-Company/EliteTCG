@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X, ChevronRight, Package, SlidersHorizontal } from 'lucide-react';
-import { ELITE_API_URL, getImageUrl } from '@/config/api';
+import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const categories = [
   { value: '', label: 'All Products' },

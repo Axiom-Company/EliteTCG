@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useWishlist } from '../../contexts/WishlistContext';
-import { ELITE_API_URL, getImageUrl } from '@/config/api';
-
-const API_BASE = ELITE_API_URL;
+import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const Wishlist = () => {
   const { wishlist, toggleWishlist, isWishlisted } = useWishlist();
@@ -21,7 +19,7 @@ const Wishlist = () => {
       setLoading(true);
       try {
         const results = await Promise.all(
-          wishlist.map(id => fetch(`${API_BASE}/api/products/${id}`).then(r => r.ok ? r.json() : null))
+          wishlist.map(id => fetch(`${ELITE_API_URL}/api/products/${id}`).then(r => r.ok ? r.json() : null))
         );
         setProducts(results.filter(Boolean).map(r => r.product).filter(Boolean));
       } catch (err) {
