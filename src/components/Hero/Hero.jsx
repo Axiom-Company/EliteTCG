@@ -49,6 +49,7 @@ const Hero = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [cardVisible, setCardVisible] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [overlayMouse, setOverlayMouse] = useState({ cx: 0.5, cy: 0.5 });
   const [, forceUpdate] = useState(0);
 
   const sectionRef = useRef(null);
@@ -137,6 +138,14 @@ const Hero = () => {
     const nx = (clientX / window.innerWidth) * 2 - 1;
     const ny = (clientY / window.innerHeight) * 2 - 1;
     setTilt({ x: ny * -18, y: nx * 18 });
+    // Track normalized mouse position for holo layers (0-1 range)
+    const cardEl = e.currentTarget.querySelector('.hero-overlay-card');
+    if (cardEl) {
+      const rect = cardEl.getBoundingClientRect();
+      const cx = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      const cy = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+      setOverlayMouse({ cx, cy });
+    }
   }, [cardVisible]);
 
   /* ── 5-layer holographic hover effect ─────────────────────────────── */
@@ -272,7 +281,7 @@ const Hero = () => {
     >
       {/* ── Background watermark text ──────────────────────────────── */}
       <div
-        className="hidden md:flex absolute inset-0 items-end justify-center pointer-events-none z-0 overflow-hidden pb-[152px]"
+        className="hidden md:flex absolute inset-0 items-end justify-center pointer-events-none z-0 overflow-hidden pb-[170px]"
         style={{
           perspective: '800px',
           maskImage: 'linear-gradient(to top, transparent 0%, black 40%)',
@@ -296,7 +305,7 @@ const Hero = () => {
 
       {/* ── Text + Button ──────────────────────────────────────────── */}
       <div
-        className="relative z-10 flex flex-col items-center text-center px-6 mt-[95px] md:mt-[8vh]"
+        className="relative z-10 flex flex-col items-center text-center px-6 mt-[90px] md:mt-[calc(8vh-5px)]"
         style={{ transform: `translateY(${-textOffset}px)`, opacity: titleOpacity }}
       >
         <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase mb-5">
@@ -389,40 +398,132 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* ── Card Overlay (click to enlarge) ────────────────────────── */}
-      {selectedCard !== null && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center cursor-pointer"
-          style={{
-            backgroundColor: cardVisible ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0)',
-            transition: 'background-color 0.3s ease',
-            perspective: '1000px',
-          }}
-          onClick={closeCard}
-          onMouseMove={handleOverlayPointerMove}
-          onTouchMove={(e) => { e.preventDefault(); handleOverlayPointerMove(e); }}
-          onMouseLeave={() => setTilt({ x: 0, y: 0 })}
-        >
-          <img
-            src={CARD_DATA[selectedCard].src}
-            alt={CARD_DATA[selectedCard].name}
-            onClick={(e) => e.stopPropagation()}
+      {/* ── Card Overlay (click to enlarge with holographic effects) ── */}
+      {selectedCard !== null && (() => {
+        const holoAngle = Math.round(overlayMouse.cx * 360);
+        const sheenPx = Math.round(overlayMouse.cx * 100);
+        const sheenPy = Math.round(overlayMouse.cy * 100);
+        const sparkOx = Math.round(overlayMouse.cx * 20);
+        const sparkOy = Math.round(overlayMouse.cy * 20);
+        const hue = Math.round(overlayMouse.cx * 60 + 20);
+
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center cursor-pointer"
             style={{
-              width: '220px',
-              height: 'auto',
-              borderRadius: '12px',
-              boxShadow: '0 30px 80px rgba(0,0,0,0.5)',
-              transform: cardVisible
-                ? `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1)`
-                : 'rotateY(-180deg) scale(0.4) translateY(40px)',
-              opacity: cardVisible ? 1 : 0,
-              transition: cardVisible
-                ? 'transform 0.1s ease-out, opacity 0.3s ease'
-                : 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease',
+              backgroundColor: cardVisible ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0)',
+              transition: 'background-color 0.3s ease',
+              perspective: '1000px',
             }}
-          />
-        </div>
-      )}
+            onClick={closeCard}
+            onMouseMove={handleOverlayPointerMove}
+            onTouchMove={(e) => { e.preventDefault(); handleOverlayPointerMove(e); }}
+            onMouseLeave={() => { setTilt({ x: 0, y: 0 }); setOverlayMouse({ cx: 0.5, cy: 0.5 }); }}
+          >
+            <div
+              className="hero-overlay-card"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                position: 'relative',
+                width: '280px',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                boxShadow: cardVisible
+                  ? `inset 0 0 40px rgba(255,${150 + hue},50,0.18), 0 0 30px rgba(100,140,255,0.3), 0 30px 80px rgba(0,0,0,0.6)`
+                  : '0 30px 80px rgba(0,0,0,0.5)',
+                transform: cardVisible
+                  ? `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1)`
+                  : 'rotateY(-180deg) scale(0.4) translateY(40px)',
+                opacity: cardVisible ? 1 : 0,
+                transition: cardVisible
+                  ? 'transform 0.1s ease-out, opacity 0.3s ease, box-shadow 0.15s ease'
+                  : 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease',
+                transformStyle: 'preserve-3d',
+              }}
+            >
+              {/* Card image */}
+              <img
+                src={CARD_DATA[selectedCard].src}
+                alt={CARD_DATA[selectedCard].name}
+                draggable="false"
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  display: 'block',
+                  borderRadius: '12px',
+                  userSelect: 'none',
+                }}
+              />
+
+              {/* Layer 2: Holographic rainbow gradient (20% amplified) */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: '12px',
+                  pointerEvents: 'none',
+                  mixBlendMode: 'screen',
+                  zIndex: 3,
+                  opacity: cardVisible ? 1 : 0,
+                  transition: 'opacity 0.4s ease',
+                  background: `linear-gradient(${holoAngle}deg,
+                    rgba(255,50,50,0.18), rgba(255,180,50,0.18), rgba(255,255,80,0.18),
+                    rgba(50,255,100,0.18), rgba(50,150,255,0.18), rgba(180,50,255,0.18),
+                    rgba(255,50,150,0.18))`,
+                }}
+              />
+
+              {/* Layer 3: Moving light sheen (20% amplified) */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: '12px',
+                  pointerEvents: 'none',
+                  zIndex: 4,
+                  opacity: cardVisible ? 1 : 0,
+                  transition: 'opacity 0.4s ease',
+                  background: `radial-gradient(circle at ${sheenPx}% ${sheenPy}%,
+                    rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.06) 30%, transparent 60%)`,
+                }}
+              />
+
+              {/* Layer 4: Sparkle texture (20% amplified) */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: '12px',
+                  pointerEvents: 'none',
+                  mixBlendMode: 'overlay',
+                  zIndex: 5,
+                  opacity: cardVisible ? 0.85 : 0,
+                  transition: 'opacity 0.4s ease',
+                  backgroundImage: `
+                    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.84) 1px, transparent 1px),
+                    radial-gradient(circle at 75% 75%, rgba(255,255,255,0.60) 1px, transparent 1px)`,
+                  backgroundSize: '12px 12px, 17px 17px',
+                  backgroundPosition: `${sparkOx}px ${sparkOy}px, ${sparkOx + 5}px ${sparkOy + 5}px`,
+                }}
+              />
+
+              {/* Layer 5: Subtle idle holographic shimmer */}
+              <div
+                className="hero-overlay-card__holo-idle"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: '12px',
+                  pointerEvents: 'none',
+                  zIndex: 6,
+                  opacity: cardVisible ? 0.35 : 0,
+                  transition: 'opacity 0.6s ease',
+                }}
+              />
+            </div>
+          </div>
+        );
+      })()}
     </section>
   );
 };

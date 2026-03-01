@@ -585,6 +585,8 @@
   -webkit-backface-visibility: hidden;
   border-radius: 11px;
   overflow: hidden;
+  outline: 1px solid transparent;
+  transform: translateZ(0);
 }
 
 .hero-card__face img {
@@ -595,6 +597,7 @@
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
+  transform: translateZ(0);
 }
 
 .hero-card__back {
@@ -907,6 +910,32 @@
   }
 }
 
+/* ── Overlay Card: Subtle Idle Holographic Shimmer ────── */
+.hero-overlay-card__holo-idle {
+  background: linear-gradient(
+    var(--holo-idle-angle, 0deg),
+    rgba(255, 50, 50, 0.06),
+    rgba(255, 180, 50, 0.08),
+    rgba(50, 255, 100, 0.06),
+    rgba(50, 150, 255, 0.08),
+    rgba(180, 50, 255, 0.06)
+  );
+  mix-blend-mode: screen;
+  animation: holoIdleSweep 4s ease-in-out infinite;
+}
+
+@keyframes holoIdleSweep {
+  0%   { --holo-idle-angle: 0deg; }
+  50%  { --holo-idle-angle: 180deg; }
+  100% { --holo-idle-angle: 360deg; }
+}
+
+@property --holo-idle-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
 /* ── Reduced Motion ────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .particle,
@@ -920,7 +949,8 @@
   .hero-banner__pack-crack,
   .shockwave,
   .hero-banner__flash,
-  .hero-banner--shake {
+  .hero-banner--shake,
+  .hero-overlay-card__holo-idle {
     animation: none !important;
   }
 
