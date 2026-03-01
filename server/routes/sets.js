@@ -4,6 +4,9 @@ import { supabaseAdmin } from '../config/supabase.js';
 
 const router = Router();
 
+// Map DB columns to frontend-expected shape
+const formatSet = (s) => ({ ...s, image: s.logo_url || null });
+
 // GET all sets
 router.get('/', async (req, res) => {
   try {
@@ -20,7 +23,7 @@ router.get('/', async (req, res) => {
     const { data, error, count } = await query;
     if (error) throw error;
 
-    res.json({ sets: data || [], total: count || 0 });
+    res.json({ sets: (data || []).map(formatSet), total: count || 0 });
   } catch (error) {
     console.error('Get sets error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -38,7 +41,7 @@ router.get('/:id', async (req, res) => {
     }
 
     if (!data) return res.status(404).json({ error: 'Set not found' });
-    res.json({ set: data });
+    res.json({ set: formatSet(data) });
   } catch (error) {
     console.error('Get set error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -63,13 +66,13 @@ router.post('/', authenticateToken, requireRole('super_admin', 'admin'), async (
         is_active: setData.is_active !== false,
         is_new: setData.is_new || false,
         display_order: (count || 0) + 1,
-        image: setData.image || null,
+        logo_url: setData.image || null,
       })
       .select()
       .single();
 
     if (error) throw error;
-    res.status(201).json({ set: data });
+    res.status(201).json({ set: formatSet(data) });
   } catch (error) {
     console.error('Create set error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -82,15 +85,20 @@ router.put('/:id', authenticateToken, requireRole('super_admin', 'admin', 'manag
     const { id } = req.params;
     const updates = req.body;
 
+    const { image, ...rest } = updates;
+    const dbUpdates = { ...rest, updated_at: new Date().toISOString() };
+    if (image !== undefined) dbUpdates.logo_url = image;
+    if (dbUpdates.release_date === '') dbUpdates.release_date = null;
+
     const { data, error } = await supabaseAdmin
       .from('sets')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    res.json({ set: data });
+    res.json({ set: formatSet(data) });
   } catch (error) {
     console.error('Update set error:', error);
     res.status(500).json({ error: 'Server error' });

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
-
-const API_BASE = 'http://localhost:3001';
+import { ELITE_API_URL, getImageUrl } from '../../config/api';
 
 // Default icon when no image
 const DefaultIcon = () => (
@@ -27,8 +26,8 @@ const ShopByCategory = () => {
     const fetchData = async () => {
       try {
         const [catRes, productsRes] = await Promise.all([
-          fetch(`${API_BASE}/api/categories`),
-          fetch(`${API_BASE}/api/products?limit=200`),
+          fetch(`${ELITE_API_URL}/api/categories`),
+          fetch(`${ELITE_API_URL}/api/products?limit=200`),
         ]);
         const catData = await catRes.json();
         const productsData = await productsRes.json();
@@ -94,9 +93,9 @@ const ShopByCategory = () => {
               className={`flex flex-col bg-white rounded-xl overflow-hidden transition-all duration-500 group cursor-pointer ${isVisible(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
             >
               <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
-                {getImageUrl(category) ? (
+                {getImageUrl(category.image) ? (
                   <img
-                    src={getImageUrl(category)}
+                    src={getImageUrl(category.image)}
                     alt={category.name}
                     className="max-w-[70%] max-h-[70%] object-contain"
                   />

@@ -4,6 +4,8 @@ import { supabaseAdmin } from '../config/supabase.js';
 
 const router = Router();
 
+const formatCategory = (c) => ({ ...c, image: c.image_url || null });
+
 // GET all categories
 router.get('/', async (req, res) => {
   try {
@@ -20,7 +22,7 @@ router.get('/', async (req, res) => {
     const { data, error, count } = await query;
     if (error) throw error;
 
-    res.json({ categories: data || [], total: count || 0 });
+    res.json({ categories: (data || []).map(formatCategory), total: count || 0 });
   } catch (error) {
     console.error('Get categories error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -38,7 +40,7 @@ router.get('/:id', async (req, res) => {
     }
 
     if (!data) return res.status(404).json({ error: 'Category not found' });
-    res.json({ category: data });
+    res.json({ category: formatCategory(data) });
   } catch (error) {
     console.error('Get category error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -70,13 +72,13 @@ router.post('/', authenticateToken, requireRole('super_admin', 'admin'), async (
         icon: categoryData.icon || 'box',
         is_active: categoryData.is_active !== false,
         display_order: (count || 0) + 1,
-        image: categoryData.image || null,
+        image_url: categoryData.image || null,
       })
       .select()
       .single();
 
     if (error) throw error;
-    res.status(201).json({ category: data });
+    res.status(201).json({ category: formatCategory(data) });
   } catch (error) {
     console.error('Create category error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -89,15 +91,19 @@ router.put('/:id', authenticateToken, requireRole('super_admin', 'admin', 'manag
     const { id } = req.params;
     const updates = req.body;
 
+    const { image, ...rest } = updates;
+    const dbUpdates = { ...rest, updated_at: new Date().toISOString() };
+    if (image !== undefined) dbUpdates.image_url = image;
+
     const { data, error } = await supabaseAdmin
       .from('categories')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    res.json({ category: data });
+    res.json({ category: formatCategory(data) });
   } catch (error) {
     console.error('Update category error:', error);
     res.status(500).json({ error: 'Server error' });

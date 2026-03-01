@@ -206,10 +206,6 @@ const Checkout = () => {
 
   if (cart.length === 0) return null;
 
-  // Section numbering adjusts based on shipping method
-  const addressSectionNum = 3;
-  const paymentSectionNum = shippingMethod === 'courier_guy' ? 4 : 3;
-
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-6 py-12">
