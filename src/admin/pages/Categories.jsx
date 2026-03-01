@@ -24,8 +24,9 @@ import {
   MoreVertical,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { ELITE_API_URL } from '@/config/api';
 
-const API_BASE = 'http://localhost:3001';
+const API_BASE = ELITE_API_URL;
 
 const iconMap = {
   box: Box,

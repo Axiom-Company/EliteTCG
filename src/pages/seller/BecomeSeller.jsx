@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
+import { ELITE_API_URL } from '@/config/api';
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = ELITE_API_URL;
 
 const BecomeSeller = () => {
   const { isAuthenticated, isSeller, getToken } = useCustomerAuth();

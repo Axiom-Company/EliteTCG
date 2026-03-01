@@ -7,8 +7,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from '../../components/ui/dialog';
+import { ELITE_API_URL } from '@/config/api';
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = ELITE_API_URL;
 
 const statusStyles = {
   pending: 'bg-yellow-900/30 text-yellow-400 border border-yellow-800/30',

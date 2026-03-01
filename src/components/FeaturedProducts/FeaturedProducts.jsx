@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
-const API_BASE = 'http://localhost:3001';
+import { ELITE_API_URL } from '@/config/api';
+
+const API_BASE = ELITE_API_URL;
 
 const FeaturedProducts = () => {
   const [products, setProducts] = useState([]);

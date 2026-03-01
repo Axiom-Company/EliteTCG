@@ -160,7 +160,7 @@ const ListingDetail = () => {
           )}
 
           {/* Price */}
-          <div className="flex items-baseline gap-3 mb-8">
+          <div className="flex items-baseline gap-3 mb-3">
             <span className="text-3xl font-bold text-gray-900">
               R{listing.price.toLocaleString()}
             </span>
@@ -175,6 +175,15 @@ const ListingDetail = () => {
               </>
             )}
           </div>
+
+          {/* Market value reference */}
+          {listing.market_price_zar ? (
+            <p className="text-sm text-gray-500 mb-8">
+              Market value: <span className="font-medium">R{listing.market_price_zar.toLocaleString()}</span>
+            </p>
+          ) : (
+            <div className="mb-5" />
+          )}
 
           {/* Condition */}
           <div className="mb-6 pb-6 border-b border-gray-200">

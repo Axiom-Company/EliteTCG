@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { ChevronRight, ShoppingBag, MapPin } from 'lucide-react';
-
-const API_BASE_URL = 'http://localhost:3001';
+import { ELITE_API_URL } from '../../config/api';
 
 const provinces = [
   'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
@@ -22,7 +21,7 @@ const conditionLabels = {
 const getImageUrl = (url) => {
   if (!url) return null;
   if (url.startsWith('http')) return url;
-  return `${API_BASE_URL}${url}`;
+  return `${ELITE_API_URL}${url}`;
 };
 
 const MarketplaceCheckout = () => {
@@ -79,7 +78,7 @@ const MarketplaceCheckout = () => {
           }
         }
 
-        const res = await fetch(`${API_BASE_URL}/api/marketplace/listings/${listingId}`, { headers });
+        const res = await fetch(`${ELITE_API_URL}/api/marketplace/listings/${listingId}`, { headers });
         const data = await res.json();
 
         if (!res.ok) {
@@ -174,7 +173,7 @@ const MarketplaceCheckout = () => {
         }
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/payfast/create-payment`, {
+      const res = await fetch(`${ELITE_API_URL}/api/payfast/create-payment`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install -D vite-plugin-pwa)",
+      "Bash(node --check server/routes/verification.js)",
+      "Bash(npm run build)",
+      "Bash(node index.js)",
+      "Bash(xargs grep -l \"mock\\\\|sample\\\\|dummy\")",
+      "Bash(xargs ls -la)"
+    ]
+  }
+}

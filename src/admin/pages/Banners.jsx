@@ -17,8 +17,9 @@ import {
   Image as ImageIcon,
   MoreVertical,
 } from 'lucide-react';
+import { ELITE_API_URL } from '@/config/api';
 
-const API_BASE = 'http://localhost:3001'; // Ensure this matches your backend API base URL
+const API_BASE = ELITE_API_URL;
 
 const Banners = () => {
   const [banners, setBanners] = useState([]);

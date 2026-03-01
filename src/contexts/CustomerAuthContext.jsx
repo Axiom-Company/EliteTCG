@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { ELITE_API_URL } from '@/config/api';
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = ELITE_API_URL;
 
 const CustomerAuthContext = createContext(null);
 

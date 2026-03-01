@@ -1,14 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X, ChevronRight, Package, SlidersHorizontal } from 'lucide-react';
-
-const API_BASE_URL = 'http://localhost:3001';
-
-const getImageUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${API_BASE_URL}${url}`;
-};
+import { ELITE_API_URL, getImageUrl } from '@/config/api';
 
 const categories = [
   { value: '', label: 'All Products' },

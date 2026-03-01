@@ -2,14 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChevronRight, Package, ArrowLeft, Heart } from 'lucide-react';
 import { useWishlist } from '../../contexts/WishlistContext';
+import { ELITE_API_URL, getImageUrl } from '@/config/api';
 
-const API_BASE = 'http://localhost:3001';
-
-const getImageUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${API_BASE}${url}`;
-};
+const API_BASE = ELITE_API_URL;
 
 const sortOptions = [
   { value: 'newest', label: 'Newest First' },

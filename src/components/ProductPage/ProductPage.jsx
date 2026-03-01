@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useWishlist } from '../../contexts/WishlistContext';
+import { ELITE_API_URL } from '@/config/api';
 
-const API_BASE = 'http://localhost:3001';
+const API_BASE = ELITE_API_URL;
 
 const HeartIcon = ({ filled }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

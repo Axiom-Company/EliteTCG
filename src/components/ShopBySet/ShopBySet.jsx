@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useScrollAnimation } from '../../hooks/useScrollAnimation';
+import { ELITE_API_URL } from '@/config/api';
 
-const API_BASE = 'http://localhost:3001';
+const API_BASE = ELITE_API_URL;
 
 const ChevronLeft = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

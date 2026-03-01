@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
-import { PAYMENTS_API_URL } from '@/config/api';
+import { ELITE_API_URL, PAYMENTS_API_URL } from '@/config/api';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = `${ELITE_API_URL}/api`;
 const FASTAPI_BASE = PAYMENTS_API_URL;
 const ADMIN_API_KEY = import.meta.env.VITE_FASTAPI_ADMIN_KEY || '';
 

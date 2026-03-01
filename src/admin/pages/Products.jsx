@@ -29,8 +29,9 @@ import {
   Star,
   Package,
 } from 'lucide-react';
+import { ELITE_API_URL } from '@/config/api';
 
-const API_BASE = 'http://localhost:3001';
+const API_BASE = ELITE_API_URL;
 
 const CATEGORIES = [
   { value: 'all', label: 'All' },

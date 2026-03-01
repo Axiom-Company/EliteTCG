@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, LayoutGrid } from 'lucide-react';
+import { ELITE_API_URL, getImageUrl } from '@/config/api';
 
-const API_BASE = 'http://localhost:3001';
-
-const getImageUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${API_BASE}${url}`;
-};
+const API_BASE = ELITE_API_URL;
 
 const SetCardSkeleton = () => (
   <div className="bg-white rounded-2xl overflow-hidden animate-pulse">

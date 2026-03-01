@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X, ChevronRight, Package, SlidersHorizontal } from 'lucide-react';
 import ListingCard from '../../components/marketplace/ListingCard';
+import { ELITE_API_URL } from '@/config/api';
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = ELITE_API_URL;
 
 const conditions = [
   { value: '', label: 'All Conditions' },

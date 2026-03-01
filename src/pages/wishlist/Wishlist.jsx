@@ -2,13 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useWishlist } from '../../contexts/WishlistContext';
+import { ELITE_API_URL, getImageUrl } from '@/config/api';
 
-const API_BASE = 'http://localhost:3001';
-
-const getImageUrl = (url) => {
-  if (!url) return null;
-  return url.startsWith('http') ? url : `${API_BASE}${url}`;
-};
+const API_BASE = ELITE_API_URL;
 
 const Wishlist = () => {
   const { wishlist, toggleWishlist, isWishlisted } = useWishlist();
