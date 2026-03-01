@@ -1,102 +1,55 @@
 import { Router } from 'express';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { supabaseAdmin } from '../config/supabase.js';
 
 const router = Router();
 
-// Local storage file path
-const dataFilePath = path.join(__dirname, '..', 'data', 'categories.json');
-
-// Ensure data directory exists
-const dataDir = path.join(__dirname, '..', 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-// Load categories from local file
-const loadLocalCategories = () => {
-  try {
-    if (fs.existsSync(dataFilePath)) {
-      const data = fs.readFileSync(dataFilePath, 'utf8');
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error loading categories:', error);
-  }
-  return [];
-};
-
-// Save categories to local file
-const saveLocalCategories = (categories) => {
-  try {
-    fs.writeFileSync(dataFilePath, JSON.stringify(categories, null, 2));
-  } catch (error) {
-    console.error('Error saving categories:', error);
-  }
-};
-
-// Initialize with default categories if empty
-const initializeCategories = () => {
-  let categories = loadLocalCategories();
-  if (categories.length === 0) {
-    categories = [
-      { id: '1', name: 'Booster Boxes', slug: 'booster_box', description: 'Factory sealed booster boxes', icon: 'box', is_active: true, display_order: 1, image: null, created_at: new Date().toISOString() },
-      { id: '2', name: 'Elite Trainer Boxes', slug: 'etb', description: 'ETBs with exclusive promos', icon: 'package', is_active: true, display_order: 2, image: null, created_at: new Date().toISOString() },
-      { id: '3', name: 'Singles', slug: 'singles', description: 'Individual cards & holos', icon: 'card', is_active: true, display_order: 3, image: null, created_at: new Date().toISOString() },
-      { id: '4', name: 'Special Collections', slug: 'collection', description: 'Premium boxes & tins', icon: 'gift', is_active: true, display_order: 4, image: null, created_at: new Date().toISOString() },
-      { id: '5', name: 'Binders & Storage', slug: 'binders', description: 'Protect your collection', icon: 'binder', is_active: true, display_order: 5, image: null, created_at: new Date().toISOString() },
-      { id: '6', name: 'Sleeves & Supplies', slug: 'accessories', description: 'Card sleeves & accessories', icon: 'sleeve', is_active: true, display_order: 6, image: null, created_at: new Date().toISOString() },
-    ];
-    saveLocalCategories(categories);
-  }
-  return categories;
-};
-
-// Initialize on first load
-initializeCategories();
-
-// Get all categories (public)
+// GET all categories
 router.get('/', async (req, res) => {
   try {
     const { active, limit = 50 } = req.query;
 
-    let categories = loadLocalCategories();
-    if (active !== 'all') categories = categories.filter(c => c.is_active);
-    categories.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-    res.json({ categories: categories.slice(0, parseInt(limit)), total: categories.length });
+    let query = supabaseAdmin
+      .from('categories')
+      .select('*', { count: 'exact' })
+      .order('display_order', { ascending: true })
+      .limit(parseInt(limit));
+
+    if (active !== 'all') query = query.eq('is_active', true);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    res.json({ categories: data || [], total: count || 0 });
   } catch (error) {
     console.error('Get categories error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Get single category
+// GET single category by id or slug
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const categories = loadLocalCategories();
-    const category = categories.find(c => c.id === id || c.slug === id);
-    if (!category) return res.status(404).json({ error: 'Category not found' });
-    res.json({ category });
+    let { data } = await supabaseAdmin.from('categories').select('*').eq('slug', id).maybeSingle();
+    if (!data) {
+      ({ data } = await supabaseAdmin.from('categories').select('*').eq('id', id).maybeSingle());
+    }
+
+    if (!data) return res.status(404).json({ error: 'Category not found' });
+    res.json({ category: data });
   } catch (error) {
     console.error('Get category error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Create category (admin only)
+// POST create category
 router.post('/', authenticateToken, requireRole('super_admin', 'admin'), async (req, res) => {
   try {
     const categoryData = req.body;
-    const categories = loadLocalCategories();
 
-    // Create slug if not provided
     if (!categoryData.slug) {
       categoryData.slug = categoryData.name
         .toLowerCase()
@@ -104,68 +57,59 @@ router.post('/', authenticateToken, requireRole('super_admin', 'admin'), async (
         .replace(/(^_|_$)/g, '');
     }
 
-    const newCategory = {
-      id: Date.now().toString(),
-      name: categoryData.name,
-      slug: categoryData.slug,
-      description: categoryData.description || '',
-      icon: categoryData.icon || 'box',
-      is_active: categoryData.is_active !== false,
-      display_order: categories.length + 1,
-      image: categoryData.image || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    const { count } = await supabaseAdmin
+      .from('categories')
+      .select('*', { count: 'exact', head: true });
 
-    categories.push(newCategory);
-    saveLocalCategories(categories);
+    const { data, error } = await supabaseAdmin
+      .from('categories')
+      .insert({
+        name: categoryData.name,
+        slug: categoryData.slug,
+        description: categoryData.description || '',
+        icon: categoryData.icon || 'box',
+        is_active: categoryData.is_active !== false,
+        display_order: (count || 0) + 1,
+        image: categoryData.image || null,
+      })
+      .select()
+      .single();
 
-    res.status(201).json({ category: newCategory });
+    if (error) throw error;
+    res.status(201).json({ category: data });
   } catch (error) {
     console.error('Create category error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Update category (admin only)
+// PUT update category
 router.put('/:id', authenticateToken, requireRole('super_admin', 'admin', 'manager'), async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
 
-    const categories = loadLocalCategories();
-    const index = categories.findIndex(c => c.id === id);
-    if (index === -1) {
-      return res.status(404).json({ error: 'Category not found' });
-    }
+    const { data, error } = await supabaseAdmin
+      .from('categories')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
 
-    categories[index] = {
-      ...categories[index],
-      ...updates,
-      updated_at: new Date().toISOString()
-    };
-
-    saveLocalCategories(categories);
-    res.json({ category: categories[index] });
+    if (error) throw error;
+    res.json({ category: data });
   } catch (error) {
     console.error('Update category error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Delete category (admin only)
+// DELETE category
 router.delete('/:id', authenticateToken, requireRole('super_admin', 'admin'), async (req, res) => {
   try {
     const { id } = req.params;
-
-    const categories = loadLocalCategories();
-    const index = categories.findIndex(c => c.id === id);
-    if (index === -1) {
-      return res.status(404).json({ error: 'Category not found' });
-    }
-
-    categories.splice(index, 1);
-    saveLocalCategories(categories);
+    const { error } = await supabaseAdmin.from('categories').delete().eq('id', id);
+    if (error) throw error;
     res.json({ message: 'Category deleted' });
   } catch (error) {
     console.error('Delete category error:', error);
@@ -173,19 +117,15 @@ router.delete('/:id', authenticateToken, requireRole('super_admin', 'admin'), as
   }
 });
 
-// Reorder categories (admin only)
+// POST reorder categories
 router.post('/reorder', authenticateToken, requireRole('super_admin', 'admin', 'manager'), async (req, res) => {
   try {
-    const { orders } = req.body; // Array of { id, display_order }
-
-    const categories = loadLocalCategories();
-    for (const item of orders) {
-      const category = categories.find(c => c.id === item.id);
-      if (category) {
-        category.display_order = item.display_order;
-      }
-    }
-    saveLocalCategories(categories);
+    const { orders } = req.body;
+    await Promise.all(
+      orders.map(({ id, display_order }) =>
+        supabaseAdmin.from('categories').update({ display_order }).eq('id', id)
+      )
+    );
     res.json({ message: 'Categories reordered' });
   } catch (error) {
     console.error('Reorder categories error:', error);

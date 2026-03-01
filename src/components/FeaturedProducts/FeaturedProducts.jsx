@@ -1,18 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
+import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 const API_BASE = 'http://localhost:3001';
 
-const HeartIcon = ({ filled }) => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
-  </svg>
-);
-
 const FeaturedProducts = () => {
-  const [wishlist, setWishlist] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { setRef, isVisible } = useScrollAnimation(products.length);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -36,18 +30,9 @@ const FeaturedProducts = () => {
     fetchProducts();
   }, []);
 
-  const toggleWishlist = (id) => {
-    setWishlist(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
-  };
 
   const getBadgeClass = (badge) => {
-    switch (badge?.toLowerCase()) {
-      case 'hot':
-      case 'sale': return 'bg-gray-800 text-white';
-      case 'new': return 'bg-primary text-white';
-      case 'limited': return 'bg-gray-700 text-white';
-      default: return '';
-    }
+    return 'bg-gray-900 text-white';
   };
 
   const getImageUrl = (product) => {
@@ -95,18 +80,18 @@ const FeaturedProducts = () => {
           </div>
         ) : (
           <div className="grid grid-cols-4 gap-4 lg:grid-cols-4 md:grid-cols-3 md:gap-4 max-[480px]:grid-cols-1">
-            {products.map((product) => (
+            {products.map((product, i) => (
               <Link
                 key={product.id}
                 to={`/product/${product.slug || product.id}`}
-                className="card-3d flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-gray-300 group cursor-pointer"
+                className="card-3d flex flex-col bg-white rounded-2xl overflow-hidden group cursor-pointer"
               >
                 <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
                   {getImageUrl(product) ? (
                     <img
                       src={getImageUrl(product)}
                       alt={product.name}
-                      className="max-w-[80%] max-h-[80%] object-contain"
+                      className="max-w-[70%] max-h-[70%] object-contain"
                     />
                   ) : (
                     <div className="text-gray-300">
@@ -124,27 +109,18 @@ const FeaturedProducts = () => {
                     </span>
                   )}
 
-                  <button
-                    className={`absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white rounded-full transition-all duration-150 cursor-pointer ${
-                      wishlist.includes(product.id) ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
-                    }`}
-                    onClick={(e) => { e.preventDefault(); toggleWishlist(product.id); }}
-                    aria-label={wishlist.includes(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
-                  >
-                    <HeartIcon filled={wishlist.includes(product.id)} />
-                  </button>
                 </div>
 
-                <div className="p-3 flex flex-col items-center text-center">
+                <div className="px-3 pt-1.5 pb-2 flex flex-col items-center text-center">
                   {(product.rating > 0 || product.review_count > 0) && (
-                    <div className="flex items-center gap-1 mb-2">
+                    <div className="flex items-center gap-1 mb-1">
                       <span className="text-gold text-xs">★</span>
                       <span className="text-xs font-medium text-gray-700">{product.rating || 0}</span>
                       <span className="text-xs text-gray-400">({product.review_count || 0})</span>
                     </div>
                   )}
 
-                  <h3 className="text-sm font-normal leading-snug mb-2 line-clamp-2">
+                  <h3 className="text-sm font-normal leading-snug mb-1 line-clamp-2">
                     {product.name}
                   </h3>
 

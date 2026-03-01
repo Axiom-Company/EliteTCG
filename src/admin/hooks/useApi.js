@@ -148,11 +148,13 @@ export const uploadApi = {
 // ── FastAPI fetch wrapper (CourierGuy / PayFast backend, API-key auth) ──
 
 const fastApiFetch = async (endpoint, options = {}) => {
+  const token = getToken();
   const config = {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       'X-Admin-Api-Key': ADMIN_API_KEY,
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
   };

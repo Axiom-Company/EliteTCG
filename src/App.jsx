@@ -1,4 +1,11 @@
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+};
 
 // Components for main public site
 import Navbar from './components/Navbar/Navbar';
@@ -31,6 +38,16 @@ import MarketplacePaymentCancel from './pages/marketplace/MarketplacePaymentCanc
 // Products pages
 import Products from './pages/products/Products';
 
+// Wishlist page
+import Wishlist from './pages/wishlist/Wishlist';
+
+// Sets pages
+import Sets from './pages/sets/Sets';
+import SetDetail from './pages/sets/SetDetail';
+
+// Category pages
+import CategoryDetail from './pages/categories/CategoryDetail';
+
 // Checkout pages
 import Checkout from './pages/checkout/Checkout';
 import PaymentSuccess from './pages/checkout/PaymentSuccess';
@@ -49,6 +66,9 @@ import { Toaster } from 'sonner';
 // Cart Provider and Components
 import { CartProvider } from './contexts/CartContext';
 import CartDrawer from './components/Cart/CartDrawer';
+
+// Wishlist Provider
+import { WishlistProvider } from './contexts/WishlistContext';
 
 // PWA Components
 import InstallPrompt from './components/PWA/InstallPrompt';
@@ -94,10 +114,16 @@ const NavbarLayout = ({ children }) => (
 function App() {
   return (
     <CustomerAuthProvider>
+      <WishlistProvider>
       <CartProvider>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
           <Route path="/products" element={<MainLayout><Products /></MainLayout>} />
+          <Route path="/wishlist" element={<MainLayout><Wishlist /></MainLayout>} />
+          <Route path="/sets" element={<MainLayout><Sets /></MainLayout>} />
+          <Route path="/sets/:id" element={<MainLayout><SetDetail /></MainLayout>} />
+          <Route path="/categories/:slug" element={<MainLayout><CategoryDetail /></MainLayout>} />
           <Route path="/product/:id" element={<MainLayout><ProductPage /></MainLayout>} />
           <Route path="/login" element={<NavbarLayout><Login /></NavbarLayout>} />
           <Route path="/register" element={<NavbarLayout><Register /></NavbarLayout>} />
@@ -126,6 +152,7 @@ function App() {
         <InstallPrompt />
         <UpdateNotification />
       </CartProvider>
+      </WishlistProvider>
     </CustomerAuthProvider>
   );
 }

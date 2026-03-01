@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useScrollAnimation } from '../../hooks/useScrollAnimation';
 
 const API_BASE = 'http://localhost:3001';
 
@@ -11,16 +13,38 @@ const DefaultIcon = () => (
   </svg>
 );
 
+const BADGE_PRIORITY = ['hot', 'sale', 'limited', 'new', 'preorder'];
+
+const getBadgeStyle = () => 'bg-gray-900 text-white';
+
 const ShopByCategory = () => {
   const [categories, setCategories] = useState([]);
+  const [categoryBadges, setCategoryBadges] = useState({});
   const [loading, setLoading] = useState(true);
+  const { setRef, isVisible } = useScrollAnimation(categories.length);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/categories`);
-        const data = await response.json();
-        setCategories(data.categories || []);
+        const [catRes, productsRes] = await Promise.all([
+          fetch(`${API_BASE}/api/categories`),
+          fetch(`${API_BASE}/api/products?limit=200`),
+        ]);
+        const catData = await catRes.json();
+        const productsData = await productsRes.json();
+
+        const badges = {};
+        for (const product of productsData.products || []) {
+          if (!product.category || !product.badge || product.badge === 'none') continue;
+          const current = badges[product.category];
+          const incoming = product.badge.toLowerCase();
+          if (!current || BADGE_PRIORITY.indexOf(incoming) < BADGE_PRIORITY.indexOf(current)) {
+            badges[product.category] = incoming;
+          }
+        }
+
+        setCategories(catData.categories || []);
+        setCategoryBadges(badges);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
       } finally {
@@ -28,7 +52,7 @@ const ShopByCategory = () => {
       }
     };
 
-    fetchCategories();
+    fetchData();
   }, []);
 
   const getImageUrl = (category) => {
@@ -38,7 +62,7 @@ const ShopByCategory = () => {
 
   if (loading) {
     return (
-      <section id="category" className="py-16 bg-gray-50 md:py-10">
+      <section id="category" className="py-16 bg-white md:py-10">
         <div className="container">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-medium mb-2">Shop by Category</h2>
@@ -64,31 +88,39 @@ const ShopByCategory = () => {
           <p className="text-sm text-gray-500">Find exactly what you're looking for</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {categories.map((category) => (
-            <a
+        <div className="grid grid-cols-4 gap-4 lg:grid-cols-4 md:grid-cols-3 md:gap-4 max-[480px]:grid-cols-2">
+          {categories.map((category, i) => (
+            <Link
               key={category.id}
-              href={`#category-${category.slug}`}
-              className="flex flex-col bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-250 hover:border-gray-300 group cursor-pointer"
+              to={`/categories/${category.slug}`}
+              ref={setRef(i)}
+              data-anim-idx={i}
+              style={{ transitionDelay: `${i * 70}ms` }}
+              className={`flex flex-col bg-white rounded-xl overflow-hidden transition-all duration-500 group cursor-pointer ${isVisible(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
             >
-              <div className="relative h-40 bg-white flex items-center justify-center overflow-hidden">
+              <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
                 {getImageUrl(category) ? (
                   <img
                     src={getImageUrl(category)}
                     alt={category.name}
-                    className="max-w-[80%] max-h-[80%] object-contain transition-transform duration-300 group-hover:scale-110"
+                    className="max-w-[70%] max-h-[70%] object-contain"
                   />
                 ) : (
                   <div className="text-gray-300">
                     <DefaultIcon />
                   </div>
                 )}
+                {categoryBadges[category.slug] && (
+                  <span className={`absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full capitalize tracking-wide ${getBadgeStyle(categoryBadges[category.slug])}`}>
+                    {categoryBadges[category.slug]}
+                  </span>
+                )}
               </div>
-              <div className="p-3 text-center">
+              <div className="px-3 pt-1.5 pb-2 text-center">
                 <h3 className="text-base font-medium text-gray-900 mb-1">{category.name}</h3>
                 <p className="text-xs text-gray-500">{category.description}</p>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
 

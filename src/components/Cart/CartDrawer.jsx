@@ -9,9 +9,6 @@ const CartDrawer = () => {
     isCartOpen,
     closeCart,
     subtotal,
-    shipping,
-    total,
-    freeShippingThreshold
   } = useCart();
 
   // Prevent body scroll when drawer is open
@@ -36,8 +33,6 @@ const CartDrawer = () => {
   }, [closeCart]);
 
   if (!isCartOpen) return null;
-
-  const amountToFreeShipping = freeShippingThreshold - subtotal;
 
   return (
     <>
@@ -94,21 +89,6 @@ const CartDrawer = () => {
         {/* Footer */}
         {cart.length > 0 && (
           <div className="border-t border-gray-100 px-6 py-4 bg-white">
-            {/* Free shipping progress */}
-            {amountToFreeShipping > 0 && (
-              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <p className="text-xs text-gray-600">
-                  Add <span className="font-medium text-gray-900">R{amountToFreeShipping.toLocaleString()}</span> more for free shipping
-                </p>
-                <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#FFCB32] rounded-full transition-all"
-                    style={{ width: `${Math.min((subtotal / freeShippingThreshold) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
             {/* Totals */}
             <div className="space-y-2 mb-4">
               <div className="flex justify-between text-sm">
@@ -117,17 +97,11 @@ const CartDrawer = () => {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Shipping</span>
-                <span className="text-gray-900">
-                  {shipping === 0 ? (
-                    <span className="text-green-600">FREE</span>
-                  ) : (
-                    `R${shipping}`
-                  )}
-                </span>
+                <span className="text-gray-400">Calculated at checkout</span>
               </div>
               <div className="flex justify-between text-base font-medium pt-2 border-t border-gray-100">
-                <span className="text-gray-900">Total</span>
-                <span className="text-gray-900">R{total.toLocaleString()}</span>
+                <span className="text-gray-900">Subtotal</span>
+                <span className="text-gray-900">R{subtotal.toLocaleString()}</span>
               </div>
             </div>
 

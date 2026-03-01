@@ -23,8 +23,7 @@ const Checkout = () => {
   });
   const [errors, setErrors] = useState({});
 
-  // Shipping method state
-  const [shippingMethod, setShippingMethod] = useState('courier_guy');
+  // Shipping state
   const [shippingQuote, setShippingQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState(null);
@@ -86,20 +85,19 @@ const Checkout = () => {
     }
   }, [formData.streetAddress, formData.city, formData.province, formData.postalCode]);
 
-  // Auto-fetch quote when address is complete and courier_guy is selected
+  // Auto-fetch quote when address is complete (only once — don't retry on error)
   useEffect(() => {
     if (
-      shippingMethod === 'courier_guy' &&
       formData.streetAddress && formData.city && formData.province && formData.postalCode &&
       formData.postalCode.length >= 4 &&
-      !shippingQuote && !quoteLoading
+      !shippingQuote && !quoteLoading && !quoteError
     ) {
       fetchQuote();
     }
-  }, [shippingMethod, formData.streetAddress, formData.city, formData.province, formData.postalCode, shippingQuote, quoteLoading, fetchQuote]);
+  }, [formData.streetAddress, formData.city, formData.province, formData.postalCode, shippingQuote, quoteLoading, quoteError, fetchQuote]);
 
   // Calculate totals
-  const shippingCost = shippingMethod === 'collection' ? 0 : (shippingQuote?.customer_cost_zar || 0);
+  const shippingCost = shippingQuote?.customer_cost_zar || 0;
   const orderTotal = subtotal + shippingCost;
 
   const validate = () => {
@@ -109,12 +107,10 @@ const Checkout = () => {
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email address';
     if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (shippingMethod === 'courier_guy') {
-      if (!formData.streetAddress.trim()) newErrors.streetAddress = 'Street address is required';
-      if (!formData.city.trim()) newErrors.city = 'City is required';
-      if (!formData.province) newErrors.province = 'Province is required';
-      if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
-    }
+    if (!formData.streetAddress.trim()) newErrors.streetAddress = 'Street address is required';
+    if (!formData.city.trim()) newErrors.city = 'City is required';
+    if (!formData.province) newErrors.province = 'Province is required';
+    if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -124,7 +120,7 @@ const Checkout = () => {
     setSubmitError(null);
     if (!validate()) return;
 
-    if (shippingMethod === 'courier_guy' && !shippingQuote) {
+    if (!shippingQuote) {
       setSubmitError('Please get a shipping quote before proceeding');
       return;
     }
@@ -146,11 +142,11 @@ const Checkout = () => {
           phone: formData.phone,
         },
         shipping: {
-          method: shippingMethod,
-          address_line1: formData.streetAddress || 'Collection',
-          city: formData.city || 'N/A',
-          province: formData.province || 'Gauteng',
-          postal_code: formData.postalCode || '0000',
+          method: 'courier_guy',
+          address_line1: formData.streetAddress,
+          city: formData.city,
+          province: formData.province,
+          postal_code: formData.postalCode,
           cost_zar: shippingCost,
         },
       });
@@ -256,81 +252,10 @@ const Checkout = () => {
                 </div>
               </section>
 
-              {/* ── Shipping Method ── */}
+              {/* ── Delivery Address ── */}
               <section>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-medium">2</div>
-                  <h2 className="text-lg font-medium text-gray-900">Shipping Method</h2>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Courier Guy */}
-                  <button
-                    type="button"
-                    onClick={() => setShippingMethod('courier_guy')}
-                    className={`text-left p-5 rounded-xl border-2 transition-all ${
-                      shippingMethod === 'courier_guy'
-                        ? 'border-gray-900 bg-gray-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                        shippingMethod === 'courier_guy' ? 'border-gray-900' : 'border-gray-300'
-                      }`}>
-                        {shippingMethod === 'courier_guy' && <div className="w-2.5 h-2.5 rounded-full bg-gray-900" />}
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm">Courier Guy Delivery</p>
-                        <p className="text-xs text-gray-500 mt-1">Door-to-door delivery across South Africa</p>
-                        {shippingQuote && shippingMethod === 'courier_guy' && (
-                          <div className="mt-3 pt-3 border-t border-gray-200">
-                            <p className="text-sm font-medium text-gray-900">R{shippingQuote.customer_cost_zar.toFixed(2)}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              {shippingQuote.estimated_days} business day{shippingQuote.estimated_days !== 1 ? 's' : ''} · {shippingQuote.service_name}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* Collection */}
-                  <button
-                    type="button"
-                    onClick={() => { setShippingMethod('collection'); setShippingQuote(null); setQuoteError(null); }}
-                    className={`text-left p-5 rounded-xl border-2 transition-all ${
-                      shippingMethod === 'collection'
-                        ? 'border-gray-900 bg-gray-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                        shippingMethod === 'collection' ? 'border-gray-900' : 'border-gray-300'
-                      }`}>
-                        {shippingMethod === 'collection' && <div className="w-2.5 h-2.5 rounded-full bg-gray-900" />}
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm">Local Collection</p>
-                        <p className="text-xs text-gray-500 mt-1">Pick up from our location — free</p>
-                        {shippingMethod === 'collection' && (
-                          <div className="mt-3 pt-3 border-t border-gray-200">
-                            <p className="text-sm font-medium text-green-600">FREE</p>
-                            <p className="text-xs text-gray-500 mt-0.5">Collect at arranged time</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </section>
-
-              {/* ── Delivery Address (only for courier) ── */}
-              {shippingMethod === 'courier_guy' && (
-                <section>
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-medium">3</div>
+                    <div className="w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-medium">2</div>
                     <h2 className="text-lg font-medium text-gray-900">Delivery Address</h2>
                   </div>
 
@@ -403,21 +328,15 @@ const Checkout = () => {
                       </button>
                     )}
                     {shippingQuote && !quoteLoading && (
-                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-green-800">Shipping quote ready</p>
-                            <p className="text-xs text-green-700 mt-0.5">
-                              {shippingQuote.service_name} · {shippingQuote.estimated_days} business day{shippingQuote.estimated_days !== 1 ? 's' : ''}
-                            </p>
-                          </div>
-                          <p className="text-lg font-medium text-green-800">R{shippingQuote.customer_cost_zar.toFixed(2)}</p>
-                        </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <svg className="w-4 h-4 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Shipping quote calculated — see order summary
                       </div>
                     )}
                   </div>
                 </section>
-              )}
             </div>
 
             {/* Right Column — Order Summary (2 cols) */}
@@ -458,25 +377,24 @@ const Checkout = () => {
                     <span className="text-gray-900">R{subtotal.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Shipping</span>
+                    <div>
+                      <span className="text-gray-600">Shipping</span>
+                      {shippingQuote && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {shippingQuote.service_name} · {shippingQuote.estimated_days} business day{shippingQuote.estimated_days !== 1 ? 's' : ''}
+                        </p>
+                      )}
+                    </div>
                     <span className="text-gray-900">
-                      {shippingMethod === 'collection' ? (
-                        <span className="text-green-600">FREE</span>
-                      ) : shippingQuote ? (
+                      {shippingQuote ? (
                         `R${shippingQuote.customer_cost_zar.toFixed(2)}`
                       ) : quoteLoading ? (
-                        <span className="text-gray-400">Calculating...</span>
+                        <span className="text-gray-400 text-xs">Calculating...</span>
                       ) : (
-                        <span className="text-gray-400">Get quote</span>
+                        <span className="text-gray-400">—</span>
                       )}
                     </span>
                   </div>
-                  {shippingQuote && shippingMethod === 'courier_guy' && (
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-400">Est. delivery</span>
-                      <span className="text-gray-500">{shippingQuote.estimated_days} business days</span>
-                    </div>
-                  )}
                   <div className="flex justify-between text-base font-medium pt-2 border-t border-gray-200">
                     <span className="text-gray-900">Total</span>
                     <span className="text-gray-900">R{orderTotal.toLocaleString()}</span>
@@ -486,7 +404,7 @@ const Checkout = () => {
                 {/* Pay Button */}
                 <button
                   type="submit"
-                  disabled={loading || (shippingMethod === 'courier_guy' && !shippingQuote)}
+                  disabled={loading || !shippingQuote}
                   className="w-full mt-6 py-3.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   {loading ? (

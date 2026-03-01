@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import CartIcon from '../Cart/CartIcon';
 import logo from '../../assets/images/elitetcglogo.webp';
+import { useWishlist } from '../../contexts/WishlistContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,6 +13,7 @@ const Navbar = () => {
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const [mobileMarketplaceOpen, setMobileMarketplaceOpen] = useState(false);
   const { isAuthenticated, user, isSeller, logout } = useCustomerAuth();
+  const { wishlist } = useWishlist();
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -212,6 +214,20 @@ const Navbar = () => {
 
         {/* Right Side */}
         <div className="flex items-center gap-4">
+          <Link
+            to="/wishlist"
+            className="relative flex items-center justify-center w-10 h-10 text-gray-600 hover:text-gray-900 transition-colors"
+            aria-label="Wishlist"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+            </svg>
+            {wishlist.length > 0 && (
+              <span className="absolute top-1 right-1 w-4 h-4 bg-gray-900 text-white text-[10px] font-medium rounded-full flex items-center justify-center leading-none">
+                {wishlist.length > 9 ? '9+' : wishlist.length}
+              </span>
+            )}
+          </Link>
           <CartIcon />
 
           {isAuthenticated ? (

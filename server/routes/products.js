@@ -1,106 +1,71 @@
 import { Router } from 'express';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { supabaseAdmin } from '../config/supabase.js';
 
 const router = Router();
 
-// Local storage file path
-const dataFilePath = path.join(__dirname, '..', 'data', 'products.json');
-
-// Ensure data directory exists
-const dataDir = path.join(__dirname, '..', 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-// Load products from local file
-const loadLocalProducts = () => {
-  try {
-    if (fs.existsSync(dataFilePath)) {
-      const data = fs.readFileSync(dataFilePath, 'utf8');
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error loading products:', error);
-  }
-  return [];
+// Normalize inventory from joined data (can be array or object depending on FK setup)
+const formatProduct = (p) => {
+  const inv = Array.isArray(p.inventory)
+    ? (p.inventory[0] || { quantity: 0, low_stock_threshold: 5 })
+    : (p.inventory || { quantity: 0, low_stock_threshold: 5 });
+  return { ...p, inventory: inv };
 };
 
-// Save products to local file
-const saveLocalProducts = (products) => {
-  try {
-    fs.writeFileSync(dataFilePath, JSON.stringify(products, null, 2));
-  } catch (error) {
-    console.error('Error saving products:', error);
-  }
-};
-
-// Initialize with some mock data if empty
-const initializeProducts = () => {
-  let products = loadLocalProducts();
-  if (products.length === 0) {
-    products = [
-      { id: '1', name: 'Prismatic Evolutions Booster Box', slug: 'prismatic-evolutions-booster-box', description: 'A premium booster box featuring prismatic Pokemon cards.', price: 149.99, compare_at_price: 179.99, category: 'booster_box', badge: 'hot', is_active: true, is_featured: true, rating: 4.9, review_count: 128, images: [], inventory: { quantity: 25, low_stock_threshold: 5 }, created_at: new Date().toISOString() },
-      { id: '2', name: 'Surging Sparks Elite Trainer Box', slug: 'surging-sparks-etb', description: 'Elite Trainer Box with exclusive cards and accessories.', price: 49.99, compare_at_price: null, category: 'etb', badge: 'new', is_active: true, is_featured: true, rating: 4.8, review_count: 64, images: [], inventory: { quantity: 42, low_stock_threshold: 5 }, created_at: new Date().toISOString() },
-      { id: '3', name: 'Charizard ex SAR #234', slug: 'charizard-ex-sar-234', description: 'Rare Special Art Rare Charizard card.', price: 289.99, compare_at_price: null, category: 'singles', badge: 'none', is_active: true, is_featured: true, rating: 5.0, review_count: 42, images: [], inventory: { quantity: 3, low_stock_threshold: 5 }, created_at: new Date().toISOString() },
-    ];
-    saveLocalProducts(products);
-  }
-  return products;
-};
-
-// Initialize on first load
-initializeProducts();
-
-// Get all products (public) - Always use local storage for full feature support
+// GET all products
 router.get('/', async (req, res) => {
   try {
     const { category, set_id, featured, active, badge, limit = 50, offset = 0 } = req.query;
 
-    const localProducts = loadLocalProducts();
-    let filtered = [...localProducts];
-    if (category) filtered = filtered.filter(p => p.category === category);
-    if (set_id) filtered = filtered.filter(p => p.set_id === set_id);
-    if (featured === 'true') filtered = filtered.filter(p => p.is_featured);
-    if (active !== 'all') filtered = filtered.filter(p => p.is_active);
-    if (badge) filtered = filtered.filter(p => p.badge === badge);
+    let query = supabaseAdmin
+      .from('products')
+      .select('*, inventory(quantity, low_stock_threshold)', { count: 'exact' });
 
-    // Sort by created_at descending
-    filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    if (category) query = query.eq('category', category);
+    if (set_id) query = query.eq('set_id', set_id);
+    if (featured === 'true') query = query.eq('is_featured', true);
+    if (active !== 'all') query = query.eq('is_active', true);
+    if (badge) query = query.eq('badge', badge);
 
-    res.json({ products: filtered.slice(0, parseInt(limit)), total: filtered.length });
+    query = query
+      .order('created_at', { ascending: false })
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
+    res.json({ products: (data || []).map(formatProduct), total: count || 0 });
   } catch (error) {
     console.error('Get products error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Get single product - Always use local storage
+// GET single product by slug or id
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const sel = '*, inventory(quantity, low_stock_threshold)';
 
-    const localProducts = loadLocalProducts();
-    const product = localProducts.find(p => p.id === id || p.slug === id);
-    if (!product) return res.status(404).json({ error: 'Product not found' });
-    res.json({ product });
+    // Try slug first, then fall back to id
+    let { data } = await supabaseAdmin.from('products').select(sel).eq('slug', id).maybeSingle();
+    if (!data) {
+      ({ data } = await supabaseAdmin.from('products').select(sel).eq('id', id).maybeSingle());
+    }
+
+    if (!data) return res.status(404).json({ error: 'Product not found' });
+    res.json({ product: formatProduct(data) });
   } catch (error) {
     console.error('Get product error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Create product (admin only) - Always use local storage
+// POST create product
 router.post('/', authenticateToken, requireRole('super_admin', 'admin'), async (req, res) => {
   try {
     const productData = req.body;
 
-    // Create slug if not provided
     if (!productData.slug) {
       productData.slug = productData.name
         .toLowerCase()
@@ -108,82 +73,105 @@ router.post('/', authenticateToken, requireRole('super_admin', 'admin'), async (
         .replace(/(^-|-$)/g, '');
     }
 
-    const localProducts = loadLocalProducts();
-    const newProduct = {
-      id: Date.now().toString(),
-      name: productData.name,
-      slug: productData.slug,
-      description: productData.description || '',
-      price: parseFloat(productData.price) || 0,
-      compare_at_price: productData.compare_at_price ? parseFloat(productData.compare_at_price) : null,
-      currency: productData.currency || 'ZAR',
-      category: productData.category || 'booster_box',
-      badge: productData.badge || 'none',
-      set_id: productData.set_id || null,
-      is_active: productData.is_active !== false,
-      is_featured: productData.is_featured || false,
-      rating: 0,
-      review_count: 0,
-      images: productData.images || [],
-      sku: productData.sku || '',
-      inventory: {
-        quantity: parseInt(productData.initial_quantity) || 0,
-        low_stock_threshold: parseInt(productData.low_stock_threshold) || 5
-      },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    const { data: product, error: productError } = await supabaseAdmin
+      .from('products')
+      .insert({
+        name: productData.name,
+        slug: productData.slug,
+        description: productData.description || '',
+        price: parseFloat(productData.price) || 0,
+        compare_at_price: productData.compare_at_price ? parseFloat(productData.compare_at_price) : null,
+        currency: productData.currency || 'ZAR',
+        category: productData.category || 'booster_box',
+        badge: productData.badge || 'none',
+        set_id: productData.set_id || null,
+        is_active: productData.is_active !== false,
+        is_featured: productData.is_featured || false,
+        rating: 0,
+        review_count: 0,
+        images: productData.images || [],
+        sku: productData.sku || '',
+      })
+      .select()
+      .single();
 
-    localProducts.push(newProduct);
-    saveLocalProducts(localProducts);
+    if (productError) throw productError;
 
-    res.status(201).json({ product: newProduct });
+    const initQty = parseInt(productData.initial_quantity) || 0;
+    const threshold = parseInt(productData.low_stock_threshold) || 5;
+
+    const { error: invError } = await supabaseAdmin
+      .from('inventory')
+      .insert({ product_id: product.id, quantity: initQty, low_stock_threshold: threshold });
+
+    if (invError) console.error('Inventory insert error:', invError);
+
+    res.status(201).json({
+      product: formatProduct({
+        ...product,
+        inventory: [{ quantity: initQty, low_stock_threshold: threshold }],
+      }),
+    });
   } catch (error) {
     console.error('Create product error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Update product (admin only) - Always use local storage
+// PUT update product
 router.put('/:id', authenticateToken, requireRole('super_admin', 'admin', 'manager'), async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    // Strip inventory/quantity fields — those go through the inventory endpoint
+    const { initial_quantity, low_stock_threshold, inventory, ...productUpdates } = req.body;
 
-    const localProducts = loadLocalProducts();
-    const index = localProducts.findIndex(p => p.id === id);
-    if (index === -1) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
+    const { data, error } = await supabaseAdmin
+      .from('products')
+      .update({ ...productUpdates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('*, inventory(quantity, low_stock_threshold)')
+      .single();
 
-    // Update product
-    localProducts[index] = {
-      ...localProducts[index],
-      ...updates,
-      updated_at: new Date().toISOString()
-    };
-
-    saveLocalProducts(localProducts);
-    res.json({ product: localProducts[index] });
+    if (error) throw error;
+    res.json({ product: formatProduct(data) });
   } catch (error) {
     console.error('Update product error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Delete product (admin only) - Always use local storage
+// DELETE product — also removes images from Supabase Storage
 router.delete('/:id', authenticateToken, requireRole('super_admin', 'admin'), async (req, res) => {
   try {
     const { id } = req.params;
 
-    const localProducts = loadLocalProducts();
-    const index = localProducts.findIndex(p => p.id === id);
-    if (index === -1) {
-      return res.status(404).json({ error: 'Product not found' });
+    // Fetch images before deleting so we can clean up storage
+    const { data: product } = await supabaseAdmin
+      .from('products')
+      .select('images')
+      .eq('id', id)
+      .maybeSingle();
+
+    // Delete the product row (inventory cascades via FK if set up, otherwise also delete explicitly)
+    const { error } = await supabaseAdmin.from('products').delete().eq('id', id);
+    if (error) throw error;
+
+    // Remove images from Supabase Storage
+    if (product?.images?.length) {
+      const paths = product.images
+        .map((url) => {
+          // Extract path after /images/ in the storage public URL
+          const match = url.match(/\/images\/(.+)$/);
+          return match ? match[1] : null;
+        })
+        .filter(Boolean);
+
+      if (paths.length) {
+        const { error: storageError } = await supabaseAdmin.storage.from('images').remove(paths);
+        if (storageError) console.error('Storage cleanup error:', storageError);
+      }
     }
 
-    localProducts.splice(index, 1);
-    saveLocalProducts(localProducts);
     res.json({ message: 'Product deleted' });
   } catch (error) {
     console.error('Delete product error:', error);
@@ -191,34 +179,33 @@ router.delete('/:id', authenticateToken, requireRole('super_admin', 'admin'), as
   }
 });
 
-// Update inventory - Always use local storage
+// PATCH inventory
 router.patch('/:id/inventory', authenticateToken, requireRole('super_admin', 'admin', 'manager', 'staff'), async (req, res) => {
   try {
     const { id } = req.params;
     const { quantity, adjustment, low_stock_threshold } = req.body;
 
-    const localProducts = loadLocalProducts();
-    const product = localProducts.find(p => p.id === id);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
+    const { data: current } = await supabaseAdmin
+      .from('inventory')
+      .select('quantity')
+      .eq('product_id', id)
+      .maybeSingle();
 
-    if (!product.inventory) {
-      product.inventory = { quantity: 0, low_stock_threshold: 5 };
-    }
+    let newQty = current?.quantity ?? 0;
+    if (quantity !== undefined) newQty = quantity;
+    else if (adjustment !== undefined) newQty = newQty + adjustment;
 
-    if (quantity !== undefined) {
-      product.inventory.quantity = quantity;
-    } else if (adjustment !== undefined) {
-      product.inventory.quantity = (product.inventory.quantity || 0) + adjustment;
-    }
+    const updates = { product_id: id, quantity: newQty };
+    if (low_stock_threshold !== undefined) updates.low_stock_threshold = low_stock_threshold;
 
-    if (low_stock_threshold !== undefined) {
-      product.inventory.low_stock_threshold = low_stock_threshold;
-    }
+    const { data, error } = await supabaseAdmin
+      .from('inventory')
+      .upsert(updates, { onConflict: 'product_id' })
+      .select()
+      .single();
 
-    saveLocalProducts(localProducts);
-    res.json({ inventory: product.inventory });
+    if (error) throw error;
+    res.json({ inventory: data });
   } catch (error) {
     console.error('Update inventory error:', error);
     res.status(500).json({ error: 'Server error' });
