@@ -13,6 +13,7 @@ import card10 from '../../assets/images/SingleCards/card10.png';
 import card11 from '../../assets/images/SingleCards/card11.png';
 import card12 from '../../assets/images/SingleCards/card12.png';
 
+//test
 const CARD_DATA = [
   { pos: 1,  src: card1,  name: 'Card 1' },
   { pos: 2,  src: card2,  name: 'Card 2' },
