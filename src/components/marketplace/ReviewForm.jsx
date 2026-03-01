@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ELITE_API_URL } from '../../config/api';
+import { supabase } from '@/config/supabase';
 
 const MAX_COMMENT_LENGTH = 1000;
 
@@ -20,7 +21,11 @@ const ReviewForm = ({ orderId, onSubmit }) => {
     setError(null);
 
     try {
-      const token = localStorage.getItem('customer_token');
+      let token = null;
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        token = session?.access_token;
+      }
       if (!token) {
         throw new Error('You must be logged in to submit a review');
       }

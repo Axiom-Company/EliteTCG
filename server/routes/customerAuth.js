@@ -1,7 +1,6 @@
 import { Router } from 'express';
-import bcrypt from 'bcrypt';
 import { z } from 'zod';
-import { generateCustomerToken, authenticateCustomer } from '../middleware/auth.js';
+import { authenticateCustomer } from '../middleware/auth.js';
 import { supabaseAdmin } from '../config/supabase.js';
 
 const router = Router();
@@ -16,11 +15,6 @@ const registerSchema = z.object({
   accepts_marketing: z.boolean().optional().default(false)
 });
 
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required')
-});
-
 const updateProfileSchema = z.object({
   first_name: z.string().min(1).max(100).optional(),
   last_name: z.string().min(1).max(100).optional(),
@@ -32,9 +26,6 @@ const updateProfileSchema = z.object({
   postal_code: z.string().max(20).optional(),
   accepts_marketing: z.boolean().optional()
 });
-
-// Mock customer for development (when Supabase not configured)
-let mockCustomers = [];
 
 // Helper to get seller profile
 const getSellerProfile = async (customerId) => {
@@ -50,7 +41,7 @@ const getSellerProfile = async (customerId) => {
   return data;
 };
 
-// Register new customer
+// Register new customer (creates Supabase Auth user + customer profile)
 router.post('/register', async (req, res) => {
   try {
     const validation = registerSchema.safeParse(req.body);
@@ -62,80 +53,54 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    const { email, password, first_name, last_name, phone, accepts_marketing } = validation.data;
-
-    // Check if customer already exists
-    if (supabaseAdmin) {
-      const { data: existing } = await supabaseAdmin
-        .from('customers')
-        .select('id')
-        .eq('email', email.toLowerCase())
-        .single();
-
-      if (existing) {
-        return res.status(409).json({ error: 'Email already registered' });
-      }
-    } else {
-      // Mock check
-      const existing = mockCustomers.find(c => c.email === email.toLowerCase());
-      if (existing) {
-        return res.status(409).json({ error: 'Email already registered' });
-      }
+    if (!supabaseAdmin) {
+      return res.status(503).json({ error: 'Auth service not configured' });
     }
 
-    // Hash password
-    const password_hash = await bcrypt.hash(password, 10);
+    const { email, password, first_name, last_name, phone, accepts_marketing } = validation.data;
 
-    // Create customer
-    let customer;
+    // Create Supabase Auth user
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: email.toLowerCase(),
+      password,
+      email_confirm: false, // Supabase will send confirmation email
+      user_metadata: { first_name, last_name }
+    });
 
-    if (supabaseAdmin) {
-      const { data, error } = await supabaseAdmin
-        .from('customers')
-        .insert({
-          email: email.toLowerCase(),
-          password_hash,
-          first_name,
-          last_name,
-          name: `${first_name} ${last_name}`,
-          phone,
-          accepts_marketing,
-          is_active: true,
-          is_seller: false
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Registration error:', error);
-        return res.status(500).json({ error: 'Failed to create account' });
+    if (authError) {
+      if (authError.message?.includes('already been registered')) {
+        return res.status(409).json({ error: 'Email already registered' });
       }
+      console.error('Supabase auth create error:', authError);
+      return res.status(500).json({ error: 'Failed to create account' });
+    }
 
-      customer = data;
-    } else {
-      // Mock creation
-      customer = {
-        id: `mock-${Date.now()}`,
+    // Create customer profile row with id = Supabase Auth user id
+    const { data: customer, error: profileError } = await supabaseAdmin
+      .from('customers')
+      .insert({
+        id: authData.user.id,
         email: email.toLowerCase(),
-        password_hash,
         first_name,
         last_name,
         name: `${first_name} ${last_name}`,
         phone,
         accepts_marketing,
         is_active: true,
-        is_seller: false,
-        created_at: new Date().toISOString()
-      };
-      mockCustomers.push(customer);
+        is_seller: false
+      })
+      .select()
+      .single();
+
+    if (profileError) {
+      // Rollback: delete the auth user if profile creation fails
+      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      console.error('Customer profile creation error:', profileError);
+      return res.status(500).json({ error: 'Failed to create account' });
     }
 
-    // Generate token
-    const token = generateCustomerToken(customer, null);
-
     res.status(201).json({
-      message: 'Account created successfully',
-      token,
+      message: 'Account created successfully. Please check your email to verify your account.',
       user: {
         id: customer.id,
         email: customer.email,
@@ -151,103 +116,26 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login customer
-router.post('/login', async (req, res) => {
+// Get current customer profile
+router.get('/me', authenticateCustomer, async (req, res) => {
   try {
-    const validation = loginSchema.safeParse(req.body);
-
-    if (!validation.success) {
-      return res.status(400).json({
-        error: 'Validation failed',
-        details: validation.error.errors
-      });
+    if (!supabaseAdmin) {
+      return res.status(503).json({ error: 'Database not configured' });
     }
 
-    const { email, password } = validation.data;
+    const { data: customer, error } = await supabaseAdmin
+      .from('customers')
+      .select('*')
+      .eq('id', req.customer.id)
+      .single();
 
-    let customer;
-
-    if (supabaseAdmin) {
-      const { data, error } = await supabaseAdmin
-        .from('customers')
-        .select('*')
-        .eq('email', email.toLowerCase())
-        .eq('is_active', true)
-        .single();
-
-      if (error || !data) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
-
-      customer = data;
-    } else {
-      // Mock login
-      customer = mockCustomers.find(c => c.email === email.toLowerCase() && c.is_active);
-      if (!customer) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
-    }
-
-    // Verify password
-    const validPassword = await bcrypt.compare(password, customer.password_hash);
-    if (!validPassword) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+    if (error || !customer) {
+      return res.status(404).json({ error: 'Customer not found' });
     }
 
     // Get seller profile if customer is a seller
     let sellerProfile = null;
     if (customer.is_seller) {
-      sellerProfile = await getSellerProfile(customer.id);
-    }
-
-    // Generate token
-    const token = generateCustomerToken(customer, sellerProfile);
-
-    res.json({
-      token,
-      user: {
-        id: customer.id,
-        email: customer.email,
-        first_name: customer.first_name,
-        last_name: customer.last_name,
-        name: customer.name || `${customer.first_name || ''} ${customer.last_name || ''}`.trim(),
-        is_seller: customer.is_seller,
-        seller_id: sellerProfile?.id || null
-      }
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Get current customer profile
-router.get('/me', authenticateCustomer, async (req, res) => {
-  try {
-    let customer;
-
-    if (supabaseAdmin) {
-      const { data, error } = await supabaseAdmin
-        .from('customers')
-        .select('*')
-        .eq('id', req.customer.id)
-        .single();
-
-      if (error || !data) {
-        return res.status(404).json({ error: 'Customer not found' });
-      }
-
-      customer = data;
-    } else {
-      customer = mockCustomers.find(c => c.id === req.customer.id);
-      if (!customer) {
-        return res.status(404).json({ error: 'Customer not found' });
-      }
-    }
-
-    // Get seller profile if customer is a seller
-    let sellerProfile = null;
-    if (customer.is_seller && supabaseAdmin) {
       const { data } = await supabaseAdmin
         .from('seller_profiles')
         .select('*')
@@ -299,48 +187,35 @@ router.put('/me', authenticateCustomer, async (req, res) => {
       });
     }
 
+    if (!supabaseAdmin) {
+      return res.status(503).json({ error: 'Database not configured' });
+    }
+
     const updates = validation.data;
 
     // Update name field if first_name or last_name changed
     if (updates.first_name || updates.last_name) {
-      if (supabaseAdmin) {
-        const { data: current } = await supabaseAdmin
-          .from('customers')
-          .select('first_name, last_name')
-          .eq('id', req.customer.id)
-          .single();
-
-        const firstName = updates.first_name || current?.first_name || '';
-        const lastName = updates.last_name || current?.last_name || '';
-        updates.name = `${firstName} ${lastName}`.trim();
-      }
-    }
-
-    let customer;
-
-    if (supabaseAdmin) {
-      const { data, error } = await supabaseAdmin
+      const { data: current } = await supabaseAdmin
         .from('customers')
-        .update(updates)
+        .select('first_name, last_name')
         .eq('id', req.customer.id)
-        .select()
         .single();
 
-      if (error) {
-        console.error('Update profile error:', error);
-        return res.status(500).json({ error: 'Failed to update profile' });
-      }
+      const firstName = updates.first_name || current?.first_name || '';
+      const lastName = updates.last_name || current?.last_name || '';
+      updates.name = `${firstName} ${lastName}`.trim();
+    }
 
-      customer = data;
-    } else {
-      // Mock update
-      const index = mockCustomers.findIndex(c => c.id === req.customer.id);
-      if (index === -1) {
-        return res.status(404).json({ error: 'Customer not found' });
-      }
+    const { data: customer, error } = await supabaseAdmin
+      .from('customers')
+      .update(updates)
+      .eq('id', req.customer.id)
+      .select()
+      .single();
 
-      mockCustomers[index] = { ...mockCustomers[index], ...updates };
-      customer = mockCustomers[index];
+    if (error) {
+      console.error('Update profile error:', error);
+      return res.status(500).json({ error: 'Failed to update profile' });
     }
 
     res.json({
@@ -362,90 +237,6 @@ router.put('/me', authenticateCustomer, async (req, res) => {
     });
   } catch (error) {
     console.error('Update profile error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Change password
-router.post('/change-password', authenticateCustomer, async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: 'Current and new password required' });
-    }
-
-    if (newPassword.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters' });
-    }
-
-    let customer;
-
-    if (supabaseAdmin) {
-      const { data, error } = await supabaseAdmin
-        .from('customers')
-        .select('*')
-        .eq('id', req.customer.id)
-        .single();
-
-      if (error || !data) {
-        return res.status(404).json({ error: 'Customer not found' });
-      }
-
-      customer = data;
-    } else {
-      customer = mockCustomers.find(c => c.id === req.customer.id);
-      if (!customer) {
-        return res.status(404).json({ error: 'Customer not found' });
-      }
-    }
-
-    // Verify current password
-    const validPassword = await bcrypt.compare(currentPassword, customer.password_hash);
-    if (!validPassword) {
-      return res.status(401).json({ error: 'Current password is incorrect' });
-    }
-
-    // Hash new password
-    const newPasswordHash = await bcrypt.hash(newPassword, 10);
-
-    if (supabaseAdmin) {
-      await supabaseAdmin
-        .from('customers')
-        .update({ password_hash: newPasswordHash })
-        .eq('id', req.customer.id);
-    } else {
-      const index = mockCustomers.findIndex(c => c.id === req.customer.id);
-      mockCustomers[index].password_hash = newPasswordHash;
-    }
-
-    res.json({ message: 'Password updated successfully' });
-  } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Request password reset (placeholder - would need email service)
-router.post('/forgot-password', async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
-    }
-
-    // In production, this would:
-    // 1. Generate a reset token
-    // 2. Store it with expiration
-    // 3. Send email with reset link
-
-    // For now, just acknowledge the request
-    res.json({
-      message: 'If an account with that email exists, a password reset link has been sent.'
-    });
-  } catch (error) {
-    console.error('Forgot password error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

@@ -1,16 +1,21 @@
 import { useState, useCallback } from 'react';
 import { ELITE_API_URL, PAYMENTS_API_URL } from '@/config/api';
+import { supabase } from '@/config/supabase';
 
 const API_BASE = `${ELITE_API_URL}/api`;
 const FASTAPI_BASE = PAYMENTS_API_URL;
 const ADMIN_API_KEY = import.meta.env.VITE_FASTAPI_ADMIN_KEY || '';
 
-// Get token from localStorage
-const getToken = () => localStorage.getItem('admin_token');
+// Get token from Supabase session
+const getToken = async () => {
+  if (!supabase) return null;
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token || null;
+};
 
 // Base fetch wrapper
 const apiFetch = async (endpoint, options = {}) => {
-  const token = getToken();
+  const token = await getToken();
 
   const config = {
     ...options,
@@ -33,17 +38,7 @@ const apiFetch = async (endpoint, options = {}) => {
 
 // Auth API
 export const authApi = {
-  login: (email, password) =>
-    apiFetch('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    }),
   me: () => apiFetch('/auth/me'),
-  changePassword: (currentPassword, newPassword) =>
-    apiFetch('/auth/change-password', {
-      method: 'POST',
-      body: JSON.stringify({ currentPassword, newPassword }),
-    }),
 };
 
 // Products API
@@ -123,7 +118,7 @@ export const discountsApi = {
 // Upload API
 export const uploadApi = {
   uploadImage: async (file) => {
-    const token = getToken();
+    const token = await getToken();
     const formData = new FormData();
     formData.append('image', file);
 
@@ -148,7 +143,7 @@ export const uploadApi = {
 // ── FastAPI fetch wrapper (CourierGuy / PayFast backend, API-key auth) ──
 
 const fastApiFetch = async (endpoint, options = {}) => {
-  const token = getToken();
+  const token = await getToken();
   const config = {
     ...options,
     headers: {
@@ -225,4 +220,4 @@ export const useApiCall = () => {
   return { loading, error, execute, setError };
 };
 
-export default { authApi, productsApi, setsApi, categoriesApi, configApi, preordersApi, discountsApi, ordersApi, dashboardApi };
+export default { productsApi, setsApi, categoriesApi, configApi, preordersApi, discountsApi, ordersApi, dashboardApi };

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { ChevronRight, ShoppingBag, MapPin } from 'lucide-react';
-import { ELITE_API_URL } from '../../config/api';
+import { ELITE_API_URL, PAYMENTS_API_URL } from '../../config/api';
 
 const provinces = [
   'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
@@ -173,7 +173,7 @@ const MarketplaceCheckout = () => {
         }
       };
 
-      const res = await fetch(`${ELITE_API_URL}/api/payfast/create-payment`, {
+      const res = await fetch(`${PAYMENTS_API_URL}/marketplace/payfast/create-payment`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)

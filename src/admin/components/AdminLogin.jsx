@@ -82,7 +82,7 @@ const AdminLogin = () => {
 
           <div className="mt-6 text-center">
             <p className="text-xs text-[#4a4a4a]">
-              Demo: admin@elitetcg.com / admin123
+              Authorized personnel only
             </p>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticateToken, requireRole, generateCustomerToken } from '../middleware/auth.js';
+import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { supabaseAdmin } from '../config/supabase.js';
 import { mockApplications, mockSellerProfiles } from './sellers.js';
 

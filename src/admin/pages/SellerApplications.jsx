@@ -8,6 +8,7 @@ import {
   DialogFooter,
 } from '../../components/ui/dialog';
 import { ELITE_API_URL } from '@/config/api';
+import { supabase } from '@/config/supabase';
 
 const API_BASE_URL = ELITE_API_URL;
 
@@ -28,12 +29,16 @@ const SellerApplications = () => {
   const [adminNotes, setAdminNotes] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  const getToken = () => localStorage.getItem('admin_token');
+  const getToken = async () => {
+    if (!supabase) return null;
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  };
 
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      const token = getToken();
+      const token = await getToken();
       const res = await fetch(
         `${API_BASE_URL}/api/admin/seller-applications?status=${statusFilter}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
@@ -49,7 +54,7 @@ const SellerApplications = () => {
 
   const fetchStats = async () => {
     try {
-      const token = getToken();
+      const token = await getToken();
       const res = await fetch(
         `${API_BASE_URL}/api/admin/seller-applications/stats/overview`,
         { headers: { 'Authorization': `Bearer ${token}` } }
@@ -70,7 +75,7 @@ const SellerApplications = () => {
     if (!selectedApp) return;
     setActionLoading(true);
     try {
-      const token = getToken();
+      const token = await getToken();
       const res = await fetch(
         `${API_BASE_URL}/api/admin/seller-applications/${selectedApp.id}/approve`,
         {
@@ -97,7 +102,7 @@ const SellerApplications = () => {
     if (!selectedApp || !rejectionReason.trim()) return;
     setActionLoading(true);
     try {
-      const token = getToken();
+      const token = await getToken();
       const res = await fetch(
         `${API_BASE_URL}/api/admin/seller-applications/${selectedApp.id}/reject`,
         {
