@@ -54,6 +54,9 @@ import CartDrawer from './components/Cart/CartDrawer';
 import InstallPrompt from './components/PWA/InstallPrompt';
 import UpdateNotification from './components/PWA/UpdateNotification';
 
+// Analytics
+import { Analytics } from '@vercel/analytics/react';
+
 // Admin Application
 import AdminApp from './admin/AdminApp';
 
@@ -125,6 +128,7 @@ function App() {
         />
         <InstallPrompt />
         <UpdateNotification />
+        <Analytics />
       </CartProvider>
     </CustomerAuthProvider>
   );
