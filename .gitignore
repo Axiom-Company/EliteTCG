@@ -19,8 +19,7 @@ dist-ssr
 .env.production
 server/.env
 
-# Uploaded files (local dev only)
-server/uploads/
+# Temp build artifacts
 server/EliteTCG/
 
 # Editor directories and files

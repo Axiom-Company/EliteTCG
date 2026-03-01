@@ -1,14 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, Heart, X, ChevronRight, Package, SlidersHorizontal } from 'lucide-react';
-
-const API_BASE_URL = 'http://localhost:3001';
-
-const getImageUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${API_BASE_URL}${url}`;
-};
+import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const categories = [
   { value: '', label: 'All Products' },
@@ -122,7 +115,7 @@ const Products = () => {
         if (filters.category) params.set('category', filters.category);
         params.set('limit', '100');
 
-        const res = await fetch(`${API_BASE_URL}/api/products?${params}`);
+        const res = await fetch(`${ELITE_API_URL}/api/products?${params}`);
         const data = await res.json();
 
         let sorted = data.products || [];
@@ -383,15 +376,12 @@ const Products = () => {
                     >
                       {/* Image */}
                       <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">
-                        {product.images?.[0] ? (
-                          <img
-                            src={getImageUrl(product.images[0])}
-                            alt={product.name}
-                            className="w-[75%] h-[75%] object-contain transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          <Package className="w-12 h-12 text-gray-200" />
-                        )}
+                        <img
+                          src={getImageUrl(product.images?.[0])}
+                          alt={product.name}
+                          className="w-[75%] h-[75%] object-contain transition-transform duration-300 group-hover:scale-105"
+                          onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+                        />
 
                         {/* Badge */}
                         {product.badge && product.badge !== 'none' && (

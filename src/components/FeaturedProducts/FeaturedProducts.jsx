@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
-const API_BASE = 'http://localhost:3001';
+import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const HeartIcon = ({ filled }) => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -17,7 +16,7 @@ const FeaturedProducts = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/products?limit=8`);
+        const response = await fetch(`${ELITE_API_URL}/api/products?limit=8`);
         const data = await response.json();
         // Sort: featured products first, then by created_at
         const sorted = (data.products || []).sort((a, b) => {
@@ -48,12 +47,6 @@ const FeaturedProducts = () => {
       case 'limited': return 'bg-gray-700 text-white';
       default: return '';
     }
-  };
-
-  const getImageUrl = (product) => {
-    if (!product.images?.[0]) return null;
-    const img = product.images[0];
-    return img.startsWith('http') ? img : `${API_BASE}${img}`;
   };
 
   const getCurrencySymbol = (currency) => {
@@ -102,21 +95,12 @@ const FeaturedProducts = () => {
                 className="card-3d flex flex-col bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-gray-300 group cursor-pointer"
               >
                 <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
-                  {getImageUrl(product) ? (
-                    <img
-                      src={getImageUrl(product)}
-                      alt={product.name}
-                      className="max-w-[80%] max-h-[80%] object-contain"
-                    />
-                  ) : (
-                    <div className="text-gray-300">
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                        <rect width="18" height="18" x="3" y="3" rx="2"/>
-                        <circle cx="9" cy="9" r="2"/>
-                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                      </svg>
-                    </div>
-                  )}
+                  <img
+                    src={getImageUrl(product.images?.[0])}
+                    alt={product.name}
+                    className="max-w-[80%] max-h-[80%] object-contain"
+                    onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+                  />
 
                   {product.badge && product.badge !== 'none' && (
                     <span className={`absolute top-2 left-2 px-3 py-1 text-xs font-medium rounded-full capitalize ${getBadgeClass(product.badge)}`}>

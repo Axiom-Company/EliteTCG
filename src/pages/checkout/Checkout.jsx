@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
-import { getImageUrl } from '../../config/api';
+import { getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 import { getShippingQuote } from '../../services/shippingApi';
 import { createDirectOrder } from '../../services/orderApi';
 import { getPayflexConfiguration, createPayflexOrder } from '../../services/payflexApi';
@@ -537,15 +537,12 @@ const Checkout = () => {
                   {cart.map(item => (
                     <div key={item.id} className="flex gap-4">
                       <div className="w-16 h-16 bg-white rounded-lg overflow-hidden shrink-0">
-                        {item.image ? (
-                          <img src={getImageUrl(item.image)} alt={item.name} className="w-full h-full object-contain p-1" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-300">
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
-                          </div>
-                        )}
+                        <img
+                          src={getImageUrl(item.image)}
+                          alt={item.name}
+                          className="w-full h-full object-contain p-1"
+                          onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-900 line-clamp-1">{item.name}</p>

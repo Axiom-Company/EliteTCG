@@ -6,8 +6,8 @@ const PAYFAST_CONFIG = {
   merchantKey: process.env.PAYFAST_MERCHANT_KEY || '',
   passphrase: process.env.PAYFAST_PASSPHRASE || '',
   sandbox: process.env.PAYFAST_SANDBOX === 'true',
-  returnUrl: process.env.PAYFAST_RETURN_URL || 'http://localhost:5173/marketplace/payment/success',
-  cancelUrl: process.env.PAYFAST_CANCEL_URL || 'http://localhost:5173/marketplace/payment/cancel',
+  returnUrl: process.env.PAYFAST_RETURN_URL || 'https://www.elitetcg.co.za/marketplace/payment/success',
+  cancelUrl: process.env.PAYFAST_CANCEL_URL || 'https://www.elitetcg.co.za/marketplace/payment/cancel',
   notifyUrl: process.env.PAYFAST_NOTIFY_URL || 'http://localhost:3001/api/payfast/notify'
 };
 
@@ -174,8 +174,8 @@ function buildPaymentUrl(paymentData) {
  * Generate payment data for store orders (not marketplace)
  */
 function generateStorePaymentData(order, buyer) {
-  const storeReturnUrl = process.env.PAYFAST_STORE_RETURN_URL || 'http://localhost:5173/payment/success';
-  const storeCancelUrl = process.env.PAYFAST_STORE_CANCEL_URL || 'http://localhost:5173/payment/cancel';
+  const storeReturnUrl = process.env.PAYFAST_STORE_RETURN_URL || 'https://www.elitetcg.co.za/payment/success';
+  const storeCancelUrl = process.env.PAYFAST_STORE_CANCEL_URL || 'https://www.elitetcg.co.za/payment/cancel';
   const storeNotifyUrl = process.env.PAYFAST_STORE_NOTIFY_URL || 'http://localhost:3001/api/orders/notify';
 
   const data = {

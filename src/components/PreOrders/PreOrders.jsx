@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-
-const API_BASE = 'http://localhost:3001';
+import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const getCurrencySymbol = (currency) => {
   switch (currency) {
@@ -19,7 +18,7 @@ const PreOrders = () => {
   useEffect(() => {
     const fetchPreorders = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/products?badge=preorder`);
+        const response = await fetch(`${ELITE_API_URL}/api/products?badge=preorder`);
         const data = await response.json();
         setPreorders(data.products || []);
       } catch (error) {
@@ -56,13 +55,12 @@ const PreOrders = () => {
                 className="flex flex-col bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-250 hover:border-gray-300 group cursor-pointer"
               >
                 <div className="relative h-48 bg-white flex items-center justify-center overflow-hidden p-3">
-                  {item.images?.[0] ? (
-                    <img
-                      src={item.images[0].startsWith('http') ? item.images[0] : `${API_BASE}${item.images[0]}`}
-                      alt={item.name}
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  ) : null}
+                  <img
+                    src={getImageUrl(item.images?.[0])}
+                    alt={item.name}
+                    className="max-w-full max-h-full object-contain"
+                    onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+                  />
                   <span className="absolute top-3 right-3 inline-flex items-center px-2 py-1 text-[10px] font-medium uppercase tracking-wider rounded-full bg-primary text-white">
                     Coming Soon
                   </span>

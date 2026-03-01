@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import PayflexPriceSplitter from '../Payflex/PayflexPriceSplitter';
-
-const API_BASE = 'http://localhost:3001';
+import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const HeartIcon = ({ filled }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -43,7 +42,7 @@ const ProductPage = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE}/api/products/${id}`);
+        const response = await fetch(`${ELITE_API_URL}/api/products/${id}`);
         if (!response.ok) {
           throw new Error('Product not found');
         }
@@ -58,11 +57,6 @@ const ProductPage = () => {
 
     fetchProduct();
   }, [id]);
-
-  const getImageUrl = (img) => {
-    if (!img) return null;
-    return img.startsWith('http') ? img : `${API_BASE}${img}`;
-  };
 
   const getCurrencySymbol = (currency) => {
     switch (currency) {
@@ -142,21 +136,12 @@ const ProductPage = () => {
           <div className="space-y-4">
             {/* Main Image */}
             <div className="relative bg-white rounded-2xl flex items-center justify-center overflow-hidden border border-gray-100 p-6 max-w-[90%]">
-              {getImageUrl(images[selectedImage]) ? (
-                <img
-                  src={getImageUrl(images[selectedImage])}
-                  alt={product.name}
-                  className="w-auto h-full max-h-[500px] object-contain"
-                />
-              ) : (
-                <div className="text-gray-300">
-                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                    <rect width="18" height="18" x="3" y="3" rx="2"/>
-                    <circle cx="9" cy="9" r="2"/>
-                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                  </svg>
-                </div>
-              )}
+              <img
+                src={getImageUrl(images[selectedImage])}
+                alt={product.name}
+                className="w-auto h-full max-h-[500px] object-contain"
+                onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+              />
             </div>
 
             {/* Product Name */}
@@ -180,19 +165,12 @@ const ProductPage = () => {
                       selectedImage === index ? 'border-primary' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    {getImageUrl(img) ? (
-                      <img
-                        src={getImageUrl(img)}
-                        alt={`${product.name} ${index + 1}`}
-                        className="w-full h-full object-contain bg-gray-50"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-                          <rect width="18" height="18" x="3" y="3" rx="2"/>
-                        </svg>
-                      </div>
-                    )}
+                    <img
+                      src={getImageUrl(img)}
+                      alt={`${product.name} ${index + 1}`}
+                      className="w-full h-full object-contain bg-gray-50"
+                      onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+                    />
                   </button>
                 ))}
               </div>
