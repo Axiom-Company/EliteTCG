@@ -1,0 +1,8 @@
+index.js
+routes
+config
+middleware
+uploads
+.env
+.env.*
+node_modules
