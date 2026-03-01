@@ -77,6 +77,7 @@ import UpdateNotification from './components/PWA/UpdateNotification';
 
 // Analytics
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // Admin Application
 import AdminApp from './admin/AdminApp';
@@ -157,6 +158,7 @@ function App() {
         <InstallPrompt />
         <UpdateNotification />
         <Analytics />
+        <SpeedInsights />
       </CartProvider>
       </WishlistProvider>
     </CustomerAuthProvider>
