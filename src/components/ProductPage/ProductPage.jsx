@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
-import PayflexPriceSplitter from '../Payflex/PayflexPriceSplitter';
-import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
+import { useWishlist } from '../../contexts/WishlistContext';
+
+const API_BASE = 'http://localhost:3001';
 
 const HeartIcon = ({ filled }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -19,10 +20,10 @@ const ChevronLeft = () => (
 const ProductPage = () => {
   const { id } = useParams();
   const { addToCart, openCart } = useCart();
+  const { toggleWishlist, isWishlisted } = useWishlist();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [inWishlist, setInWishlist] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -268,15 +269,15 @@ const ProductPage = () => {
                 Add to Cart
               </button>
               <button
-                onClick={() => setInWishlist(!inWishlist)}
-                className={`w-12 h-12 flex items-center justify-center rounded-full border transition-colors cursor-pointer ${
-                  inWishlist
-                    ? 'border-primary text-primary bg-primary/5'
-                    : 'border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600'
+                onClick={() => product && toggleWishlist(product.id)}
+                className={`w-12 h-12 flex items-center justify-center transition-colors cursor-pointer ${
+                  product && isWishlisted(product.id)
+                    ? 'text-primary'
+                    : 'text-gray-400 hover:text-gray-600'
                 }`}
-                aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                aria-label={product && isWishlisted(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
               >
-                <HeartIcon filled={inWishlist} />
+                <HeartIcon filled={product && isWishlisted(product.id)} />
               </button>
             </div>
 

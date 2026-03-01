@@ -1,22 +1,31 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../../components/HeroBanner/HeroBanner.css';
+import card1 from '../../assets/images/SingleCards/card1.png';
+import card2 from '../../assets/images/SingleCards/card2.png';
+import card3 from '../../assets/images/SingleCards/card3.png';
+import card4 from '../../assets/images/SingleCards/card4.png';
+import card5 from '../../assets/images/SingleCards/card5.png';
+import card6 from '../../assets/images/SingleCards/card6.png';
+import card7  from '../../assets/images/SingleCards/card7.png';
+import card8  from '../../assets/images/SingleCards/card8.png';
+import card9  from '../../assets/images/SingleCards/card9.png';
+import card10 from '../../assets/images/SingleCards/card10.png';
+import card11 from '../../assets/images/SingleCards/card11.png';
+import card12 from '../../assets/images/SingleCards/card12.png';
 
-/* ── Card Data: 14 cards, display order left-to-right (positions 1-14) ── */
 const CARD_DATA = [
-  { pos: 1,  file: 'single_card_14.png', name: 'Mega Lopunny ex' },
-  { pos: 2,  file: 'single_card_8.png',  name: 'Mega Emboar ex' },
-  { pos: 3,  file: 'single_card_10.png', name: 'Mega Froslass ex' },
-  { pos: 4,  file: 'single_card_5.png',  name: 'Mega Gengar ex' },
-  { pos: 5,  file: 'single_card_7.png',  name: 'Koraidon ex' },
-  { pos: 6,  file: 'single_card_1.png',  name: 'Mega Dragonite ex' },
-  { pos: 7,  file: 'single_card_13.png', name: 'Mega Charizard X ex' },
-  { pos: 8,  file: 'single_card_2.png',  name: 'Pikachu ex' },
-  { pos: 9,  file: 'single_card_11.png', name: 'Miraidon ex' },
-  { pos: 10, file: 'single_card_3.png',  name: "Team Rocket's Mewtwo ex" },
-  { pos: 11, file: 'single_card_9.png',  name: 'Cinderace ex' },
-  { pos: 12, file: 'single_card_6.png',  name: 'Mega Lucario ex' },
-  { pos: 13, file: 'single_card_4.png',  name: 'Mega Gardevoir ex' },
-  { pos: 14, file: 'single_card_12.png', name: 'Mega Gardevoir ex' },
+  { pos: 1,  src: card1,  name: 'Card 1' },
+  { pos: 2,  src: card2,  name: 'Card 2' },
+  { pos: 3,  src: card3,  name: 'Card 3' },
+  { pos: 4,  src: card4,  name: 'Card 4' },
+  { pos: 5,  src: card5,  name: 'Card 5' },
+  { pos: 6,  src: card6,  name: 'Card 6' },
+  { pos: 7,  src: card7,  name: 'Card 7' },
+  { pos: 8,  src: card8,  name: 'Card 8' },
+  { pos: 9,  src: card9,  name: 'Card 9' },
+  { pos: 10, src: card10, name: 'Card 10' },
+  { pos: 11, src: card11, name: 'Card 11' },
+  { pos: 12, src: card12, name: 'Card 12' },
 ];
 
 const TOTAL_CARDS = CARD_DATA.length;
@@ -26,7 +35,7 @@ function computeArc(slot, total, spreadVw) {
   const t = total <= 1 ? 0 : (slot / (total - 1)) * 2 - 1;
   return {
     x: t * (spreadVw / 2),
-    y: t * t * 80,
+    y: t * t * 60,
     rot: t * 18,
   };
 }
@@ -49,20 +58,22 @@ const Hero = () => {
   const sparkleRefs = useRef([]);
   const hoveredSlot = useRef(null);
   const isMobileRef = useRef(false);
-  const spreadVwRef = useRef(150);
+  const spreadVwRef = useRef(
+    (() => { const w = typeof window !== 'undefined' ? window.innerWidth : 1440; return w < 640 ? 105 : w < 1024 ? 82 : 76; })()
+  );
   const phaseRef = useRef('emerging');
 
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   /* ── Responsive spread ────────────────────────────────────────────── */
   useEffect(() => {
+    isMobileRef.current = window.innerWidth < 640;
     const check = () => {
       const w = window.innerWidth;
       isMobileRef.current = w < 640;
-      spreadVwRef.current = w < 640 ? 100 : w < 1024 ? 130 : 150;
+      spreadVwRef.current = w < 640 ? 105 : w < 1024 ? 82 : 76;
       forceUpdate((n) => n + 1);
     };
-    check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
@@ -71,7 +82,7 @@ const Hero = () => {
   useEffect(() => {
     CARD_DATA.forEach((c) => {
       const img = new Image();
-      img.src = `/images/hero/${c.file}`;
+      img.src = c.src;
     });
   }, []);
 
@@ -84,8 +95,8 @@ const Hero = () => {
 
   /* ── Emerge -> Interactive transition on page load ─────────────────── */
   useEffect(() => {
-    // Cards emerge immediately; after emerge animation completes, go idle
-    const emergeTotal = TOTAL_CARDS * 60 + 700; // last card delay + animation duration
+    const visibleCount = isMobileRef.current ? 8 : TOTAL_CARDS;
+    const emergeTotal = visibleCount * 60 + 700; // last card delay + animation duration
     const timer = setTimeout(() => {
       setPhase('interactive');
     }, emergeTotal);
@@ -136,16 +147,13 @@ const Hero = () => {
     const cy = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
 
     // Layer 1: 3D tilt on card inner
-    const rotY = (cx - 0.5) * 30;
-    const rotX = (cy - 0.5) * -20;
+    const rotY = (cx - 0.5) * 14;
+    const rotX = (cy - 0.5) * -10;
     const inner = innerRefs.current[slotIdx];
     if (inner) {
       inner.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg)`;
       inner.style.transition = 'transform 0.08s linear';
-      // Layer 5: Edge glow via box-shadow
-      const hue = Math.round(cx * 60 + 20);
-      inner.style.boxShadow =
-        `inset 0 0 30px rgba(255,${150 + hue},50,0.15), 0 0 20px rgba(100,140,255,0.25), 0 8px 32px rgba(0,0,0,0.3)`;
+      inner.style.boxShadow = '0 8px 24px rgba(0,0,0,0.25)';
       inner.style.borderRadius = '11px';
     }
 
@@ -189,33 +197,34 @@ const Hero = () => {
   }, []);
 
   /* ── Card hover: 35px lift + 1.46x scale + taskbar neighbor magnification ── */
+  const resetCard = useCallback((idx) => {
+    const el = cardElRefs.current[idx];
+    if (!el) return;
+    el.classList.remove('hero-card--hovered');
+    if (phaseRef.current === 'interactive') el.classList.add('hero-card--idle');
+    el.style.transform = '';
+    clearHoloLayers(idx);
+  }, [clearHoloLayers]);
+
   const handleCardMouseEnter = useCallback((slotIdx) => {
     if (phaseRef.current !== 'interactive' || isMobileRef.current) return;
+
+    // Clean up previously hovered card if mouseleave was missed
+    if (hoveredSlot.current !== null && hoveredSlot.current !== slotIdx) {
+      resetCard(hoveredSlot.current);
+    }
+
     hoveredSlot.current = slotIdx;
     const el = cardElRefs.current[slotIdx];
     if (!el) return;
     el.classList.add('hero-card--hovered');
     el.classList.remove('hero-card--idle');
-    el.style.transform = 'translateX(var(--card-x)) translateY(calc(var(--card-y) - 35px)) rotate(0deg) scale(1.46)';
-    el.style.zIndex = '100';
-    el.style.transition = 'transform 0.25s ease-out';
-
-    // Taskbar-style neighbor magnification
-    const prev = cardElRefs.current[slotIdx - 1];
-    const next = cardElRefs.current[slotIdx + 1];
-    if (prev) {
-      prev.classList.remove('hero-card--idle');
-      prev.style.transform = 'translateX(var(--card-x)) translateY(calc(var(--card-y) - 14px)) rotate(var(--card-rot)) scale(1.18)';
-      prev.style.transition = 'transform 0.25s ease-out';
-      prev.style.zIndex = '99';
-    }
-    if (next) {
-      next.classList.remove('hero-card--idle');
-      next.style.transform = 'translateX(var(--card-x)) translateY(calc(var(--card-y) - 14px)) rotate(var(--card-rot)) scale(1.18)';
-      next.style.transition = 'transform 0.25s ease-out';
-      next.style.zIndex = '99';
-    }
-  }, []);
+    requestAnimationFrame(() => {
+      if (hoveredSlot.current === slotIdx) {
+        el.style.transform = 'translateX(var(--card-x)) translateY(calc(var(--card-y) - 16px)) rotate(var(--card-rot))';
+      }
+    });
+  }, [resetCard]);
 
   const handleCardMouseMove = useCallback((e, slotIdx) => {
     if (phaseRef.current !== 'interactive' || hoveredSlot.current !== slotIdx) return;
@@ -224,39 +233,18 @@ const Hero = () => {
 
   const handleCardMouseLeave = useCallback((slotIdx) => {
     hoveredSlot.current = null;
-    const el = cardElRefs.current[slotIdx];
-    if (el) {
-      el.classList.remove('hero-card--hovered');
-      if (phaseRef.current === 'interactive') el.classList.add('hero-card--idle');
-      el.style.transform = '';
-      el.style.zIndex = '';
-      el.style.transition = 'transform 0.35s ease-out';
-    }
-    clearHoloLayers(slotIdx);
-
-    // Reset neighbors
-    const prev = cardElRefs.current[slotIdx - 1];
-    const next = cardElRefs.current[slotIdx + 1];
-    [prev, next].forEach((n) => {
-      if (!n) return;
-      if (phaseRef.current === 'interactive') n.classList.add('hero-card--idle');
-      n.style.transform = '';
-      n.style.zIndex = '';
-      n.style.transition = 'transform 0.35s ease-out';
-    });
-  }, [clearHoloLayers]);
+    resetCard(slotIdx);
+  }, [resetCard]);
 
   /* ── Compute CSS custom properties for each card slot ──────────────── */
-  const getSlotVars = useCallback((slotIdx) => {
-    const arc = computeArc(slotIdx, TOTAL_CARDS, spreadVwRef.current);
-    const centerDist = Math.abs(slotIdx - (TOTAL_CARDS - 1) / 2);
-    const z = Math.round(TOTAL_CARDS - centerDist);
-    const isDesktop = spreadVwRef.current === 150;
+  const getSlotVars = useCallback((slotIdx, total) => {
+    const arc = computeArc(slotIdx, total, spreadVwRef.current);
+    const centerDist = Math.abs(slotIdx - (total - 1) / 2);
+    const z = Math.round(total - centerDist);
     return {
       '--card-x': `${arc.x}vw`,
       '--card-y': `${arc.y}px`,
       '--card-rot': `${arc.rot}deg`,
-      '--card-scale': isDesktop ? '0.98' : '1',
       '--card-z': z,
       '--emerge-delay': `${slotIdx * 60}ms`,
       '--bob-delay': `${slotIdx * 0.4}s`,
@@ -272,6 +260,9 @@ const Hero = () => {
 
   const isEmerging = phase === 'emerging';
   const isInteractive = phase === 'interactive';
+  const visibleCards = isMobileRef.current
+    ? CARD_DATA.slice(Math.floor((TOTAL_CARDS - 8) / 2), Math.floor((TOTAL_CARDS - 8) / 2) + 8)
+    : CARD_DATA;
 
   return (
     <section
@@ -337,15 +328,15 @@ const Hero = () => {
 
       {/* ── 14-Card Parabolic Arc (pinned to bottom) ───────────────── */}
       <div
-        className="relative w-full -mt-2 md:absolute md:bottom-[60px] md:left-0 md:right-0 z-10 flex justify-center"
+        className="relative w-full mt-4 md:absolute md:bottom-[35px] md:left-0 md:right-0 z-10 flex justify-center"
         style={{ height: '320px', opacity: cardFadeOpacity }}
       >
         <div
           className="hero-banner__cards"
           style={{ position: 'relative', width: '100%', height: '100%' }}
         >
-          {CARD_DATA.map((card, slotIdx) => {
-            const vars = getSlotVars(slotIdx);
+          {visibleCards.map((card, slotIdx) => {
+            const vars = getSlotVars(slotIdx, visibleCards.length);
 
             return (
               <div
@@ -369,7 +360,7 @@ const Hero = () => {
                   {/* Front face only -- no card back, no flip */}
                   <div className="hero-card__face">
                     <img
-                      src={`/images/hero/${card.file}`}
+                      src={card.src}
                       alt={card.name}
                       draggable="false"
                     />
@@ -386,11 +377,6 @@ const Hero = () => {
                       className="hero-card__light-sheen"
                     />
 
-                    {/* Layer 4: Sparkle/glitter texture */}
-                    <div
-                      ref={(el) => { sparkleRefs.current[slotIdx] = el; }}
-                      className="hero-card__sparkle-texture"
-                    />
                   </div>
                 </div>
 
@@ -417,7 +403,7 @@ const Hero = () => {
           onMouseLeave={() => setTilt({ x: 0, y: 0 })}
         >
           <img
-            src={`/images/hero/${CARD_DATA[selectedCard].file}`}
+            src={CARD_DATA[selectedCard].src}
             alt={CARD_DATA[selectedCard].name}
             onClick={(e) => e.stopPropagation()}
             style={{

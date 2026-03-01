@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, Heart, X, ChevronRight, Package, SlidersHorizontal } from 'lucide-react';
-import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
+import { Search, X, ChevronRight, Package, SlidersHorizontal } from 'lucide-react';
+
+const API_BASE_URL = 'http://localhost:3001';
+
+const getImageUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith('http')) return url;
+  return `${API_BASE_URL}${url}`;
+};
 
 const categories = [
   { value: '', label: 'All Products' },
@@ -41,7 +48,7 @@ const CategoryLabel = ({ value }) => {
 };
 
 const CardSkeleton = () => (
-  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
+  <div className="bg-white rounded-2xl overflow-hidden animate-pulse">
     <div className="aspect-square bg-gray-50" />
     <div className="p-4 space-y-2.5">
       <div className="h-3 bg-gray-100 rounded w-1/3" />
@@ -56,7 +63,6 @@ const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [wishlist, setWishlist] = useState([]);
   const [addingToCart, setAddingToCart] = useState(null);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
@@ -69,12 +75,6 @@ const Products = () => {
     return () => { document.body.style.overflow = ''; };
   }, [mobileFilterOpen]);
 
-  const toggleWishlist = (id, e) => {
-    e.preventDefault();
-    setWishlist(prev =>
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
-  };
 
   const handleQuickAdd = async (product, e) => {
     e.preventDefault();
@@ -361,7 +361,6 @@ const Products = () => {
                 {products.map((product) => {
                   const comparePrice = formatComparePrice(product);
                   const discountPct = getDiscountPct(product);
-                  const isWishlisted = wishlist.includes(product.id);
                   const isOutOfStock = product.inventory?.quantity === 0;
                   const isLowStock =
                     product.inventory?.quantity > 0 &&
@@ -372,30 +371,30 @@ const Products = () => {
                     <Link
                       key={product.id}
                       to={`/product/${product.slug || product.id}`}
-                      className="card-3d group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-300"
+                      className="group flex flex-col bg-white rounded-2xl overflow-hidden"
                     >
                       {/* Image */}
                       <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">
-                        <img
-                          src={getImageUrl(product.images?.[0])}
-                          alt={product.name}
-                          className="w-[75%] h-[75%] object-contain transition-transform duration-300 group-hover:scale-105"
-                          onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
-                        />
+                        {product.images?.[0] ? (
+                          <img
+                            src={getImageUrl(product.images[0])}
+                            alt={product.name}
+                            className="w-[75%] h-[75%] object-contain"
+                          />
+                        ) : (
+                          <Package className="w-12 h-12 text-gray-200" />
+                        )}
 
-                        {/* Badge */}
-                        {product.badge && product.badge !== 'none' && (
+                        {/* Badge — discount % takes priority */}
+                        {!isOutOfStock && (discountPct ? (
+                          <span className="absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-gray-900 text-white">
+                            -{discountPct}%
+                          </span>
+                        ) : product.badge && product.badge !== 'none' && (
                           <span className={`absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full capitalize tracking-wide ${getBadgeStyle(product.badge)}`}>
                             {product.badge}
                           </span>
-                        )}
-
-                        {/* Discount % */}
-                        {discountPct && !isOutOfStock && (
-                          <span className="absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-[#E3350D] text-white">
-                            -{discountPct}%
-                          </span>
-                        )}
+                        ))}
 
                         {/* Out of stock overlay */}
                         {isOutOfStock && (
@@ -406,40 +405,7 @@ const Products = () => {
                           </div>
                         )}
 
-                        {/* Quick Add — slides up on hover */}
-                        {!isOutOfStock && (
-                          <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-200">
-                            <button
-                              onClick={(e) => handleQuickAdd(product, e)}
-                              className="w-full py-2.5 bg-gray-200 hover:bg-gray-800 text-gray-800 hover:text-white text-xs font-medium flex items-center justify-center gap-2 transition-colors duration-150"
-                            >
-                              {isAdding ? (
-                                <span className="flex items-center gap-2">
-                                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                                  </svg>
-                                  Adding…
-                                </span>
-                              ) : (
-                                'Quick Add'
-                              )}
-                            </button>
-                          </div>
-                        )}
 
-                        {/* Wishlist */}
-                        <button
-                          onClick={(e) => toggleWishlist(product.id, e)}
-                          aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                          className={`absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-full shadow-sm transition-all ${
-                            isWishlisted
-                              ? 'text-red-500'
-                              : 'text-gray-300 hover:text-gray-500'
-                          }`}
-                        >
-                          <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-current' : ''}`} />
-                        </button>
                       </div>
 
                       {/* Info */}

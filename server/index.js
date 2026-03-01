@@ -31,6 +31,9 @@ import reviewRoutes from './routes/reviews.js';
 import promotionRoutes from './routes/promotions.js';
 import verificationRoutes from './routes/verification.js';
 import { supabaseAdmin } from './config/supabase.js';
+import shippingRoutes from './routes/shipping.js';
+import checkoutRoutes from './routes/checkout.js';
+import adminApiRoutes from './routes/adminApi.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -107,6 +110,9 @@ app.use('/api/orders', ordersRoutes);
 app.use('/api/marketplace/reviews', reviewRoutes);
 app.use('/api/marketplace/promotions', promotionRoutes);
 app.use('/api/sellers/verification', verificationRoutes);
+app.use('/api/v1/shipping', shippingRoutes);
+app.use('/api/v1/checkout', checkoutRoutes);
+app.use('/api/v1', adminApiRoutes);
 
 // 404 handler
 app.use('/api/*', (req, res) => {

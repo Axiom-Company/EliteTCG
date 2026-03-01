@@ -485,8 +485,8 @@
 /* ── Individual Card ─────────────────────────────────────── */
 .hero-card {
   position: absolute;
-  width: 180px;
-  height: 252px;
+  width: 148px;
+  height: 207px;
   cursor: pointer;
   perspective: 800px;
   z-index: var(--card-z, 1);
@@ -529,7 +529,7 @@
 
 /* Idle bob */
 .hero-card--idle {
-  animation: cardBob 4s ease-in-out infinite;
+  animation: cardBob 6s ease-in-out infinite;
   animation-delay: var(--bob-delay, 0s);
 }
 
@@ -556,11 +556,11 @@
   animation: none !important;
 }
 
-/* Hovered card: disables bob, enables fast tilt transitions */
+/* Hovered card: disables bob */
 .hero-card--hovered {
-  z-index: 100 !important;
   animation: none !important;
-  transition: transform 0.08s linear;
+  transition: transform 0.2s ease-out, filter 0.15s ease;
+  filter: brightness(1.12);
 }
 
 /* ── Card Inner (flip container) ─────────────────────────── */
@@ -733,10 +733,6 @@
   opacity: 1;
 }
 
-.hero-card--hovered .hero-card__sparkle-texture {
-  opacity: 0.3;
-}
-
 /* Mouse-leave fade-out for layers */
 .hero-card__holo-rainbow,
 .hero-card__light-sheen {
@@ -843,8 +839,8 @@
 /* ── Responsive: Tablet ──────────────────────────────────── */
 @media (max-width: 1024px) {
   .hero-card {
-    width: 140px;
-    height: 196px;
+    width: 115px;
+    height: 161px;
   }
 
   .hero-banner__pack-img-wrap {

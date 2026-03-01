@@ -1,17 +1,15 @@
 import { Router } from 'express';
 import multer from 'multer';
-import sharp from 'sharp';
-import { supabaseAdmin } from '../config/supabase.js';
+import path from 'path';
 import { authenticateToken, requireRole, authenticateCustomer, requireSeller } from '../middleware/auth.js';
+import { supabaseAdmin } from '../config/supabase.js';
 
 const router = Router();
 
 const BUCKET = 'images';
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const WEBP_QUALITY = 82;
 
-// File filter - only allow images
-const fileFilter = (_req, file, cb) => {
+// Use memory storage — files go to Supabase Storage, not local disk
+const fileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -24,201 +22,94 @@ const fileFilter = (_req, file, cb) => {
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter,
-  limits: {
-    fileSize: MAX_FILE_SIZE,
-  },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
-/**
- * Generate a unique filename: {timestamp}-{random9digits}.webp
- */
-function generateFilename() {
-  const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 1_000_000_000).toString().padStart(9, '0');
-  return `${timestamp}-${random}.webp`;
-}
-
-/**
- * Convert an image buffer to WebP using sharp, then upload to Supabase Storage.
- * Returns the public URL on success, or throws on failure.
- */
-async function convertAndUpload(buffer, folder) {
-  if (!supabaseAdmin) {
-    throw new Error('Supabase client is not configured');
-  }
-
-  const webpBuffer = await sharp(buffer)
-    .webp({ quality: WEBP_QUALITY })
-    .toBuffer();
-
-  const filename = generateFilename();
-  const filePath = `${folder}/${filename}`;
+const uploadToSupabase = async (buffer, mimetype, originalname, folder = 'products') => {
+  const ext = path.extname(originalname);
+  const filename = `${folder}/${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
 
   const { error } = await supabaseAdmin.storage
     .from(BUCKET)
-    .upload(filePath, webpBuffer, {
-      contentType: 'image/webp',
-      upsert: false,
-    });
+    .upload(filename, buffer, { contentType: mimetype, upsert: false });
 
-  if (error) {
-    throw new Error(`Supabase upload failed: ${error.message}`);
+  if (error) throw error;
+
+  const { data: urlData } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(filename);
+  return { url: urlData.publicUrl, filename };
+};
+
+// Upload single image (admin)
+router.post('/image', authenticateToken, requireRole('super_admin', 'admin', 'manager'), upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No image file provided' });
+
+    const { url, filename } = await uploadToSupabase(req.file.buffer, req.file.mimetype, req.file.originalname);
+
+    res.json({ success: true, url, filename, originalName: req.file.originalname, size: req.file.size });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Failed to upload image' });
   }
 
-  const { data: urlData } = supabaseAdmin.storage
-    .from(BUCKET)
-    .getPublicUrl(filePath);
+// Upload single image (seller)
+router.post('/seller-image', authenticateCustomer, requireSeller, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No image file provided' });
 
-  return {
-    url: urlData.publicUrl,
-    filename,
-    filePath,
-    size: webpBuffer.length,
-  };
-}
+    const { url, filename } = await uploadToSupabase(req.file.buffer, req.file.mimetype, req.file.originalname, 'seller');
 
-// Upload single image (admin) — products/ path
-router.post(
-  '/image',
-  authenticateToken,
-  requireRole('super_admin', 'admin', 'manager'),
-  upload.single('image'),
-  async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: 'No image file provided' });
-      }
-
-      const result = await convertAndUpload(req.file.buffer, 'products');
-
-      res.json({
-        success: true,
-        url: result.url,
-        filename: result.filename,
-        originalName: req.file.originalname,
-        size: result.size,
-      });
-    } catch (error) {
-      console.error('Upload error:', error);
-      res.status(500).json({ error: 'Failed to upload image' });
-    }
+    res.json({ success: true, url, filename, originalName: req.file.originalname, size: req.file.size });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Failed to upload image' });
   }
-);
 
-// Upload single image (seller) — listings/ path
-router.post(
-  '/seller-image',
-  authenticateCustomer,
-  requireSeller,
-  upload.single('image'),
-  async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: 'No image file provided' });
-      }
+// Upload multiple images (admin)
+router.post('/images', authenticateToken, requireRole('super_admin', 'admin', 'manager'), upload.array('images', 5), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No image files provided' });
 
-      const result = await convertAndUpload(req.file.buffer, 'listings');
+    const images = await Promise.all(
+      req.files.map(async (file) => {
+        const { url, filename } = await uploadToSupabase(file.buffer, file.mimetype, file.originalname);
+        return { url, filename, originalName: file.originalname, size: file.size };
+      })
+    );
 
-      res.json({
-        success: true,
-        url: result.url,
-        filename: result.filename,
-        originalName: req.file.originalname,
-        size: result.size,
-      });
-    } catch (error) {
-      console.error('Upload error:', error);
-      res.status(500).json({ error: 'Failed to upload image' });
-    }
+    res.json({ success: true, images });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: 'Failed to upload images' });
   }
-);
-
-// Upload multiple images (admin) — products/ path
-router.post(
-  '/images',
-  authenticateToken,
-  requireRole('super_admin', 'admin', 'manager'),
-  upload.array('images', 5),
-  async (req, res) => {
-    try {
-      if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ error: 'No image files provided' });
-      }
-
-      const results = await Promise.all(
-        req.files.map(async (file) => {
-          const result = await convertAndUpload(file.buffer, 'products');
-          return {
-            url: result.url,
-            filename: result.filename,
-            originalName: file.originalname,
-            size: result.size,
-          };
-        })
-      );
-
-      res.json({
-        success: true,
-        images: results,
-      });
-    } catch (error) {
-      console.error('Upload error:', error);
-      res.status(500).json({ error: 'Failed to upload images' });
-    }
-  }
-);
+});
 
 // Delete image from Supabase Storage
-// Requires query param: ?path=products/filename.webp
-router.delete(
-  '/:filename',
-  authenticateToken,
-  requireRole('super_admin', 'admin'),
-  async (req, res) => {
-    try {
-      if (!supabaseAdmin) {
-        return res.status(500).json({ error: 'Supabase client is not configured' });
-      }
+router.delete('/:filename', authenticateToken, requireRole('super_admin', 'admin'), async (req, res) => {
+  try {
+    const { filename } = req.params;
+    // filename param may be just the name or include the folder prefix
+    const filePath = filename.includes('/') ? filename : `products/${filename}`;
 
-      const bucketPath = req.query.path;
+    const { error } = await supabaseAdmin.storage.from(BUCKET).remove([filePath]);
+    if (error) throw error;
 
-      if (!bucketPath || typeof bucketPath !== 'string') {
-        return res.status(400).json({ error: 'Query parameter "path" is required (e.g. ?path=products/file.webp)' });
-      }
-
-      // Prevent path traversal
-      if (bucketPath.includes('..') || bucketPath.startsWith('/')) {
-        return res.status(400).json({ error: 'Invalid file path' });
-      }
-
-      const { error } = await supabaseAdmin.storage
-        .from(BUCKET)
-        .remove([bucketPath]);
-
-      if (error) {
-        console.error('Supabase delete error:', error);
-        return res.status(500).json({ error: 'Failed to delete image' });
-      }
-
-      res.json({ success: true, message: 'Image deleted' });
-    } catch (error) {
-      console.error('Delete error:', error);
-      res.status(500).json({ error: 'Failed to delete image' });
-    }
+    res.json({ success: true, message: 'Image deleted' });
+  } catch (error) {
+    console.error('Delete error:', error);
+    res.status(500).json({ error: 'Failed to delete image' });
   }
 );
 
-// Error handling middleware for multer
-router.use((error, _req, res, next) => {
+// Error handling for multer
+router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ error: 'File too large. Maximum size is 5MB' });
     }
     return res.status(400).json({ error: error.message });
   }
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
+  if (error) return res.status(400).json({ error: error.message });
   next();
 });
 

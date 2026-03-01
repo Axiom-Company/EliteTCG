@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
+import { Link } from 'react-router-dom';
+import { useScrollAnimation } from '../../hooks/useScrollAnimation';
+
+const API_BASE = 'http://localhost:3001';
 
 const ChevronLeft = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -19,6 +22,7 @@ const ShopBySet = () => {
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [sets, setSets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { setRef, isVisible } = useScrollAnimation(sets.length);
 
   useEffect(() => {
     const fetchSets = async () => {
@@ -87,11 +91,14 @@ const ShopBySet = () => {
               onScroll={handleScroll}
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {sets.map((set) => (
-                <a
+              {sets.map((set, i) => (
+                <Link
                   key={set.id}
-                  href={`#set-${set.code || set.id}`}
-                  className="flex-none w-60 scroll-snap-start bg-white rounded-lg overflow-hidden transition-all duration-250 hover:opacity-80 md:w-[200px]"
+                  to={`/sets/${set.id}`}
+                  ref={setRef(i)}
+                  data-anim-idx={i}
+                  style={{ transitionDelay: `${i * 60}ms` }}
+                  className={`flex-none w-60 scroll-snap-start bg-white rounded-lg overflow-hidden transition-all duration-500 hover:opacity-80 md:w-[200px] ${isVisible(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
                 >
                   <div className="relative h-[220px] bg-white flex items-center justify-center overflow-hidden md:h-[180px]">
                     <img
@@ -109,7 +116,7 @@ const ShopBySet = () => {
                   <div className="px-2 pb-2 text-center">
                     <h3 className="text-sm font-normal text-gray-900">{set.name}</h3>
                   </div>
-                </a>
+                </Link>
               ))}
             </div>
 
@@ -125,12 +132,12 @@ const ShopBySet = () => {
         )}
 
         <div className="flex justify-center mt-8">
-          <a
-            href="#all-sets"
+          <Link
+            to="/sets"
             className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-white text-gray-900 border border-gray-300 hover:border-primary hover:text-primary transition-all duration-250"
           >
             View All Sets
-          </a>
+          </Link>
         </div>
       </div>
     </section>
