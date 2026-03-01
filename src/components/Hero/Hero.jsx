@@ -272,7 +272,7 @@ const Hero = () => {
     >
       {/* ── Background watermark text ──────────────────────────────── */}
       <div
-        className="hidden md:flex absolute inset-0 items-end justify-center pointer-events-none z-0 overflow-hidden pb-[222px]"
+        className="hidden md:flex absolute inset-0 items-end justify-center pointer-events-none z-0 overflow-hidden pb-[152px]"
         style={{
           perspective: '800px',
           maskImage: 'linear-gradient(to top, transparent 0%, black 40%)',
@@ -296,7 +296,7 @@ const Hero = () => {
 
       {/* ── Text + Button ──────────────────────────────────────────── */}
       <div
-        className="relative z-10 flex flex-col items-center text-center px-6 mt-8 md:mt-[8vh]"
+        className="relative z-10 flex flex-col items-center text-center px-6 mt-[95px] md:mt-[8vh]"
         style={{ transform: `translateY(${-textOffset}px)`, opacity: titleOpacity }}
       >
         <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase mb-5">
