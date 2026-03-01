@@ -97,36 +97,26 @@ const BecomeSeller = () => {
   // Not logged in
   if (!isAuthenticated) {
     return (
-      <section className="min-h-[80vh] flex">
-        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-16">
-          <div className="max-w-md text-center lg:text-left">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Become a Seller</h1>
-            <p className="text-gray-600 mb-8">
-              Sign in to apply for a seller account and start listing your Pokemon cards on EliteTCG.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Link
-                to="/login"
-                state={{ from: { pathname: '/become-seller' } }}
-                className="px-8 py-3 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors text-center"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/register"
-                className="px-8 py-3 border border-gray-300 text-gray-700 font-medium rounded-full hover:border-gray-900 transition-colors text-center"
-              >
-                Create Account
-              </Link>
-            </div>
-          </div>
-        </div>
-        <div className="hidden lg:flex w-1/2 bg-[#FFCB32] items-center justify-center transform -skew-x-6 origin-bottom-left">
-          <div className="transform skew-x-6 text-center px-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Sell Your Cards</h2>
-            <p className="text-gray-800 text-lg">
-              Reach collectors across South Africa
-            </p>
+      <section className="min-h-[80vh] flex items-center justify-center px-6 py-16">
+        <div className="max-w-md text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Become a Seller</h1>
+          <p className="text-gray-600 mb-8">
+            Sign in to apply for a seller account and start listing your Pokemon cards on EliteTCG.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/login"
+              state={{ from: { pathname: '/become-seller' } }}
+              className="px-8 py-3 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors text-center"
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/register"
+              className="px-8 py-3 border border-gray-300 text-gray-700 font-medium rounded-full hover:border-gray-900 transition-colors text-center"
+            >
+              Create Account
+            </Link>
           </div>
         </div>
       </section>
@@ -199,23 +189,8 @@ const BecomeSeller = () => {
 
   // Application form
   return (
-    <section className="min-h-[80vh] flex">
-      {/* Left - Info */}
-      <div className="hidden lg:flex w-1/2 bg-[#FFCB32] items-center justify-center transform skew-x-6 origin-bottom-right">
-        <div className="transform -skew-x-6 px-12 max-w-md">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">Why Sell on EliteTCG?</h2>
-          <div className="space-y-4 text-gray-800">
-            <p>Reach Pokemon card collectors across South Africa</p>
-            <p>Secure payments via PayFast - you receive 90% of each sale</p>
-            <p>Track your listing views and sales with detailed analytics</p>
-            <p>Join a community of verified, trusted sellers</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Right - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-16">
-        <div className="w-full max-w-md">
+    <section className="min-h-[80vh] flex items-center justify-center px-6 py-16">
+      <div className="w-full max-w-md">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Seller Application</h1>
           <p className="text-gray-600 mb-8">Fill out the form below to apply</p>
 
@@ -305,8 +280,7 @@ const BecomeSeller = () => {
             </button>
           </form>
         </div>
-      </div>
-    </section>
+      </section>
   );
 };
 

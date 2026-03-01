@@ -9,7 +9,19 @@ const Navbar = () => {
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const [isUserOpen, setIsUserOpen] = useState(false);
+  const [mobileShopOpen, setMobileShopOpen] = useState(false);
+  const [mobileMarketplaceOpen, setMobileMarketplaceOpen] = useState(false);
   const { isAuthenticated, user, isSeller, logout } = useCustomerAuth();
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isMenuOpen]);
 
   const shopRef = useRef(null);
   const marketplaceRef = useRef(null);
@@ -292,9 +304,9 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu — fixed full-screen overlay */}
       {isMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white border-t border-gray-100 shadow-lg">
+        <div className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-white border-t border-gray-100 z-50 overflow-y-auto">
           <nav className="flex flex-col p-4">
             <Link
               to="/"
@@ -304,29 +316,23 @@ const Navbar = () => {
               Home
             </Link>
 
-            <div className="px-4 py-3">
-              <p className="text-sm font-medium text-gray-900 mb-2">Shop</p>
-              <div className="pl-4 space-y-1">
-                {shopCategories.flatMap(cat => cat.links).map((link) => (
-                  <Link
-                    key={link.name}
-                    to={link.href}
-                    className="block py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="px-4 py-3">
-              <p className="text-sm font-medium text-gray-900 mb-2">Marketplace</p>
-              <div className="pl-4 space-y-1">
-                {marketplaceLinks.map((link) => {
-                  if (link.sellerOnly && !isSeller) return null;
-                  if (link.hideIfSeller && isSeller) return null;
-                  return (
+            {/* Shop — collapsible */}
+            <div>
+              <button
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-900"
+                onClick={() => setMobileShopOpen(!mobileShopOpen)}
+              >
+                Shop
+                <svg
+                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${mobileShopOpen ? 'rotate-180' : ''}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {mobileShopOpen && (
+                <div className="pl-8 pb-2 space-y-1">
+                  {shopCategories.flatMap(cat => cat.links).map((link) => (
                     <Link
                       key={link.name}
                       to={link.href}
@@ -335,9 +341,43 @@ const Navbar = () => {
                     >
                       {link.name}
                     </Link>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Marketplace — collapsible */}
+            <div>
+              <button
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-900"
+                onClick={() => setMobileMarketplaceOpen(!mobileMarketplaceOpen)}
+              >
+                Marketplace
+                <svg
+                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${mobileMarketplaceOpen ? 'rotate-180' : ''}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {mobileMarketplaceOpen && (
+                <div className="pl-8 pb-2 space-y-1">
+                  {marketplaceLinks.map((link) => {
+                    if (link.sellerOnly && !isSeller) return null;
+                    if (link.hideIfSeller && isSeller) return null;
+                    return (
+                      <Link
+                        key={link.name}
+                        to={link.href}
+                        className="block py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {link.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <Link
