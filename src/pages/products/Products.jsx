@@ -115,7 +115,7 @@ const Products = () => {
         if (filters.category) params.set('category', filters.category);
         params.set('limit', '100');
 
-        const res = await fetch(`${API_BASE_URL}/api/products?${params}`);
+        const res = await fetch(`${ELITE_API_URL}/api/products?${params}`);
         const data = await res.json();
 
         let sorted = data.products || [];

@@ -12,13 +12,7 @@ const conditionLabels = {
   poor: 'Poor',
 };
 
-const API_BASE_URL = 'http://localhost:3001';
-
-const getImageUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${API_BASE_URL}${url}`;
-};
+import { getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const ListingCard = ({ listing }) => {
   const mainImage = listing.images?.[0] || null;
@@ -37,15 +31,12 @@ const ListingCard = ({ listing }) => {
     >
       {/* Image */}
       <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">
-        {mainImage ? (
-          <img
-            src={getImageUrl(mainImage)}
-            alt={listing.title}
-            className="w-[75%] h-[75%] object-contain transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <Package className="w-12 h-12 text-gray-200" />
-        )}
+        <img
+          src={getImageUrl(mainImage)}
+          alt={listing.title}
+          className="w-[75%] h-[75%] object-contain transition-transform duration-300 group-hover:scale-105"
+          onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+        />
 
         {/* Promotion Badge */}
         {hasActivePromotion && (

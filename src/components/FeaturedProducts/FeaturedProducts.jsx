@@ -11,7 +11,7 @@ const FeaturedProducts = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/products?limit=8`);
+        const response = await fetch(`${ELITE_API_URL}/api/products?limit=8`);
         const data = await response.json();
         // Sort: featured products first, then by created_at
         const sorted = (data.products || []).sort((a, b) => {
@@ -33,12 +33,6 @@ const FeaturedProducts = () => {
 
   const getBadgeClass = (badge) => {
     return 'bg-gray-900 text-white';
-  };
-
-  const getImageUrl = (product) => {
-    if (!product.images?.[0]) return null;
-    const img = product.images[0];
-    return img.startsWith('http') ? img : `${API_BASE}${img}`;
   };
 
   const getCurrencySymbol = (currency) => {

@@ -6,14 +6,7 @@ import VerifiedBadge from '../../components/marketplace/VerifiedBadge';
 import PromotionBadge from '../../components/marketplace/PromotionBadge';
 import ReviewList from '../../components/marketplace/ReviewList';
 
-const API_BASE_URL = 'http://localhost:3001';
-
-// Helper to get full image URL
-const getImageUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${API_BASE_URL}${url}`;
-};
+import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const conditionLabels = {
   mint: 'Mint',
@@ -53,7 +46,7 @@ const ListingDetail = () => {
           headers['Authorization'] = `Bearer ${getToken()}`;
         }
 
-        const res = await fetch(`${API_BASE_URL}/api/marketplace/listings/${id}`, { headers });
+        const res = await fetch(`${ELITE_API_URL}/api/marketplace/listings/${id}`, { headers });
         const data = await res.json();
 
         if (!res.ok) {
@@ -62,7 +55,7 @@ const ListingDetail = () => {
 
         setListing(data.listing);
 
-        fetch(`${API_BASE_URL}/api/marketplace/listings/${id}/view`, {
+        fetch(`${ELITE_API_URL}/api/marketplace/listings/${id}/view`, {
           method: 'POST',
           headers
         });
@@ -118,17 +111,12 @@ const ListingDetail = () => {
         {/* Images */}
         <div>
           <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
-            {listing.images?.[selectedImage] ? (
-              <img
-                src={getImageUrl(listing.images[selectedImage])}
-                alt={listing.title}
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-300">
-                No Image
-              </div>
-            )}
+            <img
+              src={getImageUrl(listing.images?.[selectedImage])}
+              alt={listing.title}
+              className="w-full h-full object-contain"
+              onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+            />
           </div>
 
           {listing.images?.length > 1 && (
@@ -141,7 +129,7 @@ const ListingDetail = () => {
                     selectedImage === idx ? 'border-gray-900' : 'border-gray-200'
                   }`}
                 >
-                  <img src={getImageUrl(img)} alt="" className="w-full h-full object-cover" />
+                  <img src={getImageUrl(img)} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }} />
                 </button>
               ))}
             </div>

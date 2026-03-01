@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
-import { getImageUrl } from '../../config/api';
+import { getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 import { getShippingQuote } from '../../services/shippingApi';
 import { createDirectOrder } from '../../services/orderApi';
+import { getPayflexConfiguration, createPayflexOrder } from '../../services/payflexApi';
 
 const provinces = [
   'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
@@ -28,9 +29,18 @@ const Checkout = () => {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState(null);
 
+  // Payment method state
+  const [paymentMethod, setPaymentMethod] = useState('payfast');
+  const [payflexConfig, setPayflexConfig] = useState(null);
+
   // Submit state
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+
+  // Fetch Payflex configuration on mount
+  useEffect(() => {
+    getPayflexConfiguration().then(setPayflexConfig).catch(() => {});
+  }, []);
 
   // Pre-fill authenticated user
   useEffect(() => {
@@ -53,7 +63,6 @@ const Checkout = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
-    // Clear quote when address changes
     if (['streetAddress', 'city', 'province', 'postalCode'].includes(name)) {
       setShippingQuote(null);
       setQuoteError(null);
@@ -66,10 +75,8 @@ const Checkout = () => {
       setQuoteError('Please fill in your address first');
       return;
     }
-
     setQuoteLoading(true);
     setQuoteError(null);
-
     try {
       const quote = await getShippingQuote({
         address_line1: formData.streetAddress,
@@ -100,6 +107,13 @@ const Checkout = () => {
   const shippingCost = shippingQuote?.customer_cost_zar || 0;
   const orderTotal = subtotal + shippingCost;
 
+  // Payflex availability check
+  const payflexAvailable = payflexConfig?.available &&
+    orderTotal >= parseFloat(payflexConfig.min_amount || '0') &&
+    orderTotal <= parseFloat(payflexConfig.max_amount || '0');
+
+  const payflexInstallment = payflexAvailable ? (orderTotal / 4).toFixed(2) : null;
+
   const validate = () => {
     const newErrors = {};
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
@@ -128,6 +142,7 @@ const Checkout = () => {
     setLoading(true);
 
     try {
+      // Step 1: Create order in our backend
       const data = await createDirectOrder({
         items: cart.map(item => ({
           product_id: item.id,
@@ -149,6 +164,7 @@ const Checkout = () => {
           postal_code: formData.postalCode,
           cost_zar: shippingCost,
         },
+        payment_provider: paymentMethod,
       });
 
       // Store order info for success page
@@ -158,9 +174,17 @@ const Checkout = () => {
       }
       sessionStorage.setItem('clearCartOnSuccess', 'true');
 
-      // Redirect to PayFast
-      if (data.payment_url && data.payment_data) {
-        // Build and submit a form to PayFast
+      // Step 2: Route to the correct payment provider
+      if (paymentMethod === 'payflex' && data.order_number) {
+        // Payflex flow: create Payflex order, then redirect
+        const pfData = await createPayflexOrder(data.order_number);
+        if (pfData.redirect_url) {
+          window.location.href = pfData.redirect_url;
+        } else {
+          throw new Error('Failed to get Payflex checkout URL');
+        }
+      } else if (data.payment_url && data.payment_data) {
+        // PayFast flow: submit hidden form
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = data.payment_url;
@@ -181,6 +205,10 @@ const Checkout = () => {
   };
 
   if (cart.length === 0) return null;
+
+  // Section numbering adjusts based on shipping method
+  const addressSectionNum = 3;
+  const paymentSectionNum = shippingMethod === 'courier_guy' ? 4 : 3;
 
   return (
     <div className="min-h-screen bg-white">
@@ -349,15 +377,12 @@ const Checkout = () => {
                   {cart.map(item => (
                     <div key={item.id} className="flex gap-4">
                       <div className="w-16 h-16 bg-white rounded-lg overflow-hidden shrink-0">
-                        {item.image ? (
-                          <img src={getImageUrl(item.image)} alt={item.name} className="w-full h-full object-contain p-1" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-300">
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
-                          </div>
-                        )}
+                        <img
+                          src={getImageUrl(item.image)}
+                          alt={item.name}
+                          className="w-full h-full object-contain p-1"
+                          onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-gray-900 line-clamp-1">{item.name}</p>
@@ -399,6 +424,14 @@ const Checkout = () => {
                     <span className="text-gray-900">Total</span>
                     <span className="text-gray-900">R{orderTotal.toLocaleString()}</span>
                   </div>
+
+                  {/* Payflex installment breakdown */}
+                  {paymentMethod === 'payflex' && payflexInstallment && (
+                    <div className="flex justify-between text-xs pt-1">
+                      <span className="text-gray-400">4 payments of</span>
+                      <span className="font-medium" style={{ color: '#00c9a7' }}>R{payflexInstallment}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Pay Button */}
@@ -412,6 +445,8 @@ const Checkout = () => {
                       <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
                       Processing...
                     </span>
+                  ) : paymentMethod === 'payflex' ? (
+                    `Pay R${orderTotal.toLocaleString()} with Payflex`
                   ) : (
                     `Pay R${orderTotal.toLocaleString()} with PayFast`
                   )}
@@ -423,7 +458,10 @@ const Checkout = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   <p className="text-xs text-gray-400">
-                    Secured by PayFast · 256-bit SSL encryption
+                    {paymentMethod === 'payflex'
+                      ? 'Secured by Payflex · 256-bit SSL encryption'
+                      : 'Secured by PayFast · 256-bit SSL encryption'
+                    }
                   </p>
                 </div>
               </div>
