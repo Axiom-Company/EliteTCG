@@ -27,7 +27,7 @@ const ShopBySet = () => {
   useEffect(() => {
     const fetchSets = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/sets?limit=10`);
+        const response = await fetch(`${ELITE_API_URL}/api/sets?limit=10`);
         const data = await response.json();
         setSets(data.sets || []);
       } catch (error) {
@@ -39,11 +39,6 @@ const ShopBySet = () => {
 
     fetchSets();
   }, []);
-
-  const getImageUrl = (set) => {
-    if (!set.image) return null;
-    return set.image.startsWith('http') ? set.image : `${API_BASE}${set.image}`;
-  };
 
   const handleScroll = () => {
     if (scrollRef.current) {
@@ -106,17 +101,12 @@ const ShopBySet = () => {
                   className={`flex-none w-60 scroll-snap-start bg-white rounded-lg overflow-hidden transition-all duration-500 hover:opacity-80 md:w-[200px] ${isVisible(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
                 >
                   <div className="relative h-[220px] bg-white flex items-center justify-center overflow-hidden md:h-[180px]">
-                    {getImageUrl(set) ? (
-                      <img
-                        src={getImageUrl(set)}
-                        alt={set.name}
-                        className="w-full h-full object-contain p-2"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 bg-gray-50 rounded-md flex items-center justify-center">
-                        <span className="font-medium text-xl text-gray-300">?</span>
-                      </div>
-                    )}
+                    <img
+                      src={getImageUrl(set.image)}
+                      alt={set.name}
+                      className="w-full h-full object-contain p-2"
+                      onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+                    />
                     {set.is_new && (
                       <span className="absolute top-2 right-2 inline-flex items-center px-3 py-1 text-xs font-medium uppercase tracking-wider rounded-full bg-primary text-white">
                         New

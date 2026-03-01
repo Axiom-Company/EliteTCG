@@ -55,11 +55,6 @@ const ShopByCategory = () => {
     fetchData();
   }, []);
 
-  const getImageUrl = (category) => {
-    if (!category.image) return null;
-    return category.image.startsWith('http') ? category.image : `${API_BASE}${category.image}`;
-  };
-
   if (loading) {
     return (
       <section id="category" className="py-16 bg-white md:py-10">

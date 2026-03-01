@@ -1,36 +1,16 @@
 import { Router } from 'express';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
+import sharp from 'sharp';
 import { authenticateCustomer, requireSeller, authenticateToken, requireRole } from '../middleware/auth.js';
 import { supabaseAdmin } from '../config/supabase.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const router = Router();
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+const BUCKET = 'images';
+const WEBP_QUALITY = 82;
 
-// Configure multer storage for verification documents
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, `verification-${uniqueSuffix}${ext}`);
-  }
-});
-
-// File filter - only allow jpg, jpeg, png, webp
-const fileFilter = (req, file, cb) => {
+// Memory storage - buffer in RAM
+const fileFilter = (_req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -40,7 +20,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
@@ -49,6 +29,29 @@ const upload = multer({
 
 // UUID v4 validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function uploadToStorage(buffer, folder) {
+  if (!supabaseAdmin) {
+    throw new Error('Supabase client is not configured');
+  }
+
+  const webpBuffer = await sharp(buffer).webp({ quality: WEBP_QUALITY }).toBuffer();
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1_000_000_000).toString().padStart(9, '0');
+  const filename = `${timestamp}-${random}.webp`;
+  const filePath = `${folder}/${filename}`;
+
+  const { error } = await supabaseAdmin.storage
+    .from(BUCKET)
+    .upload(filePath, webpBuffer, { contentType: 'image/webp', upsert: false });
+
+  if (error) {
+    throw new Error(`Supabase upload failed: ${error.message}`);
+  }
+
+  const { data: urlData } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(filePath);
+  return urlData.publicUrl;
+}
 
 // POST /submit - Submit verification documents (seller only)
 router.post('/submit', authenticateCustomer, requireSeller, upload.fields([
@@ -64,18 +67,11 @@ router.post('/submit', authenticateCustomer, requireSeller, upload.fields([
     }
 
     if (!selfieFile) {
-      // Clean up the id_document that was already uploaded
-      if (idDocumentFile) {
-        const filePath = path.join(uploadsDir, idDocumentFile.filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      }
       return res.status(400).json({ error: 'Selfie is required' });
     }
 
-    const idDocumentUrl = `/uploads/${idDocumentFile.filename}`;
-    const selfieUrl = `/uploads/${selfieFile.filename}`;
+    const idDocumentUrl = await uploadToStorage(idDocumentFile.buffer, 'verification');
+    const selfieUrl = await uploadToStorage(selfieFile.buffer, 'verification');
 
     if (supabaseAdmin) {
       const { error } = await supabaseAdmin
@@ -130,7 +126,6 @@ router.get('/status', authenticateCustomer, requireSeller, async (req, res) => {
       return res.json(response);
     }
 
-    // Mock fallback
     res.json({
       status: 'none',
       is_verified: false
@@ -215,7 +210,7 @@ router.post('/:sellerId/reject', authenticateToken, requireRole('super_admin', '
 });
 
 // Error handling middleware for multer
-router.use((error, req, res, next) => {
+router.use((error, _req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ error: 'File too large. Maximum size is 10MB' });

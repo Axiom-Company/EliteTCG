@@ -1,13 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
-
-const API_BASE_URL = 'http://localhost:3001';
-
-const getImageUrl = (url) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${API_BASE_URL}${url}`;
-};
+import { getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const CartItem = ({ item }) => {
   const { updateQuantity, removeFromCart } = useCart();
@@ -19,19 +12,12 @@ const CartItem = ({ item }) => {
         to={`/product/${item.slug || item.id}`}
         className="w-20 h-20 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0"
       >
-        {item.image ? (
-          <img
-            src={getImageUrl(item.image)}
-            alt={item.name}
-            className="w-full h-full object-contain p-2"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-          </div>
-        )}
+        <img
+          src={getImageUrl(item.image)}
+          alt={item.name}
+          className="w-full h-full object-contain p-2"
+          onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+        />
       </Link>
 
       {/* Details */}

@@ -106,8 +106,15 @@ const Hero = () => {
 
   /* ── Lock body scroll when card overlay is open ───────────────────── */
   useEffect(() => {
-    document.body.style.overflow = selectedCard !== null ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (selectedCard !== null) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+    return () => { document.body.style.overflow = ''; document.body.style.paddingRight = ''; };
   }, [selectedCard]);
 
   /* ── Card overlay open/close ──────────────────────────────────────── */
@@ -265,7 +272,7 @@ const Hero = () => {
     >
       {/* ── Background watermark text ──────────────────────────────── */}
       <div
-        className="absolute inset-0 flex items-end justify-center pointer-events-none z-0 overflow-hidden pb-[450px] md:pb-[172px]"
+        className="absolute inset-0 flex items-end justify-center pointer-events-none z-0 overflow-hidden pb-[500px] md:pb-[222px]"
         style={{
           perspective: '800px',
           maskImage: 'linear-gradient(to top, transparent 0%, black 40%)',
@@ -274,13 +281,13 @@ const Hero = () => {
         }}
       >
         <p
-          className="text-[7rem] md:text-[16rem] text-[#f9f9f9] whitespace-nowrap select-none leading-none"
+          className="text-[7rem] md:text-[16rem] text-[#e0e0e0] whitespace-nowrap select-none leading-none"
           style={{
             fontFamily: "'Bebas Neue', sans-serif",
             transform: 'rotateX(18deg)',
             transformOrigin: 'center bottom',
             letterSpacing: '0.05em',
-            WebkitTextStroke: '4px #f9f9f9',
+            WebkitTextStroke: '4px #e0e0e0',
           }}
         >
           POKEMON POKEMON POKEMON
