@@ -585,8 +585,6 @@
   -webkit-backface-visibility: hidden;
   border-radius: 11px;
   overflow: hidden;
-  outline: 1px solid transparent;
-  transform: translateZ(0);
 }
 
 .hero-card__face img {
@@ -597,7 +595,6 @@
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
-  transform: translateZ(0);
 }
 
 .hero-card__back {

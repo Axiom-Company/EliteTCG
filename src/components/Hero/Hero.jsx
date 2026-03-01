@@ -281,7 +281,7 @@ const Hero = () => {
     >
       {/* ── Background watermark text ──────────────────────────────── */}
       <div
-        className="hidden md:flex absolute inset-0 items-end justify-center pointer-events-none z-0 overflow-hidden pb-[170px]"
+        className="absolute inset-0 pointer-events-none z-0 overflow-hidden"
         style={{
           perspective: '800px',
           maskImage: 'linear-gradient(to top, transparent 0%, black 40%)',
@@ -289,18 +289,22 @@ const Hero = () => {
           transform: `translateY(${-watermarkOffset}px)`,
         }}
       >
-        <p
-          className="text-[7rem] md:text-[16rem] text-[#f5f5f5] whitespace-nowrap select-none leading-none"
-          style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            transform: 'rotateX(18deg)',
-            transformOrigin: 'center bottom',
-            letterSpacing: '0.05em',
-            WebkitTextStroke: '4px #f5f5f5',
-          }}
-        >
-          POKEMON POKEMON POKEMON
-        </p>
+        <div className="absolute left-0 right-0 top-[39%] md:top-[45%] flex justify-center -translate-y-1/2">
+          <p
+            className="text-[7rem] md:text-[11rem] text-[#ebebeb] whitespace-nowrap select-none leading-none"
+            style={{
+              fontFamily: "'Bebas Neue', sans-serif",
+              transform: 'rotateX(18deg)',
+              transformOrigin: 'center bottom',
+              letterSpacing: '0.05em',
+              WebkitTextStroke: '4px #ebebeb',
+              maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 50%, rgba(0,0,0,0.97) 60%, rgba(0,0,0,0.93) 70%, rgba(0,0,0,0.80) 90%, rgba(0,0,0,0.70) 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 50%, rgba(0,0,0,0.97) 60%, rgba(0,0,0,0.93) 70%, rgba(0,0,0,0.80) 90%, rgba(0,0,0,0.70) 100%)',
+            }}
+          >
+            POKEMON POKEMON POKEMON
+          </p>
+        </div>
       </div>
 
       {/* ── Text + Button ──────────────────────────────────────────── */}
@@ -311,34 +315,14 @@ const Hero = () => {
         <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase mb-5">
           {`Pok\u00e9mon TCG Store`}
         </p>
-        <h1 className="text-2xl md:text-5xl font-normal text-gray-900 leading-tight max-w-xl mb-6">
+        <h1 className="text-2xl md:text-5xl font-normal text-gray-900 leading-tight max-w-xl">
           {`The Home of Pok\u00e9mon`}<br />Packs, Boxes & Rare Pulls.
         </h1>
-        <a
-          href="#products"
-          className="inline-flex items-center justify-center gap-2 py-2.5 px-7 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-colors duration-200"
-        >
-          Shop Now
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 8l4 4m0 0l-4 4m4-4H3"
-            />
-          </svg>
-        </a>
       </div>
 
-      {/* ── 14-Card Parabolic Arc (pinned to bottom) ───────────────── */}
+      {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
-        className="relative w-full mt-4 md:absolute md:bottom-[35px] md:left-0 md:right-0 z-10 flex justify-center"
+        className="relative w-full mt-9 z-10 flex justify-center"
         style={{ height: '320px', opacity: cardFadeOpacity }}
       >
         <div
@@ -396,6 +380,19 @@ const Hero = () => {
             );
           })}
         </div>
+      </div>
+
+      {/* ── Shop Now Button ─────────────────────────────────────────── */}
+      <div className="relative z-10 flex justify-center mt-0 mb-8">
+        <a
+          href="#products"
+          className="inline-flex items-center justify-center gap-2 py-2.5 px-7 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-colors duration-200"
+        >
+          Shop Now
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
       </div>
 
       {/* ── Card Overlay (click to enlarge with holographic effects) ── */}
