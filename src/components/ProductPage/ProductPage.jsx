@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
+import PayflexPriceSplitter from '../Payflex/PayflexPriceSplitter';
 
 const API_BASE = 'http://localhost:3001';
 
@@ -240,6 +241,9 @@ const ProductPage = () => {
                 </span>
               )}
             </div>
+
+            {/* Payflex installment widget */}
+            <PayflexPriceSplitter price={product.price} />
 
             {/* Stock Status */}
             <div className={`text-sm font-medium mb-6 ${stockStatus.color}`}>
