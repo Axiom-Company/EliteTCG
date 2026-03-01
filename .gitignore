@@ -17,10 +17,6 @@ dist-ssr
 .env.*
 .env.local
 .env.production
-server/.env
-
-# Temp build artifacts
-server/EliteTCG/
 
 # Editor directories and files
 .vscode/*
