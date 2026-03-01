@@ -4,8 +4,6 @@ import { supabase } from '@/config/supabase';
 
 const API_BASE = `${ELITE_API_URL}/api`;
 const FASTAPI_BASE = PAYMENTS_API_URL;
-const ADMIN_API_KEY = import.meta.env.VITE_FASTAPI_ADMIN_KEY || '';
-
 // Get token from Supabase session
 const getToken = async () => {
   if (!supabase) return null;
@@ -148,7 +146,6 @@ const fastApiFetch = async (endpoint, options = {}) => {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'X-Admin-Api-Key': ADMIN_API_KEY,
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
