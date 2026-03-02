@@ -226,8 +226,6 @@ const Navbar = () => {
           >
             Subscribe
           </Link>
-        </nav>
-
           <Link
             to="/wishlist"
             className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
