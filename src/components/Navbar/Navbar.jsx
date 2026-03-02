@@ -210,6 +210,15 @@ const Navbar = () => {
             Pre-Orders
           </Link>
 
+          {isAuthenticated && (
+            <Link
+              to="/portfolio"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              onClick={closeAll}
+            >
+              Portfolio
+            </Link>
+          )}
           <Link
             to="/subscription"
             className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
@@ -259,6 +268,13 @@ const Navbar = () => {
                     </p>
                   </div>
                   <div className="p-1.5">
+                    <Link
+                      to="/portfolio"
+                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsUserOpen(false)}
+                    >
+                      My Portfolio
+                    </Link>
                     <Link
                       to="/orders"
                       className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
@@ -418,6 +434,15 @@ const Navbar = () => {
               Pre-Orders
             </Link>
 
+            {isAuthenticated && (
+              <Link
+                to="/portfolio"
+                className="px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Portfolio
+              </Link>
+            )}
             <Link
               to="/subscription"
               className="px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"

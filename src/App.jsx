@@ -58,6 +58,9 @@ import PayflexReturn from './pages/checkout/PayflexReturn';
 import OrderTracking from './pages/orders/OrderTracking';
 import OrderHistory from './pages/orders/OrderHistory';
 
+// Portfolio pages
+import PortfolioDashboard from './pages/portfolio/PortfolioDashboard';
+import SetCompletion from './pages/portfolio/SetCompletion';
 // Subscription pages
 import SubscriptionPlans from './pages/subscription/SubscriptionPlans';
 import SubscriptionManage from './pages/subscription/SubscriptionManage';
@@ -156,6 +159,8 @@ function App() {
           <Route path="/checkout/payflex/return" element={<MainLayout><PayflexReturn /></MainLayout>} />
           <Route path="/orders" element={<MainLayout><OrderHistory /></MainLayout>} />
           <Route path="/orders/track" element={<MainLayout><OrderTracking /></MainLayout>} />
+          <Route path="/portfolio" element={<MainLayout><PortfolioDashboard /></MainLayout>} />
+          <Route path="/portfolio/completion" element={<MainLayout><SetCompletion /></MainLayout>} />
           <Route path="/subscription" element={<MainLayout><SubscriptionPlans /></MainLayout>} />
           <Route path="/subscription/manage" element={<MainLayout><SubscriptionManage /></MainLayout>} />
           <Route path="/admin/*" element={<AdminApp />} />
