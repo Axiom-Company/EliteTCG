@@ -257,15 +257,15 @@ const Orders = () => {
       )}
 
       {/* Toolbar */}
-      <div className="flex items-center gap-3 mb-5">
-        <div className="relative">
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#4a4a4a]" strokeWidth={1.5} />
           <input
             type="text"
             placeholder="Search orders..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-3 h-9 w-[220px] bg-[#111111] border border-[#282828] rounded-lg text-sm text-[#f1f1f1] placeholder-[#4a4a4a] outline-none focus:border-[#3ECF8E] transition-colors"
+            className="pl-9 pr-3 h-9 w-full sm:w-[220px] bg-[#111111] border border-[#282828] rounded-lg text-sm text-[#f1f1f1] placeholder-[#4a4a4a] outline-none focus:border-[#3ECF8E] transition-colors"
           />
         </div>
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
@@ -285,8 +285,46 @@ const Orders = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-[#111111] border border-[#282828] rounded-xl overflow-hidden">
+      {/* Mobile cards */}
+      <div className="sm:hidden space-y-2 mb-4">
+        {loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-[#111111] border border-[#282828] rounded-xl p-4 animate-pulse space-y-2">
+              <div className="h-3.5 bg-[#1e1e1e] rounded w-24" />
+              <div className="h-3 bg-[#1e1e1e] rounded w-36" />
+              <div className="h-3 bg-[#1e1e1e] rounded w-20" />
+            </div>
+          ))
+        ) : filteredOrders.length === 0 ? (
+          <div className="py-16 text-center">
+            <Package className="w-10 h-10 text-[#282828] mx-auto mb-3" strokeWidth={1} />
+            <p className="text-sm text-[#4a4a4a]">
+              {search ? `No orders matching "${search}"` : 'No orders yet'}
+            </p>
+          </div>
+        ) : (
+          filteredOrders.map((order) => (
+            <button
+              key={order.id}
+              onClick={() => handleViewOrder(order)}
+              className="w-full text-left bg-[#111111] border border-[#282828] rounded-xl p-4 hover:border-[#3a3a3a] transition-colors"
+            >
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <span className="text-sm font-medium text-[#3ECF8E]">{order.order_number}</span>
+                <StatusBadge status={order.order_status} colors={STATUS_COLORS} />
+              </div>
+              <p className="text-sm text-[#f1f1f1] truncate">{order.guest_name || '—'}</p>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-xs text-[#6b6b6b]">{formatDate(order.created_at)}</span>
+                <span className="text-sm font-medium text-[#a0a0a0]">R{order.total_zar?.toFixed(2)}</span>
+              </div>
+            </button>
+          ))
+        )}
+      </div>
+
+      {/* Table (desktop only) */}
+      <div className="hidden sm:block bg-[#111111] border border-[#282828] rounded-xl overflow-hidden">
         {/* Table Header */}
         <div className="flex items-center gap-4 px-4 py-2.5 border-b border-[#282828] text-[10px] font-medium text-[#6b6b6b] uppercase tracking-wider">
           <div className="w-24">Order</div>

@@ -69,9 +69,9 @@ const Sets = () => {
                 className="group flex flex-col bg-white rounded-2xl overflow-hidden transition-all duration-200"
               >
                 <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white p-4">
-                  {getImageUrl(set.image) ? (
+                  {getImageUrl(set.logo_url) ? (
                     <img
-                      src={getImageUrl(set.image)}
+                      src={getImageUrl(set.logo_url)}
                       alt={set.name}
                       className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                     />

@@ -61,6 +61,11 @@ import OrderHistory from './pages/orders/OrderHistory';
 // Portfolio pages
 import PortfolioDashboard from './pages/portfolio/PortfolioDashboard';
 import SetCompletion from './pages/portfolio/SetCompletion';
+// Subscription pages
+import SubscriptionPlans from './pages/subscription/SubscriptionPlans';
+import SubscriptionManage from './pages/subscription/SubscriptionManage';
+// Review page
+import WriteReview from './pages/reviews/WriteReview';
 
 // Customer Auth Provider
 import { CustomerAuthProvider } from './contexts/CustomerAuthContext';
@@ -85,6 +90,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // Admin Application
 import AdminApp from './admin/AdminApp';
+import AnnouncementBar from './components/AnnouncementBar/AnnouncementBar';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -104,6 +110,7 @@ const HomePage = () => {
 const MainLayout = ({ children }) => (
   <div className="flex flex-col min-h-screen">
     <Navbar />
+    <AnnouncementBar />
     <main className="flex-1">
       {children}
     </main>
@@ -114,6 +121,7 @@ const MainLayout = ({ children }) => (
 const NavbarLayout = ({ children }) => (
   <div className="flex flex-col min-h-screen">
     <Navbar />
+    <AnnouncementBar />
     <main className="flex-1">
       {children}
     </main>
@@ -134,6 +142,7 @@ function App() {
           <Route path="/sets/:id" element={<MainLayout><SetDetail /></MainLayout>} />
           <Route path="/categories/:slug" element={<MainLayout><CategoryDetail /></MainLayout>} />
           <Route path="/product/:id" element={<MainLayout><ProductPage /></MainLayout>} />
+          <Route path="/product/:id/review" element={<NavbarLayout><WriteReview /></NavbarLayout>} />
           <Route path="/login" element={<NavbarLayout><Login /></NavbarLayout>} />
           <Route path="/register" element={<NavbarLayout><Register /></NavbarLayout>} />
           <Route path="/become-seller" element={<MainLayout><BecomeSeller /></MainLayout>} />
@@ -152,6 +161,8 @@ function App() {
           <Route path="/orders/track" element={<MainLayout><OrderTracking /></MainLayout>} />
           <Route path="/portfolio" element={<MainLayout><PortfolioDashboard /></MainLayout>} />
           <Route path="/portfolio/completion" element={<MainLayout><SetCompletion /></MainLayout>} />
+          <Route path="/subscription" element={<MainLayout><SubscriptionPlans /></MainLayout>} />
+          <Route path="/subscription/manage" element={<MainLayout><SubscriptionManage /></MainLayout>} />
           <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
         <CartDrawer />

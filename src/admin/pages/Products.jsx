@@ -42,28 +42,15 @@ const CATEGORIES = [
   { value: 'accessories', label: 'Accessories' },
 ];
 
-const getCurrencySymbol = (currency) => {
-  switch (currency) {
-    case 'ZAR': return 'R';
-    case 'USD': return '$';
-    case 'EUR': return '€';
-    case 'GBP': return '£';
-    default: return 'R';
-  }
-};
 
-const getStockColor = () => '#3a3a3a';
 
 const SkeletonCard = () => (
-  <div className="bg-[#111111] border border-[#282828] rounded-xl overflow-hidden animate-pulse">
-    <div className="aspect-video bg-[#1a1a1a]" />
-    <div className="p-4 space-y-3">
-      <div className="h-4 bg-[#1e1e1e] rounded-md w-3/4" />
-      <div className="h-3 bg-[#1e1e1e] rounded-md w-1/3" />
-      <div className="flex gap-1.5 pt-1">
-        <div className="h-4 w-12 bg-[#1e1e1e] rounded-full" />
-        <div className="h-4 w-16 bg-[#1e1e1e] rounded-full" />
-      </div>
+  <div className="bg-[#111111] border border-[#282828] rounded-2xl overflow-hidden animate-pulse">
+    <div className="aspect-square bg-[#1a1a1a]" />
+    <div className="p-4 space-y-2.5">
+      <div className="h-3 bg-[#1e1e1e] rounded w-1/3" />
+      <div className="h-4 bg-[#1e1e1e] rounded w-4/5" />
+      <div className="h-4 bg-[#1e1e1e] rounded w-2/5" />
     </div>
   </div>
 );
@@ -84,7 +71,6 @@ const Products = () => {
     description: '',
     price: '',
     compare_at_price: '',
-    currency: 'ZAR',
     category: 'booster_box',
     badge: 'none',
     sku: '',
@@ -94,10 +80,15 @@ const Products = () => {
     is_active: true,
     is_featured: false,
     images: [],
+    dimensions: { weight: '', length: '', width: '', height: '' },
+    box_contents: '',
   });
+  const [sectionsOpen, setSectionsOpen] = useState({ dimensions: false, box: false });
+  const toggleSection = (key) => setSectionsOpen(p => ({ ...p, [key]: !p[key] }));
 
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImageFiles, setNewImageFiles] = useState([]);
+  const [newImagePreviews, setNewImagePreviews] = useState([]);
   const [uploading, setUploading] = useState(false);
 
   const fetchProducts = async () => {
@@ -138,23 +129,35 @@ const Products = () => {
   const resetForm = () => {
     setFormData({
       name: '', description: '', price: '', compare_at_price: '',
-      currency: 'ZAR', category: 'booster_box', badge: 'none', sku: '',
+      category: 'booster_box', badge: 'none', sku: '',
       set_id: '', initial_quantity: '0', low_stock_threshold: '5',
       is_active: true, is_featured: false, images: [],
+      dimensions: { weight: '', length: '', width: '', height: '' },
+      box_contents: '',
     });
-    setImageFile(null);
-    setImagePreview(null);
+    setSectionsOpen({ dimensions: false, box: false });
+    setExistingImages([]);
+    setNewImageFiles([]);
+    setNewImagePreviews([]);
     setEditingProduct(null);
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    setNewImageFiles(prev => [...prev, ...files]);
+    files.forEach(file => {
       const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result);
+      reader.onloadend = () => setNewImagePreviews(prev => [...prev, reader.result]);
       reader.readAsDataURL(file);
-    }
+    });
+    e.target.value = '';
+  };
+
+  const removeExistingImage = (index) => setExistingImages(prev => prev.filter((_, i) => i !== index));
+  const removeNewImage = (index) => {
+    setNewImageFiles(prev => prev.filter((_, i) => i !== index));
+    setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
@@ -162,11 +165,11 @@ const Products = () => {
     setSaving(true);
     setMessage(null);
     try {
-      let imageUrl = formData.images[0] || null;
-      if (imageFile) {
+      let allImageUrls = [...existingImages];
+      if (newImageFiles.length) {
         setUploading(true);
-        const uploadResult = await uploadApi.uploadImage(imageFile);
-        imageUrl = uploadResult.url;
+        const newUrls = await uploadApi.uploadImages(newImageFiles);
+        allImageUrls = [...allImageUrls, ...newUrls];
         setUploading(false);
       }
       const productData = {
@@ -175,7 +178,7 @@ const Products = () => {
         compare_at_price: formData.compare_at_price ? parseFloat(formData.compare_at_price) : null,
         initial_quantity: parseInt(formData.initial_quantity) || 0,
         low_stock_threshold: parseInt(formData.low_stock_threshold) || 5,
-        images: imageUrl ? [imageUrl] : [],
+        images: allImageUrls,
       };
       if (editingProduct) {
         await productsApi.update(editingProduct.id, productData);
@@ -202,7 +205,6 @@ const Products = () => {
       description: product.description || '',
       price: product.price?.toString() || '',
       compare_at_price: product.compare_at_price?.toString() || '',
-      currency: product.currency || 'ZAR',
       category: product.category || 'booster_box',
       badge: product.badge || 'none',
       sku: product.sku || '',
@@ -212,10 +214,14 @@ const Products = () => {
       is_active: product.is_active ?? true,
       is_featured: product.is_featured ?? false,
       images: product.images || [],
+      dimensions: product.dimensions || { weight: '', length: '', width: '', height: '' },
+      box_contents: product.box_contents || '',
     });
-    if (product.images?.[0]) {
-      setImagePreview(product.images[0].startsWith('http') ? product.images[0] : `${API_BASE}${product.images[0]}`);
-    }
+    const hasDims = product.dimensions && Object.values(product.dimensions).some(v => v);
+    setSectionsOpen({ dimensions: !!hasDims, box: !!product.box_contents });
+    setExistingImages(product.images || []);
+    setNewImageFiles([]);
+    setNewImagePreviews([]);
     setShowForm(true);
   };
 
@@ -263,25 +269,25 @@ const Products = () => {
       )}
 
       {/* Toolbar */}
-      <div className="flex items-center gap-3 mb-5">
-        <div className="relative">
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#4a4a4a]" strokeWidth={1.5} />
           <input
             type="text"
             placeholder="Search products..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-3 h-9 w-[220px] bg-[#111111] border border-[#282828] rounded-lg text-sm text-[#f1f1f1] placeholder-[#4a4a4a] outline-none focus:border-[#3ECF8E] transition-colors"
+            className="pl-9 pr-3 h-9 w-full sm:w-[220px] bg-[#111111] border border-[#282828] rounded-lg text-sm text-[#f1f1f1] placeholder-[#4a4a4a] outline-none focus:border-[#3ECF8E] transition-colors"
           />
         </div>
 
         {/* Category pills */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
           {CATEGORIES.map(cat => (
             <button
               key={cat.value}
               onClick={() => setFilter(cat.value)}
-              className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+              className={`px-3 py-1.5 text-xs rounded-lg border transition-colors whitespace-nowrap ${
                 filter === cat.value
                   ? 'bg-[#1e1e1e] text-[#f1f1f1] border-[#3a3a3a]'
                   : 'bg-transparent text-[#6b6b6b] border-[#282828] hover:border-[#333] hover:text-[#c4c4c4]'
@@ -303,26 +309,41 @@ const Products = () => {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label>Product Image</Label>
-              <div className="flex items-start gap-3">
-                <div className="w-16 h-16 bg-[#1c1c1c] border border-[#282828] rounded-lg overflow-hidden flex items-center justify-center shrink-0">
-                  {imagePreview ? (
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-contain" />
-                  ) : (
-                    <ImageIcon className="w-6 h-6 text-[#4a4a4a]" strokeWidth={1} />
-                  )}
-                </div>
-                <div className="flex-1 space-y-2">
-                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" id="image-upload" />
-                  <Button type="button" variant="outline" size="sm" asChild className="gap-2">
-                    <label htmlFor="image-upload" className="cursor-pointer">
-                      <Upload className="w-4 h-4" strokeWidth={1.5} />
-                      Choose Image
-                    </label>
-                  </Button>
-                  <p className="text-xs text-[#4a4a4a]">PNG, JPG up to 5MB</p>
-                </div>
+              <Label>Product Images</Label>
+              <div className="flex flex-wrap gap-2">
+                {/* Existing images */}
+                {existingImages.map((url, i) => (
+                  <div key={`e-${i}`} className="relative w-16 h-16 bg-[#1c1c1c] border border-[#282828] rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                    <img src={url.startsWith('http') ? url : `${API_BASE}${url}`} alt="" className="w-full h-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => removeExistingImage(i)}
+                      className="absolute top-0.5 right-0.5 w-4 h-4 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-[10px] leading-none"
+                    >×</button>
+                  </div>
+                ))}
+                {/* New image previews */}
+                {newImagePreviews.map((preview, i) => (
+                  <div key={`n-${i}`} className="relative w-16 h-16 bg-[#1c1c1c] border border-[#282828] rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                    <img src={preview} alt="" className="w-full h-full object-contain" />
+                    <button
+                      type="button"
+                      onClick={() => removeNewImage(i)}
+                      className="absolute top-0.5 right-0.5 w-4 h-4 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-[10px] leading-none"
+                    >×</button>
+                  </div>
+                ))}
+                {/* Add button */}
+                <label
+                  htmlFor="image-upload"
+                  className="w-16 h-16 bg-[#1c1c1c] border border-dashed border-[#3a3a3a] rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-[#3ECF8E] transition-colors shrink-0 gap-1"
+                >
+                  <Plus className="w-4 h-4 text-[#4a4a4a]" />
+                  <span className="text-[9px] text-[#4a4a4a]">Add</span>
+                </label>
+                <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" id="image-upload" />
               </div>
+              <p className="text-xs text-[#4a4a4a]">PNG, JPG up to 5MB each</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">Product Name</Label>
@@ -332,26 +353,14 @@ const Products = () => {
               <Label htmlFor="description">Description</Label>
               <Textarea id="description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Enter product description" rows={3} />
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price">Price</Label>
+                <Label htmlFor="price">Price (R)</Label>
                 <Input id="price" type="number" step="0.01" min="0" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} placeholder="0.00" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="compare_price">Compare at</Label>
+                <Label htmlFor="compare_price">Compare at (R)</Label>
                 <Input id="compare_price" type="number" step="0.01" min="0" value={formData.compare_at_price} onChange={(e) => setFormData({ ...formData, compare_at_price: e.target.value })} placeholder="0.00" />
-              </div>
-              <div className="space-y-2">
-                <Label>Currency</Label>
-                <Select value={formData.currency} onValueChange={(v) => setFormData({ ...formData, currency: v })}>
-                  <SelectTrigger className="cursor-pointer"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ZAR">ZAR (R)</SelectItem>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
-                    <SelectItem value="GBP">GBP (£)</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -405,6 +414,83 @@ const Products = () => {
                 <Input id="quantity" type="number" min="0" value={formData.initial_quantity} onChange={(e) => setFormData({ ...formData, initial_quantity: e.target.value })} />
               </div>
             </div>
+            {/* Dimensions — collapsible */}
+            <div className="border border-[#282828] rounded-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => toggleSection('dimensions')}
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-[#c4c4c4] hover:bg-[#1a1a1a] transition-colors"
+              >
+                Product Dimensions
+                <svg className={`w-4 h-4 text-[#6b6b6b] transition-transform duration-200 ${sectionsOpen.dimensions ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {sectionsOpen.dimensions && (
+                <div className="px-4 pb-4 space-y-3 border-t border-[#282828]">
+                  <div className="grid grid-cols-2 gap-3 pt-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Weight (g)</Label>
+                      <Input
+                        type="number" min="0" placeholder="e.g. 500"
+                        value={formData.dimensions.weight}
+                        onChange={(e) => setFormData({ ...formData, dimensions: { ...formData.dimensions, weight: e.target.value } })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Length (cm)</Label>
+                      <Input
+                        type="number" min="0" placeholder="e.g. 30"
+                        value={formData.dimensions.length}
+                        onChange={(e) => setFormData({ ...formData, dimensions: { ...formData.dimensions, length: e.target.value } })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Width (cm)</Label>
+                      <Input
+                        type="number" min="0" placeholder="e.g. 20"
+                        value={formData.dimensions.width}
+                        onChange={(e) => setFormData({ ...formData, dimensions: { ...formData.dimensions, width: e.target.value } })}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Height (cm)</Label>
+                      <Input
+                        type="number" min="0" placeholder="e.g. 10"
+                        value={formData.dimensions.height}
+                        onChange={(e) => setFormData({ ...formData, dimensions: { ...formData.dimensions, height: e.target.value } })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* What's in the box — collapsible */}
+            <div className="border border-[#282828] rounded-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => toggleSection('box')}
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-[#c4c4c4] hover:bg-[#1a1a1a] transition-colors"
+              >
+                What's in the Box
+                <svg className={`w-4 h-4 text-[#6b6b6b] transition-transform duration-200 ${sectionsOpen.box ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {sectionsOpen.box && (
+                <div className="px-4 pb-4 border-t border-[#282828]">
+                  <p className="text-xs text-[#6b6b6b] mt-3 mb-2">One item per line</p>
+                  <Textarea
+                    rows={5}
+                    placeholder={"1x Booster Pack\n1x Promo Card\n1x Coin"}
+                    value={formData.box_contents}
+                    onChange={(e) => setFormData({ ...formData, box_contents: e.target.value })}
+                  />
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center gap-8 pt-1">
               <div className="flex items-center gap-2">
                 <Switch id="active" checked={formData.is_active} onCheckedChange={(v) => setFormData({ ...formData, is_active: v })} />
@@ -427,7 +513,7 @@ const Products = () => {
 
       {/* Grid */}
       {loading ? (
-        <div className="grid grid-cols-4 gap-3 lg:grid-cols-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : filteredProducts.length === 0 ? (
@@ -438,65 +524,64 @@ const Products = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-3 lg:grid-cols-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {filteredProducts.map((product) => {
             const qty = product.inventory?.quantity || 0;
             const threshold = product.inventory?.low_stock_threshold || 5;
-            const stockPct = Math.min(100, (qty / (threshold * 6)) * 100);
-            const stockColor = getStockColor(qty, threshold);
 
             return (
               <div
                 key={product.id}
-                className="bg-[#111111] border border-[#282828] rounded-xl overflow-hidden hover:border-[#3a3a3a] transition-all duration-200 group relative"
+                className="bg-[#111111] border border-[#282828] rounded-2xl overflow-hidden hover:border-[#3a3a3a] transition-all duration-200 group relative"
               >
                 {/* Image */}
-                <div
-                  className="aspect-video isolate flex items-center justify-center p-5 border-b border-[#1e1e1e] relative overflow-hidden"
-                  style={{ backgroundColor: '#ffffff' }}
-                >
+                <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">
                   {product.images?.[0] ? (
                     <img
                       src={product.images[0].startsWith('http') ? product.images[0] : `${API_BASE}${product.images[0]}`}
                       alt={product.name}
-                      className="max-w-full max-h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
+                      className="w-[75%] h-[75%] object-contain"
                     />
                   ) : (
                     <ImageIcon className="w-10 h-10 text-[#ccc]" strokeWidth={1} />
                   )}
 
-                  {/* Featured badge */}
+                  {/* Badge */}
+                  {product.badge && product.badge !== 'none' && (
+                    <span className="absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-gray-900 text-white capitalize">
+                      {product.badge}
+                    </span>
+                  )}
+
+                  {/* Featured star */}
                   {product.is_featured && (
-                    <div className="absolute top-2 left-2 bg-[#0f0f0f]/70 rounded-md px-1.5 py-0.5 flex items-center gap-1">
-                      <Star className="w-2.5 h-2.5 text-[#f1f1f1] fill-[#f1f1f1]" />
-                      <span className="text-[9px] font-medium text-[#f1f1f1] uppercase tracking-wide">Featured</span>
+                    <div className="absolute top-2.5 right-2.5 flex items-center gap-1">
+                      <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
                     </div>
                   )}
 
                   {/* Hover quick-edit */}
                   <button
                     onClick={() => handleEdit(product)}
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-[#0f0f0f]/70 hover:bg-[#0f0f0f]/90 backdrop-blur-sm rounded-md p-1.5"
+                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-[#0f0f0f]/70 hover:bg-[#0f0f0f]/90 backdrop-blur-sm rounded-md p-1.5"
                   >
                     <Pencil className="w-3 h-3 text-[#f1f1f1]" strokeWidth={1.5} />
                   </button>
                 </div>
 
                 {/* Info */}
-                <div className="p-4">
+                <div className="p-4 flex flex-col gap-1">
+                  <span className="text-[10px] text-[#6b6b6b] uppercase tracking-widest">
+                    {product.is_active ? 'Active' : 'Draft'}{product.category ? ` · ${product.category}` : ''}
+                  </span>
+
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-[15px] font-medium text-[#f1f1f1] truncate leading-snug">{product.name}</p>
-                      <p className="text-sm text-[#a0a0a0] mt-1">
-                        {getCurrencySymbol(product.currency)}{product.price}
-                        {product.compare_at_price && (
-                          <span className="ml-1.5 line-through text-[#4a4a4a] text-xs">{getCurrencySymbol(product.currency)}{product.compare_at_price}</span>
-                        )}
-                      </p>
-                    </div>
+                    <p className="text-sm font-medium text-[#f1f1f1] line-clamp-2 leading-snug">
+                      {product.name}
+                    </p>
                     <DropdownMenu
                       trigger={
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-[#6b6b6b] hover:text-[#f1f1f1] cursor-pointer shrink-0 -mr-1 -mt-1">
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-[#6b6b6b] hover:text-[#f1f1f1] cursor-pointer shrink-0 -mr-1">
                           <MoreVertical className="w-3.5 h-3.5" strokeWidth={1.5} />
                         </Button>
                       }
@@ -506,31 +591,23 @@ const Products = () => {
                     </DropdownMenu>
                   </div>
 
-                  {/* Badges */}
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    <span className="px-2 py-0.5 text-[10px] rounded-full border bg-[#1e1e1e] text-[#6b6b6b] border-[#2e2e2e]">
-                      {product.is_active ? 'Active' : 'Draft'}
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-base font-medium text-[#f1f1f1]">
+                      R{Number(product.price || 0).toLocaleString()}
                     </span>
-                    {product.badge && product.badge !== 'none' && (
-                      <span className="px-2 py-0.5 text-[10px] rounded-full bg-[#282828] text-[#a0a0a0] border border-[#333] capitalize">
-                        {product.badge}
+                    {product.compare_at_price && (
+                      <span className="text-xs text-[#4a4a4a] line-through">
+                        R{Number(product.compare_at_price).toLocaleString()}
                       </span>
                     )}
                   </div>
 
-                  {/* Stock bar */}
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] text-[#4a4a4a]">Stock</span>
-                      <span className="text-[10px] text-[#4a4a4a]">{qty} left</span>
-                    </div>
-                    <div className="h-0.5 bg-[#1e1e1e] rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${stockPct}%`, backgroundColor: stockColor }}
-                      />
-                    </div>
-                  </div>
+                  {qty <= threshold && qty > 0 && (
+                    <p className="text-xs text-amber-500 mt-0.5">Only {qty} left</p>
+                  )}
+                  {qty === 0 && (
+                    <p className="text-xs text-[#6b6b6b] mt-0.5">Out of stock</p>
+                  )}
                 </div>
               </div>
             );

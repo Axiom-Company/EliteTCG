@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X, ChevronRight, Package, SlidersHorizontal } from 'lucide-react';
-import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
+import ProductCard from '../../components/ProductCard/ProductCard';
+import { ELITE_API_URL } from '../../config/api';
 
 const categories = [
   { value: '', label: 'All Products' },
@@ -19,26 +20,6 @@ const sortOptions = [
   { value: 'name', label: 'Name A–Z' },
 ];
 
-const getBadgeStyle = (badge) => {
-  switch (badge?.toLowerCase()) {
-    case 'hot':      return 'bg-[#E3350D] text-white';
-    case 'sale':     return 'bg-[#E3350D] text-white';
-    case 'new':      return 'bg-[#FFCB32] text-gray-900';
-    case 'limited':  return 'bg-gray-900 text-white';
-    case 'preorder': return 'bg-blue-600 text-white';
-    default:         return '';
-  }
-};
-
-const CategoryLabel = ({ value }) => {
-  const cat = categories.find(c => c.value === value);
-  if (!cat || !value) return null;
-  return (
-    <span className="text-[10px] text-gray-400 uppercase tracking-widest">
-      {cat.label}
-    </span>
-  );
-};
 
 const CardSkeleton = () => (
   <div className="bg-white rounded-2xl overflow-hidden animate-pulse">
@@ -56,7 +37,7 @@ const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [addingToCart, setAddingToCart] = useState(null);
+
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   useEffect(() => {
@@ -69,13 +50,6 @@ const Products = () => {
   }, [mobileFilterOpen]);
 
 
-  const handleQuickAdd = async (product, e) => {
-    e.preventDefault();
-    if (product.inventory?.quantity === 0) return;
-    setAddingToCart(product.id);
-    await new Promise(r => setTimeout(r, 600));
-    setAddingToCart(null);
-  };
 
   const filters = {
     category: searchParams.get('category') || '',
@@ -146,28 +120,6 @@ const Products = () => {
     fetchProducts();
   }, [searchParams]);
 
-  const formatPrice = (product) => {
-    const symbol =
-      product.currency === 'USD' ? '$' :
-      product.currency === 'EUR' ? '€' :
-      product.currency === 'GBP' ? '£' : 'R';
-    return `${symbol}${Number(product.price || 0).toLocaleString()}`;
-  };
-
-  const formatComparePrice = (product) => {
-    if (!product.compare_at_price) return null;
-    const symbol =
-      product.currency === 'USD' ? '$' :
-      product.currency === 'EUR' ? '€' :
-      product.currency === 'GBP' ? '£' : 'R';
-    return `${symbol}${Number(product.compare_at_price).toLocaleString()}`;
-  };
-
-  const getDiscountPct = (product) => {
-    if (!product.compare_at_price || !product.price) return null;
-    const pct = Math.round((1 - product.price / product.compare_at_price) * 100);
-    return pct > 0 ? pct : null;
-  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -351,85 +303,9 @@ const Products = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-                {products.map((product) => {
-                  const comparePrice = formatComparePrice(product);
-                  const discountPct = getDiscountPct(product);
-                  const isOutOfStock = product.inventory?.quantity === 0;
-                  const isLowStock =
-                    product.inventory?.quantity > 0 &&
-                    product.inventory?.quantity <= (product.inventory?.low_stock_threshold ?? 5);
-                  const isAdding = addingToCart === product.id;
-
-                  return (
-                    <Link
-                      key={product.id}
-                      to={`/product/${product.slug || product.id}`}
-                      className="group flex flex-col bg-white rounded-2xl overflow-hidden"
-                    >
-                      {/* Image */}
-                      <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">
-                        {product.images?.[0] ? (
-                          <img
-                            src={getImageUrl(product.images[0])}
-                            alt={product.name}
-                            className="w-[75%] h-[75%] object-contain"
-                          />
-                        ) : (
-                          <Package className="w-12 h-12 text-gray-200" />
-                        )}
-
-                        {/* Badge — discount % takes priority */}
-                        {!isOutOfStock && (discountPct ? (
-                          <span className="absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-gray-900 text-white">
-                            -{discountPct}%
-                          </span>
-                        ) : product.badge && product.badge !== 'none' && (
-                          <span className={`absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full capitalize tracking-wide ${getBadgeStyle(product.badge)}`}>
-                            {product.badge}
-                          </span>
-                        ))}
-
-                        {/* Out of stock overlay */}
-                        {isOutOfStock && (
-                          <div className="absolute inset-0 bg-white/70 flex items-end justify-center pb-4">
-                            <span className="text-xs font-medium text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200">
-                              Out of stock
-                            </span>
-                          </div>
-                        )}
-
-
-                      </div>
-
-                      {/* Info */}
-                      <div className="p-4 flex flex-col gap-1">
-                        <CategoryLabel value={product.category} />
-
-                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-snug mt-0.5">
-                          {product.name}
-                        </h3>
-
-                        <div className="flex items-baseline gap-2 mt-1">
-                          <span className="text-base font-medium text-gray-900">
-                            {formatPrice(product)}
-                          </span>
-                          {comparePrice && (
-                            <span className="text-xs text-gray-400 line-through">
-                              {comparePrice}
-                            </span>
-                          )}
-                        </div>
-
-                        {isLowStock && (
-                          <p className="flex items-center gap-1.5 text-xs font-medium text-amber-600 mt-0.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse inline-block" />
-                            Only {product.inventory.quantity} left
-                          </p>
-                        )}
-                      </div>
-                    </Link>
-                  );
-                })}
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
               </div>
             )}
           </div>
