@@ -119,10 +119,10 @@ const Sets = () => {
       release_date: set.release_date || '',
       is_active: set.is_active ?? true,
       is_new: set.is_new ?? false,
-      image: set.image || null,
+      image: set.logo_url || null,
     });
-    if (set.image) {
-      setImagePreview(set.image.startsWith('http') ? set.image : `${API_BASE}${set.image}`);
+    if (set.logo_url) {
+      setImagePreview(set.logo_url.startsWith('http') ? set.logo_url : `${API_BASE}${set.logo_url}`);
     }
     setShowForm(true);
   };
@@ -247,14 +247,14 @@ const Sets = () => {
           No sets found
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-3 lg:grid-cols-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {filteredSets.map((set) => (
             <div key={set.id} className="bg-[#111111] border border-[#282828] rounded-xl overflow-hidden hover:border-[#333] transition-colors group">
               {/* Image */}
               <div className="aspect-video isolate flex items-center justify-center p-5 border-b border-[#1e1e1e]" style={{ backgroundColor: '#ffffff' }}>
-                {set.image ? (
+                {set.logo_url ? (
                   <img
-                    src={set.image.startsWith('http') ? set.image : `${API_BASE}${set.image}`}
+                    src={set.logo_url.startsWith('http') ? set.logo_url : `${API_BASE}${set.logo_url}`}
                     alt={set.name}
                     className="max-w-full max-h-full object-contain mix-blend-multiply"
                   />

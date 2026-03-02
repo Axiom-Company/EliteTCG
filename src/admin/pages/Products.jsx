@@ -263,25 +263,25 @@ const Products = () => {
       )}
 
       {/* Toolbar */}
-      <div className="flex items-center gap-3 mb-5">
-        <div className="relative">
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#4a4a4a]" strokeWidth={1.5} />
           <input
             type="text"
             placeholder="Search products..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-3 h-9 w-[220px] bg-[#111111] border border-[#282828] rounded-lg text-sm text-[#f1f1f1] placeholder-[#4a4a4a] outline-none focus:border-[#3ECF8E] transition-colors"
+            className="pl-9 pr-3 h-9 w-full sm:w-[220px] bg-[#111111] border border-[#282828] rounded-lg text-sm text-[#f1f1f1] placeholder-[#4a4a4a] outline-none focus:border-[#3ECF8E] transition-colors"
           />
         </div>
 
         {/* Category pills */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
           {CATEGORIES.map(cat => (
             <button
               key={cat.value}
               onClick={() => setFilter(cat.value)}
-              className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+              className={`px-3 py-1.5 text-xs rounded-lg border transition-colors whitespace-nowrap ${
                 filter === cat.value
                   ? 'bg-[#1e1e1e] text-[#f1f1f1] border-[#3a3a3a]'
                   : 'bg-transparent text-[#6b6b6b] border-[#282828] hover:border-[#333] hover:text-[#c4c4c4]'
@@ -427,7 +427,7 @@ const Products = () => {
 
       {/* Grid */}
       {loading ? (
-        <div className="grid grid-cols-4 gap-3 lg:grid-cols-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : filteredProducts.length === 0 ? (
@@ -438,7 +438,7 @@ const Products = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-3 lg:grid-cols-3 md:grid-cols-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {filteredProducts.map((product) => {
             const qty = product.inventory?.quantity || 0;
             const threshold = product.inventory?.low_stock_threshold || 5;
