@@ -81,6 +81,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // Admin Application
 import AdminApp from './admin/AdminApp';
+import AnnouncementBar from './components/AnnouncementBar/AnnouncementBar';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -100,6 +101,7 @@ const HomePage = () => {
 const MainLayout = ({ children }) => (
   <div className="flex flex-col min-h-screen">
     <Navbar />
+    <AnnouncementBar />
     <main className="flex-1">
       {children}
     </main>
@@ -110,6 +112,7 @@ const MainLayout = ({ children }) => (
 const NavbarLayout = ({ children }) => (
   <div className="flex flex-col min-h-screen">
     <Navbar />
+    <AnnouncementBar />
     <main className="flex-1">
       {children}
     </main>

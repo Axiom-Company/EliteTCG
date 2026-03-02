@@ -14,6 +14,9 @@ const Settings = () => {
   const [announcementBgColor, setAnnouncementBgColor] = useState('#E3350D');
   const [announcementTextColor, setAnnouncementTextColor] = useState('#FFFFFF');
   const [announcementLink, setAnnouncementLink] = useState('');
+  const [announcementDismissible, setAnnouncementDismissible] = useState(false);
+  const [announcementFontSize, setAnnouncementFontSize] = useState('sm');
+  const [announcementIcon, setAnnouncementIcon] = useState('');
   const [freeShippingThreshold, setFreeShippingThreshold] = useState('50');
   const [lowStockThreshold, setLowStockThreshold] = useState('5');
 
@@ -26,6 +29,9 @@ const Settings = () => {
         setAnnouncementBgColor(data.announcement_bar_bg_color?.value || '#E3350D');
         setAnnouncementTextColor(data.announcement_bar_text_color?.value || '#FFFFFF');
         setAnnouncementLink(data.announcement_bar_link?.value || '');
+        setAnnouncementDismissible(data.announcement_bar_dismissible?.value === 'true');
+        setAnnouncementFontSize(data.announcement_bar_font_size?.value || 'sm');
+        setAnnouncementIcon(data.announcement_bar_icon?.value || '');
         setFreeShippingThreshold(data.free_shipping_threshold?.value || '50');
         setLowStockThreshold(data.low_stock_threshold?.value || '5');
       } catch (error) {
@@ -48,6 +54,9 @@ const Settings = () => {
         announcement_bar_bg_color: announcementBgColor,
         announcement_bar_text_color: announcementTextColor,
         announcement_bar_link: announcementLink,
+        announcement_bar_dismissible: String(announcementDismissible),
+        announcement_bar_font_size: announcementFontSize,
+        announcement_bar_icon: announcementIcon,
         free_shipping_threshold: freeShippingThreshold,
         low_stock_threshold: lowStockThreshold,
       });
@@ -65,8 +74,31 @@ const Settings = () => {
     );
   }
 
+  const fontSizeClass = { sm: 'text-xs', md: 'text-sm', lg: 'text-base' }[announcementFontSize] || 'text-xs';
+
   return (
     <div>
+      {/* Live announcement bar preview — sticky below admin nav */}
+      {announcementEnabled && announcementText && (
+        <div className="sticky top-[52px] z-50 -mx-8 -mt-8 mb-8">
+          <div
+            className="relative flex items-center justify-center px-4 py-2 text-center"
+            style={{ backgroundColor: announcementBgColor, color: announcementTextColor }}
+          >
+            <span className={`${fontSizeClass} font-medium`}>
+              {announcementIcon && <span className="mr-2">{announcementIcon}</span>}
+              {announcementText}
+            </span>
+            {announcementDismissible && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 opacity-60 text-xs">x</span>
+            )}
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-medium uppercase tracking-wider opacity-40">
+              Preview
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Page header */}
       <div className="mb-8">
         <h1 className="text-base font-medium text-[#f1f1f1]">Settings</h1>
@@ -145,16 +177,37 @@ const Settings = () => {
               </div>
             </div>
 
-            {/* Preview */}
-            <div className="space-y-2">
-              <p className="text-xs text-[#6b6b6b]">Preview</p>
-              <div
-                className="px-4 py-2.5 text-center text-sm rounded-lg"
-                style={{ backgroundColor: announcementBgColor, color: announcementTextColor }}
-              >
-                {announcementText || 'Your announcement text here'}
+            <div className="grid grid-cols-3 gap-5">
+              <div className="space-y-2">
+                <Label>Font Size</Label>
+                <select
+                  value={announcementFontSize}
+                  onChange={(e) => setAnnouncementFontSize(e.target.value)}
+                  className="w-full h-10 px-3 bg-[#1c1c1c] border border-[#282828] rounded-lg text-sm text-[#f1f1f1] focus:outline-none"
+                >
+                  <option value="sm">Small</option>
+                  <option value="md">Medium</option>
+                  <option value="lg">Large</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="announcement-icon">Icon / Emoji</Label>
+                <Input
+                  id="announcement-icon"
+                  value={announcementIcon}
+                  onChange={(e) => setAnnouncementIcon(e.target.value)}
+                  placeholder="e.g. * or ->"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Dismissible</Label>
+                <div className="flex items-center gap-3 h-10">
+                  <Switch checked={announcementDismissible} onCheckedChange={setAnnouncementDismissible} />
+                  <span className="text-sm text-[#a0a0a0]">{announcementDismissible ? 'Yes' : 'No'}</span>
+                </div>
               </div>
             </div>
+
           </div>
         </section>
 
