@@ -277,7 +277,7 @@ const Hero = () => {
           transform: `translateY(${-watermarkOffset}px)`,
         }}
       >
-        <div className="absolute left-0 right-0 top-[39%] md:top-[45%] flex justify-center -translate-y-1/2">
+        <div className="absolute left-0 right-0 top-[41%] md:top-[45%] flex justify-center -translate-y-1/2">
           <p
             className="text-[7rem] md:text-[11rem] text-[#e8e8e8] whitespace-nowrap select-none leading-none"
             style={{

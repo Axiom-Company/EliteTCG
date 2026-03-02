@@ -36,6 +36,7 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
     { id: 'categories', label: 'Categories' },
     { id: 'preorders', label: 'Pre-Orders' },
     { id: 'discounts', label: 'Discounts' },
+    { id: 'reviews', label: 'Reviews' },
     { id: 'seller-applications', label: 'Sellers' },
     { id: 'settings', label: 'Settings' },
   ];

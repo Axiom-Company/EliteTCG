@@ -1,14 +1,11 @@
 import { useState, useCallback } from 'react';
 import { ELITE_API_URL, PAYMENTS_API_URL } from '@/config/api';
-import { supabase } from '@/config/supabase';
 
 const API_BASE = `${ELITE_API_URL}/api`;
 const FASTAPI_BASE = PAYMENTS_API_URL;
-// Get token from Supabase session
+// Get token from localStorage (set by useAuth on login)
 const getToken = async () => {
-  if (!supabase) return null;
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token || null;
+  return localStorage.getItem('adminToken') || null;
 };
 
 // Base fetch wrapper
@@ -135,6 +132,25 @@ export const uploadApi = {
 
     return response.json();
   },
+  uploadImages: async (files) => {
+    const token = await getToken();
+    const formData = new FormData();
+    files.forEach(file => formData.append('images', file));
+
+    const response = await fetch(`${API_BASE}/upload/images`, {
+      method: 'POST',
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+      throw new Error(error.error || 'Upload failed');
+    }
+
+    const data = await response.json();
+    return data.images.map(img => img.url);
+  },
   deleteImage: (filename) => apiFetch(`/upload/${filename}`, { method: 'DELETE' }),
 };
 
@@ -193,6 +209,15 @@ export const ordersApi = {
       method: 'POST',
       body: JSON.stringify({ order_id: orderId }),
     }),
+};
+
+// Product Reviews API
+export const productReviewsApi = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/product-reviews${query ? `?${query}` : ''}`);
+  },
+  delete: (id) => apiFetch(`/product-reviews/${id}`, { method: 'DELETE' }),
 };
 
 // Custom hook for API calls with loading/error state

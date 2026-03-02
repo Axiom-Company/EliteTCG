@@ -1,19 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useScrollAnimation } from '../../hooks/useScrollAnimation';
-import { ELITE_API_URL, getImageUrl } from '../../config/api';
+import { ELITE_API_URL } from '../../config/api';
+import ProductCard from '../ProductCard/ProductCard';
 
 const FeaturedProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { setRef, isVisible } = useScrollAnimation(products.length);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await fetch(`${ELITE_API_URL}/api/products?limit=8`);
         const data = await response.json();
-        // Sort: featured products first, then by created_at
         const sorted = (data.products || []).sort((a, b) => {
           if (a.is_featured && !b.is_featured) return -1;
           if (!a.is_featured && b.is_featured) return 1;
@@ -29,32 +27,6 @@ const FeaturedProducts = () => {
 
     fetchProducts();
   }, []);
-
-
-  const getBadgeClass = (badge) => {
-    return 'bg-gray-900 text-white';
-  };
-
-  const getCurrencySymbol = (currency) => {
-    switch (currency) {
-      case 'ZAR': return 'R';
-      case 'USD': return '$';
-      case 'EUR': return '€';
-      case 'GBP': return '£';
-      default: return 'R';
-    }
-  };
-
-  const formatPrice = (product) => {
-    const symbol = getCurrencySymbol(product.currency);
-    return `${symbol}${Number(product.price).toFixed(2)}`;
-  };
-
-  const formatComparePrice = (product) => {
-    if (!product.compare_at_price) return null;
-    const symbol = getCurrencySymbol(product.currency);
-    return `${symbol}${Number(product.compare_at_price).toFixed(2)}`;
-  };
 
   return (
     <section id="products" className="py-16 bg-white md:py-10">
@@ -74,58 +46,8 @@ const FeaturedProducts = () => {
           </div>
         ) : (
           <div className="grid grid-cols-4 gap-4 lg:grid-cols-4 md:grid-cols-3 md:gap-4 max-[480px]:grid-cols-1">
-            {products.map((product, i) => (
-              <Link
-                key={product.id}
-                to={`/product/${product.slug || product.id}`}
-                className="card-3d flex flex-col bg-white rounded-2xl overflow-hidden group cursor-pointer"
-              >
-                <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
-                  {getImageUrl(product.images?.[0]) ? (
-                    <img
-                      src={getImageUrl(product.images?.[0])}
-                      alt={product.name}
-                      className="max-w-[70%] max-h-[70%] object-contain"
-                    />
-                  ) : (
-                    <div className="text-gray-300">
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                        <rect width="18" height="18" x="3" y="3" rx="2"/>
-                        <circle cx="9" cy="9" r="2"/>
-                        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
-                      </svg>
-                    </div>
-                  )}
-
-                  {product.badge && product.badge !== 'none' && (
-                    <span className={`absolute top-2 left-2 px-3 py-1 text-xs font-medium rounded-full capitalize ${getBadgeClass(product.badge)}`}>
-                      {product.badge}
-                    </span>
-                  )}
-
-                </div>
-
-                <div className="px-3 pt-1.5 pb-2 flex flex-col items-center text-center">
-                  {(product.rating > 0 || product.review_count > 0) && (
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="text-gold text-xs">★</span>
-                      <span className="text-xs font-medium text-gray-700">{product.rating || 0}</span>
-                      <span className="text-xs text-gray-400">({product.review_count || 0})</span>
-                    </div>
-                  )}
-
-                  <h3 className="text-sm font-normal leading-snug mb-1 line-clamp-2">
-                    {product.name}
-                  </h3>
-
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="text-lg font-normal text-gray-900">{formatPrice(product)}</span>
-                    {formatComparePrice(product) && (
-                      <span className="text-sm text-gray-400 line-through font-light">{formatComparePrice(product)}</span>
-                    )}
-                  </div>
-                </div>
-              </Link>
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}

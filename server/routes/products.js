@@ -81,7 +81,6 @@ router.post('/', authenticateToken, requireRole('super_admin', 'admin'), async (
         description: productData.description || '',
         price: parseFloat(productData.price) || 0,
         compare_at_price: productData.compare_at_price ? parseFloat(productData.compare_at_price) : null,
-        currency: productData.currency || 'ZAR',
         category: productData.category || 'booster_box',
         badge: productData.badge || 'none',
         set_id: productData.set_id || null,
@@ -91,6 +90,8 @@ router.post('/', authenticateToken, requireRole('super_admin', 'admin'), async (
         review_count: 0,
         images: productData.images || [],
         sku: productData.sku || '',
+        dimensions: productData.dimensions || null,
+        box_contents: productData.box_contents || null,
       })
       .select()
       .single();
@@ -123,7 +124,7 @@ router.put('/:id', authenticateToken, requireRole('super_admin', 'admin', 'manag
   try {
     const { id } = req.params;
     // Strip inventory/quantity fields — those go through the inventory endpoint
-    const { initial_quantity, low_stock_threshold, inventory, ...productUpdates } = req.body;
+    const { initial_quantity, low_stock_threshold, inventory, currency, ...productUpdates } = req.body;
 
     const { data, error } = await supabaseAdmin
       .from('products')

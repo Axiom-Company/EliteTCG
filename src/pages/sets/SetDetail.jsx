@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ChevronRight, Package, ArrowLeft, Heart } from 'lucide-react';
-import { useWishlist } from '../../contexts/WishlistContext';
-import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
+import { ChevronRight, Package, ArrowLeft } from 'lucide-react';
+import ProductCard from '../../components/ProductCard/ProductCard';
+import { ELITE_API_URL, getImageUrl } from '../../config/api';
 
 const sortOptions = [
   { value: 'newest', label: 'Newest First' },
@@ -11,19 +11,9 @@ const sortOptions = [
   { value: 'name', label: 'Name A–Z' },
 ];
 
-const getBadgeStyle = (badge) => {
-  switch (badge?.toLowerCase()) {
-    case 'hot':      return 'bg-[#E3350D] text-white';
-    case 'sale':     return 'bg-[#E3350D] text-white';
-    case 'new':      return 'bg-[#FFCB32] text-gray-900';
-    case 'limited':  return 'bg-gray-900 text-white';
-    case 'preorder': return 'bg-blue-600 text-white';
-    default:         return '';
-  }
-};
 
 const CardSkeleton = () => (
-  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
+  <div className="bg-white rounded-2xl overflow-hidden animate-pulse">
     <div className="aspect-square bg-gray-50" />
     <div className="p-4 space-y-2.5">
       <div className="h-4 bg-gray-100 rounded w-4/5" />
@@ -38,7 +28,6 @@ const SetDetail = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState('newest');
-  const { toggleWishlist, isWishlisted } = useWishlist();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,28 +59,12 @@ const SetDetail = () => {
     }
   });
 
-  const formatPrice = (product) => {
-    const symbol = product.currency === 'USD' ? '$' : product.currency === 'EUR' ? '€' : product.currency === 'GBP' ? '£' : 'R';
-    return `${symbol}${Number(product.price || 0).toLocaleString()}`;
-  };
-
-  const formatComparePrice = (product) => {
-    if (!product.compare_at_price) return null;
-    const symbol = product.currency === 'USD' ? '$' : product.currency === 'EUR' ? '€' : product.currency === 'GBP' ? '£' : 'R';
-    return `${symbol}${Number(product.compare_at_price).toLocaleString()}`;
-  };
-
-  const getDiscountPct = (product) => {
-    if (!product.compare_at_price || !product.price) return null;
-    const pct = Math.round((1 - product.price / product.compare_at_price) * 100);
-    return pct > 0 ? pct : null;
-  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-6 pt-4 pb-0">
-          <nav className="flex items-center gap-1.5 text-xs text-gray-400">
+          <nav className="flex items-center gap-1.5 text-[13px] text-gray-400">
             <Link to="/" className="hover:text-gray-700 transition-colors">Home</Link>
             <ChevronRight className="w-3 h-3" />
             <Link to="/sets" className="hover:text-gray-700 transition-colors">All Sets</Link>
@@ -119,7 +92,7 @@ const SetDetail = () => {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-6 pt-4 pb-0">
-          <nav className="flex items-center gap-1.5 text-xs text-gray-400">
+          <nav className="flex items-center gap-1.5 text-[13px] text-gray-400">
             <Link to="/" className="hover:text-gray-700 transition-colors">Home</Link>
             <ChevronRight className="w-3 h-3" />
             <Link to="/sets" className="hover:text-gray-700 transition-colors">All Sets</Link>
@@ -144,7 +117,7 @@ const SetDetail = () => {
     <div className="min-h-screen bg-white">
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-6 pt-4 pb-0">
-        <nav className="flex items-center gap-1.5 text-xs text-gray-400">
+        <nav className="flex items-center gap-1.5 text-[13px] text-gray-400">
           <Link to="/" className="hover:text-gray-700 transition-colors">Home</Link>
           <ChevronRight className="w-3 h-3" />
           <Link to="/sets" className="hover:text-gray-700 transition-colors">All Sets</Link>
@@ -156,9 +129,9 @@ const SetDetail = () => {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Set Header */}
         <div className="flex items-center gap-6 mb-8">
-          {getImageUrl(set.image) && (
+          {getImageUrl(set.logo_url) && (
             <div className="w-20 h-20 flex-none rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden p-2">
-              <img src={getImageUrl(set.image)} alt={set.name} className="w-full h-full object-contain" />
+              <img src={getImageUrl(set.logo_url)} alt={set.name} className="w-full h-full object-contain" />
             </div>
           )}
           <div>
@@ -208,83 +181,9 @@ const SetDetail = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-            {sortedProducts.map((product) => {
-              const comparePrice = formatComparePrice(product);
-              const discountPct = getDiscountPct(product);
-              const wishlisted = isWishlisted(product.id);
-              const isOutOfStock = product.inventory?.quantity === 0;
-              const isLowStock =
-                product.inventory?.quantity > 0 &&
-                product.inventory?.quantity <= (product.inventory?.low_stock_threshold ?? 5);
-
-              return (
-                <Link
-                  key={product.id}
-                  to={`/product/${product.slug || product.id}`}
-                  className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all duration-200"
-                >
-                  <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">
-                    {product.images?.[0] ? (
-                      <img
-                        src={getImageUrl(product.images[0])}
-                        alt={product.name}
-                        className="w-[75%] h-[75%] object-contain transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <Package className="w-12 h-12 text-gray-200" />
-                    )}
-
-                    {product.badge && product.badge !== 'none' && (
-                      <span className={`absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full capitalize tracking-wide ${getBadgeStyle(product.badge)}`}>
-                        {product.badge}
-                      </span>
-                    )}
-
-                    {discountPct && !isOutOfStock && (
-                      <span className="absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-[#E3350D] text-white">
-                        -{discountPct}%
-                      </span>
-                    )}
-
-                    {isOutOfStock && (
-                      <div className="absolute inset-0 bg-white/70 flex items-end justify-center pb-4">
-                        <span className="text-xs font-medium text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200">
-                          Out of stock
-                        </span>
-                      </div>
-                    )}
-
-                    <button
-                      onClick={(e) => { e.preventDefault(); toggleWishlist(product.id); }}
-                      aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                      className={`absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-full shadow-sm transition-all ${
-                        wishlisted ? 'text-red-500' : 'text-gray-300 hover:text-gray-500'
-                      }`}
-                    >
-                      <Heart className={`w-3.5 h-3.5 ${wishlisted ? 'fill-current' : ''}`} />
-                    </button>
-                  </div>
-
-                  <div className="p-4 flex flex-col gap-1">
-                    <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-snug mt-0.5">
-                      {product.name}
-                    </h3>
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-base font-medium text-gray-900">{formatPrice(product)}</span>
-                      {comparePrice && (
-                        <span className="text-xs text-gray-400 line-through">{comparePrice}</span>
-                      )}
-                    </div>
-                    {isLowStock && (
-                      <p className="flex items-center gap-1.5 text-xs font-medium text-amber-600 mt-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse inline-block" />
-                        Only {product.inventory.quantity} left
-                      </p>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
+            {sortedProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
           </div>
         )}
       </div>

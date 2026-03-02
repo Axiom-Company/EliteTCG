@@ -65,16 +65,6 @@ const SkeletonChart = () => (
   </div>
 );
 
-const SkeletonRow = () => (
-  <div className="flex items-center gap-4 px-4 py-3.5 border-b border-[#1e1e1e] animate-pulse">
-    <div className="h-3.5 bg-[#1e1e1e] rounded w-20" />
-    <div className="h-3.5 bg-[#1e1e1e] rounded w-32 flex-1" />
-    <div className="h-3.5 bg-[#1e1e1e] rounded w-16" />
-    <div className="h-4 bg-[#1e1e1e] rounded-full w-16" />
-    <div className="h-3.5 bg-[#1e1e1e] rounded w-20" />
-  </div>
-);
-
 const ChartTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
@@ -193,26 +183,18 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div>
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-base font-medium text-[#f1f1f1]">Dashboard</h1>
           <p className="text-sm text-[#6b6b6b] mt-0.5">Sales overview</p>
         </div>
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {Array.from({ length: 4 }).map((_, i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
           <SkeletonChart />
           <SkeletonChart />
-        </div>
-        <div className="bg-[#111111] border border-[#282828] rounded-xl overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-[#282828]">
-            <div className="h-3.5 bg-[#1e1e1e] rounded w-28 animate-pulse" />
-          </div>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <SkeletonRow key={i} />
-          ))}
         </div>
       </div>
     );
@@ -221,7 +203,7 @@ const Dashboard = () => {
   if (error) {
     return (
       <div>
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-base font-medium text-[#f1f1f1]">Dashboard</h1>
           <p className="text-sm text-[#6b6b6b] mt-0.5">Sales overview</p>
         </div>
@@ -235,34 +217,34 @@ const Dashboard = () => {
   return (
     <div>
       {/* Page header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-base font-medium text-[#f1f1f1]">Dashboard</h1>
         <p className="text-sm text-[#6b6b6b] mt-0.5">Sales overview</p>
       </div>
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      {/* Stat cards — 2 cols on mobile, 4 on sm+ */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {statCards.map(({ label, value, sub }) => (
           <div
             key={label}
-            className="bg-[#111111] border border-[#282828] rounded-xl p-5"
+            className="bg-[#111111] border border-[#282828] rounded-xl p-4 sm:p-5"
           >
             <p className="text-[10px] font-medium text-[#6b6b6b] uppercase tracking-wider">
               {label}
             </p>
-            <p className="text-2xl font-medium text-[#f1f1f1] mt-1">{value}</p>
-            {sub && <p className="text-xs text-[#4a4a4a] mt-1">{sub}</p>}
+            <p className="text-xl sm:text-2xl font-medium text-[#f1f1f1] mt-1 truncate">{value}</p>
+            {sub && <p className="text-xs text-[#4a4a4a] mt-1 truncate">{sub}</p>}
           </div>
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      {/* Charts — stacked on mobile, side by side on sm+ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         {/* Revenue Area Chart */}
-        <div className="bg-[#111111] border border-[#282828] rounded-xl p-5">
+        <div className="bg-[#111111] border border-[#282828] rounded-xl p-4 sm:p-5">
           <p className="text-sm text-[#f1f1f1]">Revenue</p>
-          <p className="text-xs text-[#6b6b6b] mt-0.5 mb-5">Last 30 days</p>
-          <div className="h-[200px]">
+          <p className="text-xs text-[#6b6b6b] mt-0.5 mb-4">Last 30 days</p>
+          <div className="h-[180px] sm:h-[200px]">
             {revenueByDay.length === 0 ? (
               <div className="flex items-center justify-center h-full text-sm text-[#4a4a4a]">
                 No revenue data
@@ -306,10 +288,10 @@ const Dashboard = () => {
         </div>
 
         {/* Status Pie Chart */}
-        <div className="bg-[#111111] border border-[#282828] rounded-xl p-5">
+        <div className="bg-[#111111] border border-[#282828] rounded-xl p-4 sm:p-5">
           <p className="text-sm text-[#f1f1f1]">Order Status</p>
           <p className="text-xs text-[#6b6b6b] mt-0.5 mb-4">Breakdown</p>
-          <div className="h-[200px]">
+          <div className="h-[180px] sm:h-[200px]">
             {statusBreakdown.length === 0 ? (
               <div className="flex items-center justify-center h-full text-sm text-[#4a4a4a]">
                 No order data
@@ -343,54 +325,84 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Recent Orders Table */}
+      {/* Recent Orders — card layout on mobile, table on sm+ */}
       <div className="bg-[#111111] border border-[#282828] rounded-xl overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-[#282828]">
+        <div className="px-4 sm:px-5 py-3.5 border-b border-[#282828]">
           <p className="text-sm text-[#f1f1f1]">Recent Orders</p>
         </div>
 
-        {/* Table Header */}
-        <div className="flex items-center gap-4 px-4 py-2.5 border-b border-[#282828] text-[10px] font-medium text-[#6b6b6b] uppercase tracking-wider">
-          <div className="w-24">Order #</div>
-          <div className="flex-1">Customer</div>
-          <div className="w-24 text-right">Total</div>
-          <div className="w-24">Status</div>
-          <div className="w-24">Date</div>
-        </div>
-
-        {/* Rows */}
         {recentOrders.length === 0 ? (
           <div className="py-12 text-center text-sm text-[#4a4a4a]">
             No orders yet
           </div>
         ) : (
-          recentOrders.map((order) => (
-            <div
-              key={order.order_number}
-              className="flex items-center gap-4 px-4 py-3.5 border-b border-[#1e1e1e] last:border-b-0 hover:bg-[#1a1a1a] transition-colors"
-            >
-              <div className="w-24 text-sm font-medium text-[#3ECF8E]">
-                {order.order_number}
+          <>
+            {/* Desktop table */}
+            <div className="hidden sm:block">
+              <div className="flex items-center gap-4 px-4 py-2.5 border-b border-[#282828] text-[10px] font-medium text-[#6b6b6b] uppercase tracking-wider">
+                <div className="w-24">Order #</div>
+                <div className="flex-1">Customer</div>
+                <div className="w-24 text-right">Total</div>
+                <div className="w-24">Status</div>
+                <div className="w-24">Date</div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-[#f1f1f1] truncate">
-                  {order.guest_name || '\u2014'}
-                </p>
-                <p className="text-xs text-[#4a4a4a] truncate">
-                  {order.guest_email || '\u2014'}
-                </p>
-              </div>
-              <div className="w-24 text-sm font-medium text-[#f1f1f1] text-right">
-                {formatCurrency(order.total_zar)}
-              </div>
-              <div className="w-24">
-                <StatusBadge status={order.order_status} />
-              </div>
-              <div className="w-24 text-xs text-[#6b6b6b]">
-                {formatDate(order.created_at)}
-              </div>
+              {recentOrders.map((order) => (
+                <div
+                  key={order.order_number}
+                  className="flex items-center gap-4 px-4 py-3.5 border-b border-[#1e1e1e] last:border-b-0 hover:bg-[#1a1a1a] transition-colors"
+                >
+                  <div className="w-24 text-sm font-medium text-[#3ECF8E]">
+                    {order.order_number}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-[#f1f1f1] truncate">
+                      {order.guest_name || '\u2014'}
+                    </p>
+                    <p className="text-xs text-[#4a4a4a] truncate">
+                      {order.guest_email || '\u2014'}
+                    </p>
+                  </div>
+                  <div className="w-24 text-sm font-medium text-[#f1f1f1] text-right">
+                    {formatCurrency(order.total_zar)}
+                  </div>
+                  <div className="w-24">
+                    <StatusBadge status={order.order_status} />
+                  </div>
+                  <div className="w-24 text-xs text-[#6b6b6b]">
+                    {formatDate(order.created_at)}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))
+
+            {/* Mobile cards */}
+            <div className="sm:hidden divide-y divide-[#1e1e1e]">
+              {recentOrders.map((order) => (
+                <div key={order.order_number} className="px-4 py-3.5">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm font-medium text-[#3ECF8E]">
+                      {order.order_number}
+                    </span>
+                    <StatusBadge status={order.order_status} />
+                  </div>
+                  <p className="text-sm text-[#f1f1f1] truncate">
+                    {order.guest_name || '\u2014'}
+                  </p>
+                  <p className="text-xs text-[#4a4a4a] truncate mb-1.5">
+                    {order.guest_email || '\u2014'}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-[#f1f1f1]">
+                      {formatCurrency(order.total_zar)}
+                    </span>
+                    <span className="text-xs text-[#6b6b6b]">
+                      {formatDate(order.created_at)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

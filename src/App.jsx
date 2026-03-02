@@ -58,6 +58,9 @@ import PayflexReturn from './pages/checkout/PayflexReturn';
 import OrderTracking from './pages/orders/OrderTracking';
 import OrderHistory from './pages/orders/OrderHistory';
 
+// Review page
+import WriteReview from './pages/reviews/WriteReview';
+
 // Customer Auth Provider
 import { CustomerAuthProvider } from './contexts/CustomerAuthContext';
 
@@ -133,6 +136,7 @@ function App() {
           <Route path="/sets/:id" element={<MainLayout><SetDetail /></MainLayout>} />
           <Route path="/categories/:slug" element={<MainLayout><CategoryDetail /></MainLayout>} />
           <Route path="/product/:id" element={<MainLayout><ProductPage /></MainLayout>} />
+          <Route path="/product/:id/review" element={<NavbarLayout><WriteReview /></NavbarLayout>} />
           <Route path="/login" element={<NavbarLayout><Login /></NavbarLayout>} />
           <Route path="/register" element={<NavbarLayout><Register /></NavbarLayout>} />
           <Route path="/become-seller" element={<MainLayout><BecomeSeller /></MainLayout>} />
