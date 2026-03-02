@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import CartIcon from '../Cart/CartIcon';
 import logo from '../../assets/images/elitetcglogo.webp';
 
@@ -8,10 +7,8 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
-  const [isUserOpen, setIsUserOpen] = useState(false);
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const [mobileMarketplaceOpen, setMobileMarketplaceOpen] = useState(false);
-  const { isAuthenticated, user, isSeller, logout, loading } = useCustomerAuth();
 
 
   // Lock body scroll when mobile menu is open
@@ -26,7 +23,6 @@ const Navbar = () => {
 
   const shopRef = useRef(null);
   const marketplaceRef = useRef(null);
-  const userRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {

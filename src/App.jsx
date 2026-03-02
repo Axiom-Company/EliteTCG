@@ -19,18 +19,6 @@ import TrustSection from './components/TrustSection/TrustSection';
 import Footer from './components/Footer/Footer';
 import ProductPage from './components/ProductPage/ProductPage';
 
-// Seller pages
-import BecomeSeller from './pages/seller/BecomeSeller';
-import CreateListing from './pages/seller/CreateListing';
-import SellerDashboard from './pages/seller/SellerDashboard';
-
-// Marketplace pages
-import MarketplaceBrowse from './pages/marketplace/MarketplaceBrowse';
-import ListingDetail from './pages/marketplace/ListingDetail';
-import MarketplaceCheckout from './pages/marketplace/MarketplaceCheckout';
-import MarketplacePaymentSuccess from './pages/marketplace/MarketplacePaymentSuccess';
-import MarketplacePaymentCancel from './pages/marketplace/MarketplacePaymentCancel';
-
 // Products pages
 import Products from './pages/products/Products';
 
@@ -109,14 +97,6 @@ function App() {
           <Route path="/sets/:id" element={<MainLayout><SetDetail /></MainLayout>} />
           <Route path="/categories/:slug" element={<MainLayout><CategoryDetail /></MainLayout>} />
           <Route path="/product/:id" element={<MainLayout><ProductPage /></MainLayout>} />
-          <Route path="/become-seller" element={<MainLayout><BecomeSeller /></MainLayout>} />
-          <Route path="/marketplace" element={<MainLayout><MarketplaceBrowse /></MainLayout>} />
-          <Route path="/marketplace/:id" element={<MainLayout><ListingDetail /></MainLayout>} />
-          <Route path="/marketplace/checkout/:listingId" element={<MainLayout><MarketplaceCheckout /></MainLayout>} />
-          <Route path="/marketplace/payment-success" element={<MainLayout><MarketplacePaymentSuccess /></MainLayout>} />
-          <Route path="/marketplace/payment-cancel" element={<MainLayout><MarketplacePaymentCancel /></MainLayout>} />
-          <Route path="/seller/create-listing" element={<MainLayout><CreateListing /></MainLayout>} />
-          <Route path="/seller/dashboard" element={<MainLayout><SellerDashboard /></MainLayout>} />
         </Routes>
         <CartDrawer />
       </CartProvider>
