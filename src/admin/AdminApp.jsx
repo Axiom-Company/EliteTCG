@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx';
 import AdminLayout from './components/AdminLayout';
 import AdminLogin from './components/AdminLogin';
-import { Dashboard, Settings, Products, Sets, Categories, Orders, Reviews } from './pages';
+import { Dashboard, Settings, Products, Sets, Categories, Orders, Reviews, EmailManagement } from './pages';
 import SellerApplications from './pages/SellerApplications';
 import SEO from '../components/SEO/SEO';
 
@@ -48,6 +48,8 @@ const AdminContent = () => {
         return <Reviews />;
       case 'seller-applications':
         return <SellerApplications />;
+      case 'email':
+        return <EmailManagement />;
       case 'settings':
         return <Settings />;
       default:

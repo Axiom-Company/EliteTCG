@@ -220,19 +220,19 @@ const EmailManagement = () => {
         },
         {
           label: 'Open Rate',
-          value: `${((stats.open_rate ?? 0) * 100).toFixed(1)}%`,
+          value: `${(stats.open_rate ?? 0).toFixed(1)}%`,
           color: 'text-blue-400',
           icon: Eye,
         },
         {
           label: 'Click Rate',
-          value: `${((stats.click_rate ?? 0) * 100).toFixed(1)}%`,
+          value: `${(stats.click_rate ?? 0).toFixed(1)}%`,
           color: 'text-purple-400',
           icon: MousePointerClick,
         },
         {
           label: 'Bounce Rate',
-          value: `${((stats.bounce_rate ?? 0) * 100).toFixed(1)}%`,
+          value: `${(stats.bounce_rate ?? 0).toFixed(1)}%`,
           color: 'text-red-400',
           icon: AlertTriangle,
         },

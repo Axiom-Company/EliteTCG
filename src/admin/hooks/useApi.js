@@ -1,11 +1,14 @@
 import { useState, useCallback } from 'react';
 import { ELITE_API_URL, PAYMENTS_API_URL } from '@/config/api';
+import { supabase } from '@/config/supabase';
 
 const API_BASE = `${ELITE_API_URL}/api`;
 const FASTAPI_BASE = PAYMENTS_API_URL;
-// Get token from localStorage (set by useAuth on login)
+// Get token from Supabase session
 const getToken = async () => {
-  return localStorage.getItem('adminToken') || null;
+  if (!supabase) return null;
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token || null;
 };
 
 // Base fetch wrapper

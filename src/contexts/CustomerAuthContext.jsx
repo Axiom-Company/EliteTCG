@@ -229,7 +229,10 @@ export const CustomerAuthProvider = ({ children }) => {
     refreshUser,
     getToken,
     isAuthenticated: !!user && !!session,
-    isSeller: user?.is_seller || false,
+    isSeller: ['seller', 'verified_seller', 'admin'].includes(user?.role),
+    isVerifiedSeller: ['verified_seller', 'admin'].includes(user?.role),
+    isAdmin: user?.role === 'admin',
+    role: user?.role || null,
     sellerId: user?.seller_profile?.id || user?.seller_id || null
   };
 

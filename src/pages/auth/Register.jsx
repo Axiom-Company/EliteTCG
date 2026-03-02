@@ -1,53 +1,171 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { toast } from 'sonner';
 import SEO from '../../components/SEO/SEO';
 
-const CardFanIllustration = () => (
-  <svg viewBox="0 0 260 300" fill="none" className="w-64 h-auto mx-auto" style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.12))' }}>
-    {/* Dashed decorative ring */}
-    <circle cx="130" cy="148" r="100" stroke="rgba(0,0,0,0.06)" strokeWidth="1.2" strokeDasharray="5 5" fill="none" />
+const STORAGE = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images`;
 
-    {/* Soft ground shadow */}
-    <ellipse cx="130" cy="260" rx="55" ry="6" fill="rgba(0,0,0,0.04)" />
+const HeroCard = () => {
+  const cardRef = useRef(null);
+  const innerRef = useRef(null);
+  const holoRef = useRef(null);
+  const sheenRef = useRef(null);
+  const sparkleRef = useRef(null);
+  const [hovered, setHovered] = useState(false);
 
-    {/* Left card */}
-    <g transform="rotate(-14 130 240)">
-      <rect x="80" y="80" width="100" height="145" rx="12" fill="#1a1a2e" stroke="white" strokeWidth="1.5" opacity="0.88" />
-      <rect x="89" y="89" width="82" height="127" rx="8" stroke="white" strokeWidth="0.5" opacity="0.1" fill="none" />
-    </g>
+  const handleMouseMove = useCallback((e) => {
+    const rect = cardRef.current.getBoundingClientRect();
+    const cx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const cy = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
 
-    {/* Center card */}
-    <g>
-      <rect x="80" y="80" width="100" height="145" rx="12" fill="#141428" stroke="white" strokeWidth="1.5" opacity="0.94" />
-      <rect x="89" y="89" width="82" height="127" rx="8" stroke="white" strokeWidth="0.5" opacity="0.13" fill="none" />
-    </g>
+    const rotY = (cx - 0.5) * 14;
+    const rotX = (cy - 0.5) * -10;
+    if (innerRef.current) {
+      innerRef.current.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg)`;
+      innerRef.current.style.transition = 'transform 0.08s linear';
+      innerRef.current.style.boxShadow = '0 12px 40px rgba(0,0,0,0.35)';
+    }
 
-    {/* Right card (front) */}
-    <g transform="rotate(14 130 240)">
-      <rect x="80" y="80" width="100" height="145" rx="12" fill="#0e0e24" stroke="white" strokeWidth="2" />
-      <rect x="89" y="89" width="82" height="127" rx="8" stroke="white" strokeWidth="0.5" opacity="0.18" fill="none" />
-      {/* Inner diamond motif */}
-      <path d="M130 118 L146 152 L130 186 L114 152Z" stroke="white" strokeWidth="1" opacity="0.18" fill="none" />
-      <path d="M130 128 L140 152 L130 176 L120 152Z" fill="white" opacity="0.04" />
-      {/* Small star in diamond center */}
-      <path d="M130 146 L132 150.5 L130 155 L128 150.5Z" fill="white" opacity="0.2" />
-    </g>
+    if (holoRef.current) {
+      const angle = Math.round(cx * 360);
+      holoRef.current.style.background =
+        `linear-gradient(${angle}deg,rgba(255,50,50,0.15),rgba(255,180,50,0.15),rgba(255,255,80,0.15),rgba(50,255,100,0.15),rgba(50,150,255,0.15),rgba(180,50,255,0.15),rgba(255,50,150,0.15))`;
+    }
 
-    {/* Sparkle accents */}
-    <g opacity="0.22">
-      <path d="M210 52 L212.5 61 L210 70 L207.5 61Z" fill="#3d2e00" />
-      <path d="M42 105 L44 111 L42 117 L40 111Z" fill="#3d2e00" />
-      <path d="M228 178 L230 183 L228 188 L226 183Z" fill="#3d2e00" />
-    </g>
+    if (sheenRef.current) {
+      const px = Math.round(cx * 100);
+      const py = Math.round(cy * 100);
+      sheenRef.current.style.background =
+        `radial-gradient(circle at ${px}% ${py}%,rgba(255,255,255,0.25) 0%,rgba(255,255,255,0.05) 30%,transparent 60%)`;
+    }
 
-    {/* Tiny dot accents */}
-    <circle cx="195" cy="90" r="1.5" fill="#3d2e00" opacity="0.12" />
-    <circle cx="60" cy="180" r="1.5" fill="#3d2e00" opacity="0.12" />
-    <circle cx="215" cy="140" r="1" fill="#3d2e00" opacity="0.1" />
-  </svg>
-);
+    if (sparkleRef.current) {
+      const ox = Math.round(cx * 20);
+      const oy = Math.round(cy * 20);
+      sparkleRef.current.style.backgroundPosition = `${ox}px ${oy}px, ${ox + 5}px ${oy + 5}px`;
+    }
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setHovered(false);
+    if (innerRef.current) {
+      innerRef.current.style.transform = '';
+      innerRef.current.style.transition = 'transform 0.4s ease-out, box-shadow 0.4s ease-out';
+      innerRef.current.style.boxShadow = '';
+    }
+    if (holoRef.current) holoRef.current.style.background = '';
+    if (sheenRef.current) sheenRef.current.style.background = '';
+    if (sparkleRef.current) sparkleRef.current.style.backgroundPosition = '';
+  }, []);
+
+  return (
+    <div
+      ref={cardRef}
+      onMouseEnter={() => setHovered(true)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        perspective: '800px',
+        width: '220px',
+        cursor: 'pointer',
+        animation: hovered ? 'none' : 'authCardBob 6s ease-in-out infinite',
+      }}
+      className="mx-auto"
+    >
+      <div
+        ref={innerRef}
+        style={{
+          transformStyle: 'preserve-3d',
+          transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.5s ease',
+          borderRadius: '11px',
+          position: 'relative',
+          filter: hovered ? 'brightness(1.12)' : 'none',
+        }}
+      >
+        <div style={{ borderRadius: '11px', overflow: 'hidden', position: 'relative' }}>
+          <img
+            src={`${STORAGE}/auth-hero-card.webp`}
+            alt="Elite TCG Card"
+            draggable="false"
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              borderRadius: '11px',
+              userSelect: 'none',
+            }}
+          />
+
+          <div
+            ref={holoRef}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              borderRadius: '11px',
+              opacity: hovered ? 1 : 0,
+              mixBlendMode: 'screen',
+              zIndex: 3,
+              transition: 'opacity 0.3s ease',
+            }}
+          />
+
+          <div
+            ref={sheenRef}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              borderRadius: '11px',
+              opacity: hovered ? 1 : 0,
+              zIndex: 4,
+              transition: 'opacity 0.3s ease',
+            }}
+          />
+
+          <div
+            ref={sparkleRef}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              borderRadius: '11px',
+              opacity: hovered ? 0.6 : 0,
+              mixBlendMode: 'overlay',
+              zIndex: 5,
+              transition: 'opacity 0.3s ease',
+              background:
+                'radial-gradient(circle at 25% 25%, rgba(255,255,255,0.7) 1px, transparent 1px), radial-gradient(circle at 75% 75%, rgba(255,255,255,0.5) 1px, transparent 1px)',
+              backgroundSize: '12px 12px, 17px 17px',
+            }}
+          />
+        </div>
+      </div>
+
+      <div
+        style={{
+          width: '80%',
+          height: '30px',
+          margin: '-10px auto 0',
+          background: '#EAB308',
+          filter: 'blur(22px)',
+          opacity: hovered ? 0.55 : 0.15,
+          borderRadius: '50%',
+          pointerEvents: 'none',
+          transition: 'opacity 0.3s ease',
+        }}
+      />
+
+      <style>{`
+        @keyframes authCardBob {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 const STEPS = [
   { title: 'Create account',  sub: 'Start with your basic details' },
@@ -143,7 +261,7 @@ const Register = () => {
           <p className="text-gray-800/60 text-[16px] leading-relaxed mb-10">
             Create an account to buy, sell, and collect rare Pokémon cards
           </p>
-          <CardFanIllustration />
+          <HeroCard />
         </div>
       </div>
 
