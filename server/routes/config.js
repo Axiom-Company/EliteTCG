@@ -157,8 +157,7 @@ router.put('/', authenticateToken, requireRole('super_admin', 'admin'), async (r
     for (const [key, value] of Object.entries(updates)) {
       await supabaseAdmin
         .from('site_config')
-        .update({ value: String(value) })
-        .eq('key', key);
+        .upsert({ key, value: String(value) }, { onConflict: 'key' });
     }
 
     res.json({ message: 'Config updated' });

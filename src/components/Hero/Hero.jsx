@@ -60,7 +60,7 @@ const Hero = () => {
   const hoveredSlot = useRef(null);
   const isMobileRef = useRef(false);
   const spreadVwRef = useRef(
-    (() => { const w = typeof window !== 'undefined' ? window.innerWidth : 1440; return w < 640 ? 105 : w < 1024 ? 82 : 76; })()
+    (() => { const w = typeof window !== 'undefined' ? window.innerWidth : 1440; return w < 640 ? 60 : w < 1024 ? 50 : 48; })()
   );
   const phaseRef = useRef('emerging');
 
@@ -72,7 +72,7 @@ const Hero = () => {
     const check = () => {
       const w = window.innerWidth;
       isMobileRef.current = w < 640;
-      spreadVwRef.current = w < 640 ? 105 : w < 1024 ? 82 : 76;
+      spreadVwRef.current = w < 640 ? 60 : w < 1024 ? 50 : 48;
       forceUpdate((n) => n + 1);
     };
     window.addEventListener('resize', check);
@@ -96,7 +96,7 @@ const Hero = () => {
 
   /* ── Emerge -> Interactive transition on page load ─────────────────── */
   useEffect(() => {
-    const visibleCount = isMobileRef.current ? 8 : TOTAL_CARDS;
+    const visibleCount = 7;
     const emergeTotal = visibleCount * 60 + 700; // last card delay + animation duration
     const timer = setTimeout(() => {
       setPhase('interactive');
@@ -255,15 +255,12 @@ const Hero = () => {
 
   /* ── Scroll-derived values ────────────────────────────────────────── */
   const textOffset      = scrollY * 0.25;
-  const titleOpacity    = Math.max(0, 1 - scrollY / 300);
+  const cardOffset      = scrollY * 0.15;
   const watermarkOffset = scrollY * 0.1;
-  const cardFadeOpacity = Math.max(0, 1 - scrollY / 350);
 
   const isEmerging = phase === 'emerging';
   const isInteractive = phase === 'interactive';
-  const visibleCards = isMobileRef.current
-    ? CARD_DATA.slice(Math.floor((TOTAL_CARDS - 8) / 2), Math.floor((TOTAL_CARDS - 8) / 2) + 8)
-    : CARD_DATA;
+  const visibleCards = CARD_DATA.slice(Math.floor((TOTAL_CARDS - 7) / 2), Math.floor((TOTAL_CARDS - 7) / 2) + 7);
 
   return (
     <section
@@ -275,20 +272,20 @@ const Hero = () => {
         className="absolute inset-0 pointer-events-none z-0 overflow-hidden"
         style={{
           perspective: '800px',
-          maskImage: 'linear-gradient(to top, transparent 0%, black 40%)',
-          WebkitMaskImage: 'linear-gradient(to top, transparent 0%, black 40%)',
+          maskImage: 'linear-gradient(to top, transparent 0%, transparent 35%, black 75%)',
+          WebkitMaskImage: 'linear-gradient(to top, transparent 0%, transparent 35%, black 75%)',
           transform: `translateY(${-watermarkOffset}px)`,
         }}
       >
         <div className="absolute left-0 right-0 top-[39%] md:top-[45%] flex justify-center -translate-y-1/2">
           <p
-            className="text-[7rem] md:text-[11rem] text-[#f5f5f5] whitespace-nowrap select-none leading-none"
+            className="text-[7rem] md:text-[11rem] text-[#e8e8e8] whitespace-nowrap select-none leading-none"
             style={{
               fontFamily: "'Bebas Neue', sans-serif",
-              transform: 'rotateX(18deg)',
+              transform: 'perspective(500px) rotateX(17.5deg)',
               transformOrigin: 'center bottom',
               letterSpacing: '0.05em',
-              WebkitTextStroke: '4px #f5f5f5',
+              WebkitTextStroke: '4px #e8e8e8',
             }}
           >
             POKEMON POKEMON POKEMON
@@ -299,7 +296,7 @@ const Hero = () => {
       {/* ── Text + Button ──────────────────────────────────────────── */}
       <div
         className="relative z-10 flex flex-col items-center text-center px-6 mt-[95px] md:mt-[8vh]"
-        style={{ transform: `translateY(${-textOffset}px)`, opacity: titleOpacity }}
+        style={{ transform: `translateY(${-textOffset}px)` }}
       >
         <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase mb-5">
           {`Pok\u00e9mon TCG Store`}
@@ -311,8 +308,8 @@ const Hero = () => {
 
       {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
-        className="relative w-full mt-9 z-10 flex justify-center"
-        style={{ height: '320px', opacity: cardFadeOpacity }}
+        className="relative w-full mt-9 z-10 flex justify-center -translate-y-[25px]"
+        style={{ height: '320px', transform: `translateY(${-cardOffset}px)` }}
       >
         <div
           className="hero-banner__cards"
@@ -372,15 +369,12 @@ const Hero = () => {
       </div>
 
       {/* ── Shop Now Button ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center mt-0 mb-8">
+      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-cardOffset}px)` }}>
         <a
           href="#products"
-          className="inline-flex items-center justify-center gap-2 py-2.5 px-7 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-colors duration-200"
+          className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"
         >
           Shop Now
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
         </a>
       </div>
 
