@@ -4,6 +4,7 @@ import AdminLayout from './components/AdminLayout';
 import AdminLogin from './components/AdminLogin';
 import { Dashboard, Settings, Products, Sets, Categories, Orders, Reviews, EmailManagement } from './pages';
 import SellerApplications from './pages/SellerApplications';
+import WebhookSettings from './pages/WebhookSettings';
 import SEO from '../components/SEO/SEO';
 
 // Placeholder pages for now
@@ -14,7 +15,9 @@ const PlaceholderPage = ({ title, description }) => (
   </div>
 );
 
-const InventoryPage = () => <PlaceholderPage title="Inventory Management" description="Coming soon — manage your product inventory here." />;
+const CRMPage = () => <PlaceholderPage title="Customer Management" description="Coming soon — CRM, customer tags, notes, and communication tracking." />;
+const InventoryPage = () => <PlaceholderPage title="Inventory Management" description="Coming soon — suppliers, purchase orders, stock adjustments, and movement tracking." />;
+const AccountingPage = () => <PlaceholderPage title="Accounting" description="Coming soon — income, expenses, invoicing, P&L reports, and VAT." />;
 const PreordersPage = () => <PlaceholderPage title="Pre-Orders" description="Coming soon — manage pre-orders here." />;
 const DiscountsPage = () => <PlaceholderPage title="Discounts" description="Coming soon — manage discount codes here." />;
 
@@ -34,8 +37,12 @@ const AdminContent = () => {
         return <Products />;
       case 'orders':
         return <Orders />;
+      case 'crm':
+        return <CRMPage />;
       case 'inventory':
         return <InventoryPage />;
+      case 'accounting':
+        return <AccountingPage />;
       case 'sets':
         return <Sets />;
       case 'categories':
@@ -50,6 +57,8 @@ const AdminContent = () => {
         return <SellerApplications />;
       case 'email':
         return <EmailManagement />;
+      case 'webhooks':
+        return <WebhookSettings />;
       case 'settings':
         return <Settings />;
       default:

@@ -27,20 +27,40 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
     return () => { document.body.style.overflow = ''; };
   }, [isMenuOpen]);
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'products', label: 'Products' },
-    { id: 'orders', label: 'Orders' },
-    { id: 'inventory', label: 'Inventory' },
-    { id: 'sets', label: 'Sets' },
-    { id: 'categories', label: 'Categories' },
-    { id: 'preorders', label: 'Pre-Orders' },
-    { id: 'discounts', label: 'Discounts' },
-    { id: 'reviews', label: 'Reviews' },
-    { id: 'seller-applications', label: 'Sellers' },
-    { id: 'email', label: 'Email' },
-    { id: 'settings', label: 'Settings' },
+  const navSections = [
+    {
+      label: 'Store',
+      items: [
+        { id: 'dashboard', label: 'Dashboard' },
+        { id: 'products', label: 'Products' },
+        { id: 'orders', label: 'Orders' },
+        { id: 'sets', label: 'Sets' },
+        { id: 'categories', label: 'Categories' },
+      ],
+    },
+    {
+      label: 'Business',
+      items: [
+        { id: 'crm', label: 'Customers' },
+        { id: 'inventory', label: 'Inventory' },
+        { id: 'accounting', label: 'Accounting' },
+      ],
+    },
+    {
+      label: 'Operations',
+      items: [
+        { id: 'preorders', label: 'Pre-Orders' },
+        { id: 'discounts', label: 'Discounts' },
+        { id: 'reviews', label: 'Reviews' },
+        { id: 'seller-applications', label: 'Sellers' },
+        { id: 'email', label: 'Email' },
+        { id: 'webhooks', label: 'Webhooks' },
+        { id: 'settings', label: 'Settings' },
+      ],
+    },
   ];
+
+  const navItems = navSections.flatMap((s) => s.items);
 
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
@@ -62,23 +82,28 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
 
         {/* Nav Items — desktop only */}
         <nav className="hidden md:flex items-center gap-0.5 flex-1 overflow-x-auto scrollbar-none">
-          {navItems.map((item) => {
-            const isActive = currentPage === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
-                className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap",
-                  isActive
-                    ? "text-[#f1f1f1] bg-[#1c1c1c]"
-                    : "text-[#6b6b6b] hover:text-[#c4c4c4] hover:bg-[#1a1a1a]"
-                )}
-              >
-                {item.label}
-              </button>
-            );
-          })}
+          {navSections.map((section, si) => (
+            <div key={section.label} className="flex items-center gap-0.5">
+              {si > 0 && <div className="w-px h-4 bg-[#282828] mx-1.5 shrink-0" />}
+              {section.items.map((item) => {
+                const isActive = currentPage === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => onNavigate(item.id)}
+                    className={cn(
+                      "px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap",
+                      isActive
+                        ? "text-[#f1f1f1] bg-[#1c1c1c]"
+                        : "text-[#6b6b6b] hover:text-[#c4c4c4] hover:bg-[#1a1a1a]"
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* Right side */}
@@ -128,23 +153,31 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
       {isMenuOpen && (
         <div className="md:hidden fixed top-13 left-0 right-0 bottom-0 bg-[#111111] border-t border-[#282828] z-299 overflow-y-auto">
           <nav className="flex flex-col p-3">
-            {navItems.map((item) => {
-              const isActive = currentPage === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => { onNavigate(item.id); setIsMenuOpen(false); }}
-                  className={cn(
-                    "w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors",
-                    isActive
-                      ? "text-[#f1f1f1] bg-[#1c1c1c]"
-                      : "text-[#6b6b6b] hover:text-[#c4c4c4] hover:bg-[#1a1a1a]"
-                  )}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
+            {navSections.map((section, si) => (
+              <div key={section.label}>
+                {si > 0 && <div className="border-t border-[#282828] my-2" />}
+                <div className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#4a4a4a]">
+                  {section.label}
+                </div>
+                {section.items.map((item) => {
+                  const isActive = currentPage === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => { onNavigate(item.id); setIsMenuOpen(false); }}
+                      className={cn(
+                        "w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors",
+                        isActive
+                          ? "text-[#f1f1f1] bg-[#1c1c1c]"
+                          : "text-[#6b6b6b] hover:text-[#c4c4c4] hover:bg-[#1a1a1a]"
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
 
             <div className="border-t border-[#282828] mt-2 pt-2 space-y-1">
               <a

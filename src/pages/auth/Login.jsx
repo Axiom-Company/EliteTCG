@@ -1,9 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useCustomerAuth } from '../../contexts/AuthContext';
 import SEO from '../../components/SEO/SEO';
-
-const STORAGE = 'https://vqtgpgbifsiokmvwgubh.supabase.co/storage/v1/object/public/images';
+import cardImage from '../../assets/images/SingleCards/card1.webp';
 
 const HeroCard = () => {
   const cardRef = useRef(null);
@@ -18,23 +18,20 @@ const HeroCard = () => {
     const cx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     const cy = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
 
-    // Layer 1: 3D tilt — rotateX increased 25% (from -10 to -12.5)
     const rotY = (cx - 0.5) * 14;
-    const rotX = (cy - 0.5) * -12.5;
+    const rotX = (cy - 0.5) * -10;
     if (innerRef.current) {
       innerRef.current.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg)`;
       innerRef.current.style.transition = 'transform 0.08s linear';
       innerRef.current.style.boxShadow = '0 12px 40px rgba(0,0,0,0.35)';
     }
 
-    // Layer 2: Holographic rainbow gradient
     if (holoRef.current) {
       const angle = Math.round(cx * 360);
       holoRef.current.style.background =
         `linear-gradient(${angle}deg,rgba(255,50,50,0.15),rgba(255,180,50,0.15),rgba(255,255,80,0.15),rgba(50,255,100,0.15),rgba(50,150,255,0.15),rgba(180,50,255,0.15),rgba(255,50,150,0.15))`;
     }
 
-    // Layer 3: Light sheen reflection
     if (sheenRef.current) {
       const px = Math.round(cx * 100);
       const py = Math.round(cy * 100);
@@ -42,7 +39,6 @@ const HeroCard = () => {
         `radial-gradient(circle at ${px}% ${py}%,rgba(255,255,255,0.25) 0%,rgba(255,255,255,0.05) 30%,transparent 60%)`;
     }
 
-    // Layer 4: Sparkle texture shift
     if (sparkleRef.current) {
       const ox = Math.round(cx * 20);
       const oy = Math.round(cy * 20);
@@ -88,7 +84,7 @@ const HeroCard = () => {
       >
         <div style={{ borderRadius: '11px', overflow: 'hidden', position: 'relative' }}>
           <img
-            src={`${STORAGE}/auth-hero-card-v2.webp`}
+            src={cardImage}
             alt="Elite TCG Card"
             draggable="false"
             style={{
@@ -100,46 +96,31 @@ const HeroCard = () => {
             }}
           />
 
-          {/* Layer 2: Holographic rainbow gradient */}
+          {/* Holographic rainbow gradient */}
           <div
             ref={holoRef}
             style={{
-              position: 'absolute',
-              inset: 0,
-              pointerEvents: 'none',
-              borderRadius: '11px',
-              opacity: hovered ? 1 : 0,
-              mixBlendMode: 'screen',
-              zIndex: 3,
+              position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: '11px',
+              opacity: hovered ? 1 : 0, mixBlendMode: 'screen', zIndex: 3,
               transition: 'opacity 0.3s ease',
             }}
           />
 
-          {/* Layer 3: Moving light sheen */}
+          {/* Moving light sheen */}
           <div
             ref={sheenRef}
             style={{
-              position: 'absolute',
-              inset: 0,
-              pointerEvents: 'none',
-              borderRadius: '11px',
-              opacity: hovered ? 1 : 0,
-              zIndex: 4,
-              transition: 'opacity 0.3s ease',
+              position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: '11px',
+              opacity: hovered ? 1 : 0, zIndex: 4, transition: 'opacity 0.3s ease',
             }}
           />
 
-          {/* Layer 4: Sparkle/glitter texture */}
+          {/* Sparkle texture */}
           <div
             ref={sparkleRef}
             style={{
-              position: 'absolute',
-              inset: 0,
-              pointerEvents: 'none',
-              borderRadius: '11px',
-              opacity: hovered ? 0.6 : 0,
-              mixBlendMode: 'overlay',
-              zIndex: 5,
+              position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: '11px',
+              opacity: hovered ? 0.6 : 0, mixBlendMode: 'overlay', zIndex: 5,
               transition: 'opacity 0.3s ease',
               background:
                 'radial-gradient(circle at 25% 25%, rgba(255,255,255,0.7) 1px, transparent 1px), radial-gradient(circle at 75% 75%, rgba(255,255,255,0.5) 1px, transparent 1px)',
@@ -149,18 +130,13 @@ const HeroCard = () => {
         </div>
       </div>
 
-      {/* Layer 5: Glow shadow under card */}
+      {/* Glow shadow */}
       <div
         style={{
-          width: '80%',
-          height: '30px',
-          margin: '-10px auto 0',
-          background: '#EAB308',
-          filter: 'blur(22px)',
-          opacity: hovered ? 0.55 : 0.15,
-          borderRadius: '50%',
-          pointerEvents: 'none',
-          transition: 'opacity 0.3s ease',
+          width: '80%', height: '30px', margin: '-10px auto 0',
+          background: '#EAB308', filter: 'blur(22px)',
+          opacity: hovered ? 0.55 : 0.15, borderRadius: '50%',
+          pointerEvents: 'none', transition: 'opacity 0.3s ease',
         }}
       />
 
@@ -178,6 +154,8 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const { signIn, signInWithGoogle } = useCustomerAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
@@ -186,8 +164,10 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // TODO: wire up auth provider
-      toast.error('Auth not yet connected');
+      await signIn(email, password);
+      navigate(from, { replace: true });
+    } catch (err) {
+      toast.error(err.message || 'Failed to sign in');
     } finally {
       setLoading(false);
     }
@@ -196,7 +176,8 @@ const Login = () => {
   return (
     <section className="min-h-[calc(100vh-130px)] flex bg-white">
       <SEO title="Login" noindex />
-      {/* ── Left: Sign In Form ──────────────────────────────── */}
+
+      {/* Left: Sign In Form */}
       <div className="w-full lg:w-[55%] flex items-center justify-center px-8 py-20 lg:px-16 xl:px-24">
         <div className="w-full max-w-[420px]">
           <h1 className="text-[32px] font-semibold text-gray-900 mb-2 tracking-tight">
@@ -209,6 +190,7 @@ const Login = () => {
           {/* Google OAuth */}
           <button
             type="button"
+            onClick={() => signInWithGoogle().catch(err => toast.error(err.message))}
             className="w-full flex items-center justify-center gap-3 py-3.5 border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
@@ -270,7 +252,7 @@ const Login = () => {
           </form>
 
           <p className="mt-12 text-center text-[14px] text-gray-400">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link to="/register" className="text-gray-900 font-medium hover:underline underline-offset-4">
               Create one
             </Link>
@@ -278,7 +260,7 @@ const Login = () => {
         </div>
       </div>
 
-      {/* ── Right: Gold Decorative Panel ────────────────────── */}
+      {/* Right: Gold Decorative Panel */}
       <div
         className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center"
         style={{ clipPath: 'polygon(0% 0, 100% 0, 100% 100%, 8% 100%)' }}
@@ -299,7 +281,7 @@ const Login = () => {
             Start Collecting
           </h2>
           <p className="text-gray-800/60 text-[16px] leading-relaxed mb-10">
-            Join thousands of collectors trading Pokémon cards on EliteTCG
+            {`Join thousands of collectors trading Pok\u00e9mon cards on EliteTCG`}
           </p>
           <HeroCard />
         </div>

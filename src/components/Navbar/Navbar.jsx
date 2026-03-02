@@ -1,15 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import CartIcon from '../Cart/CartIcon';
-import logo from '../../assets/images/elitetcglogo.webp';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
-  const [isMarketplaceOpen, setIsMarketplaceOpen] = useState(false);
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
-  const [mobileMarketplaceOpen, setMobileMarketplaceOpen] = useState(false);
-
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -22,13 +18,15 @@ const Navbar = () => {
   }, [isMenuOpen]);
 
   const shopRef = useRef(null);
-  const marketplaceRef = useRef(null);
 
+  const closeAll = () => {
+    setIsShopOpen(false);
+  };
+
+  // Click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (shopRef.current && !shopRef.current.contains(e.target)) setIsShopOpen(false);
-      if (marketplaceRef.current && !marketplaceRef.current.contains(e.target)) setIsMarketplaceOpen(false);
-      if (userRef.current && !userRef.current.contains(e.target)) setIsUserOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -48,59 +46,47 @@ const Navbar = () => {
       links: [
         { name: 'Booster Boxes', href: '/products?category=booster_box' },
         { name: 'Elite Trainer Boxes', href: '/products?category=etb' },
+        { name: 'Battle Decks', href: '/products?category=battle_deck' },
+        { name: 'Starter Decks', href: '/products?category=starter_deck' },
+        { name: 'Collection Boxes', href: '/products?category=collection_box' },
+        { name: 'Tin Boxes', href: '/products?category=tin_box' },
       ]
     },
     {
-      title: 'Browse By',
+      title: 'Browse',
       links: [
-        { name: 'Shop by Set', href: '/#sets' },
-        { name: 'Shop by Category', href: '/#category' },
+        { name: 'All Sets', href: '/sets' },
+        { name: 'Pre-Orders', href: '/#preorders' },
+        { name: 'Wishlist', href: '/wishlist' },
       ]
     }
   ];
 
-  const marketplaceLinks = [
-    { name: 'Browse Listings', href: '/marketplace', desc: 'Find cards from sellers' },
-    { name: 'Create Listing', href: '/seller/create-listing', desc: 'List your cards for sale', sellerOnly: false },
-    { name: 'Seller Dashboard', href: '/seller/dashboard', desc: 'Manage your listings', sellerOnly: true },
-    { name: 'Become a Seller', href: '/become-seller', desc: 'Start selling today', sellerOnly: false, hideIfSeller: true },
-    { name: 'Track Order', href: '/orders/track', desc: 'Track your delivery status' },
-  ];
-
-  const closeAll = () => {
-    setIsShopOpen(false);
-    setIsMarketplaceOpen(false);
-    setIsUserOpen(false);
-  };
-
   return (
-    <header className="sticky top-0 left-0 right-0 bg-white z-50 border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-8">
+    <nav className="sticky top-0 z-40 bg-white border-b border-gray-100">
+      <div className="flex items-center justify-between max-w-7xl mx-auto px-6 h-16">
         {/* Logo */}
-        <Link to="/" className="text-xl font-bold text-gray-900 shrink-0" onClick={closeAll}>
-          EliteTCG
-        </Link>
+        <div className="flex items-center">
+          <Link to="/" className="flex items-center gap-3">
+            <span
+              className="text-xl font-semibold elite-tcg-text"
+              style={{ paddingLeft: '7px' }}
+            >
+              Elite TCG
+            </span>
+          </Link>
+        </div>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
-          <Link
-            to="/"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-            onClick={closeAll}
-          >
-            Home
-          </Link>
-
           {/* Shop trigger */}
           <div ref={shopRef}>
             <button
               onClick={() => {
                 setIsShopOpen(!isShopOpen);
-                setIsMarketplaceOpen(false);
-                setIsUserOpen(false);
               }}
               className={`flex items-center gap-1 text-sm font-medium transition-colors ${
-                isShopOpen ? 'text-gray-900' : 'text-gray-600 hover:text-gray-900'
+                isShopOpen ? 'text-gray-900' : 'text-gray-800 hover:text-gray-900'
               }`}
             >
               Shop
@@ -111,7 +97,7 @@ const Navbar = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
 
-              {/* Full-width mega menu — fixed so it escapes the nav container */}
+              {/* Full-width mega menu */}
               {isShopOpen && (
                 <div
                   className="fixed top-16 left-0 right-0 bg-gray-50 border-t border-b border-gray-100 z-50"
@@ -145,86 +131,17 @@ const Navbar = () => {
             </button>
           </div>
 
-          {/* Marketplace trigger */}
-          <div ref={marketplaceRef}>
-            <button
-              onClick={() => {
-                setIsMarketplaceOpen(!isMarketplaceOpen);
-                setIsShopOpen(false);
-                setIsUserOpen(false);
-              }}
-              className={`flex items-center gap-1 text-sm font-medium transition-colors ${
-                isMarketplaceOpen ? 'text-gray-900' : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Marketplace
-              <svg
-                className={`w-3.5 h-3.5 transition-transform duration-200 ${isMarketplaceOpen ? 'rotate-180' : ''}`}
-                fill="none" viewBox="0 0 24 24" stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-
-              {isMarketplaceOpen && (
-                <div
-                  className="fixed top-16 left-0 right-0 bg-gray-50 border-t border-b border-gray-100 z-50"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="max-w-7xl mx-auto px-6 py-8">
-                    <div className="flex gap-16 justify-center">
-                      {marketplaceLinks.map((link) => {
-                        if (link.sellerOnly && !isSeller) return null;
-                        if (link.hideIfSeller && isSeller) return null;
-                        return (
-                          <Link
-                            key={link.name}
-                            to={link.href}
-                            className="group text-left"
-                            onClick={() => setIsMarketplaceOpen(false)}
-                          >
-                            <p className="text-sm font-medium text-gray-800 group-hover:text-gray-900 transition-colors mb-1">
-                              {link.name}
-                            </p>
-                            <p className="text-[11px] text-gray-400">
-                              {link.desc}
-                            </p>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </button>
-          </div>
-
           <Link
             to="/#preorders"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            className="text-sm font-medium text-gray-800 hover:text-gray-900 transition-colors"
             onClick={closeAll}
           >
             Pre-Orders
           </Link>
 
-          {isAuthenticated && (
-            <Link
-              to="/portfolio"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-              onClick={closeAll}
-            >
-              Portfolio
-            </Link>
-          )}
-          <Link
-            to="/subscription"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-            onClick={closeAll}
-          >
-            Subscribe
-          </Link>
           <Link
             to="/wishlist"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            className="text-sm font-medium text-gray-800 hover:text-gray-900 transition-colors"
             onClick={closeAll}
           >
             Wishlist
@@ -233,98 +150,13 @@ const Navbar = () => {
 
         {/* Right Side */}
         <div className="flex items-center gap-4">
+          <Link
+            to="/login"
+            className="hidden md:inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium text-gray-800 hover:text-gray-900 border border-gray-200 rounded-full hover:bg-gray-50 transition-all duration-200"
+          >
+            Sign In
+          </Link>
           <CartIcon />
-
-          {loading ? (
-            <div className="hidden md:flex items-center gap-3">
-              <div className="w-20 h-4 rounded-full bg-gray-200 animate-pulse" />
-              <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
-            </div>
-          ) : isAuthenticated ? (
-            <div ref={userRef} className="relative hidden md:block">
-              <button
-                onClick={() => setIsUserOpen(!isUserOpen)}
-                className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <div className="w-8 h-8 bg-[#FFCB32] rounded-full flex items-center justify-center text-gray-900 font-medium text-sm">
-                  {(user?.name || user?.email)?.charAt(0).toUpperCase()}
-                </div>
-              </button>
-
-              {isUserOpen && (
-                <div className="absolute top-full right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-lg min-w-[200px] z-50">
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {user?.name || 'User'}
-                    </p>
-                    <p className="text-[11px] text-gray-400 truncate mt-0.5">
-                      {user?.email}
-                    </p>
-                  </div>
-                  <div className="p-1.5">
-                    <Link
-                      to="/portfolio"
-                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                      onClick={() => setIsUserOpen(false)}
-                    >
-                      My Portfolio
-                    </Link>
-                    <Link
-                      to="/orders"
-                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                      onClick={() => setIsUserOpen(false)}
-                    >
-                      My Orders
-                    </Link>
-                    <Link
-                      to="/orders/track"
-                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                      onClick={() => setIsUserOpen(false)}
-                    >
-                      Track Order
-                    </Link>
-                    <Link
-                      to="/subscription/manage"
-                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                      onClick={() => setIsUserOpen(false)}
-                    >
-                      My Subscription
-                    </Link>
-                    {isSeller && (
-                      <Link
-                        to="/seller/dashboard"
-                        className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                        onClick={() => setIsUserOpen(false)}
-                      >
-                        Dashboard
-                      </Link>
-                    )}
-                    <button
-                      onClick={() => { logout(); setIsUserOpen(false); }}
-                      className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="hidden md:flex items-center gap-3">
-              <Link
-                to="/login"
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/register"
-                className="px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors"
-              >
-                Get Started
-              </Link>
-            </div>
-          )}
 
           {/* Mobile Menu Toggle */}
           <button
@@ -344,7 +176,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu — fixed full-screen overlay */}
+      {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-white border-t border-gray-100 z-50 overflow-y-auto">
           <nav className="flex flex-col p-4">
@@ -356,7 +188,7 @@ const Navbar = () => {
               Home
             </Link>
 
-            {/* Shop — collapsible */}
+            {/* Shop - collapsible */}
             <div>
               <button
                 className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-900"
@@ -376,7 +208,7 @@ const Navbar = () => {
                     <Link
                       key={link.name}
                       to={link.href}
-                      className="block py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                      className="block px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {link.name}
@@ -386,101 +218,17 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Marketplace — collapsible */}
-            <div>
-              <button
-                className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-900"
-                onClick={() => setMobileMarketplaceOpen(!mobileMarketplaceOpen)}
-              >
-                Marketplace
-                <svg
-                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${mobileMarketplaceOpen ? 'rotate-180' : ''}`}
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {mobileMarketplaceOpen && (
-                <div className="pl-8 pb-2 space-y-1">
-                  {marketplaceLinks.map((link) => {
-                    if (link.sellerOnly && !isSeller) return null;
-                    if (link.hideIfSeller && isSeller) return null;
-                    return (
-                      <Link
-                        key={link.name}
-                        to={link.href}
-                        className="block py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {link.name}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
             <Link
-              to="/#preorders"
+              to="/wishlist"
               className="px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              Pre-Orders
+              Wishlist
             </Link>
-
-            {isAuthenticated && (
-              <Link
-                to="/portfolio"
-                className="px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Portfolio
-              </Link>
-            )}
-            <Link
-              to="/subscription"
-              className="px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Subscribe
-            </Link>
-
-            <div className="border-t border-gray-100 mt-2 pt-2">
-              {isAuthenticated ? (
-                <>
-                  <div className="px-4 py-3 text-sm text-gray-500">
-                    {user?.name || user?.email}
-                  </div>
-                  <button
-                    onClick={() => { logout(); setIsMenuOpen(false); }}
-                    className="w-full text-left px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-                  >
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="block px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="block mx-4 mt-2 px-4 py-3 text-sm font-medium text-center bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Get Started
-                  </Link>
-                </>
-              )}
-            </div>
           </nav>
         </div>
       )}
-    </header>
+    </nav>
   );
 };
 

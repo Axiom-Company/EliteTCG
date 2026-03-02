@@ -2,10 +2,22 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (hash) {
+      setTimeout(() => {
+        const el = document.getElementById(hash.slice(1));
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, hash]);
   return null;
 };
+
+// Admin
+import AdminApp from './admin/AdminApp';
 
 // Components for main public site
 import Navbar from './components/Navbar/Navbar';
@@ -42,6 +54,9 @@ import CartDrawer from './components/Cart/CartDrawer';
 
 // Wishlist Provider
 import { WishlistProvider } from './contexts/WishlistContext';
+
+// Auth Provider
+import { AuthProvider } from './contexts/AuthContext';
 
 // SEO
 import SEO from './components/SEO/SEO';
@@ -90,6 +105,7 @@ const NavbarLayout = ({ children }) => (
 
 function App() {
   return (
+    <AuthProvider>
     <WishlistProvider>
       <CartProvider>
         <ScrollToTop />
@@ -103,10 +119,14 @@ function App() {
           <Route path="/product/:id" element={<MainLayout><ProductPage /></MainLayout>} />
           <Route path="/login" element={<NavbarLayout><Login /></NavbarLayout>} />
           <Route path="/register" element={<NavbarLayout><Register /></NavbarLayout>} />
+          <Route path="/marketplace" element={<MainLayout><Products /></MainLayout>} />
+          <Route path="/become-seller" element={<NavbarLayout><Register /></NavbarLayout>} />
+          <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
         <CartDrawer />
       </CartProvider>
     </WishlistProvider>
+    </AuthProvider>
   );
 }
 

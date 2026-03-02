@@ -148,8 +148,8 @@ const Hero = () => {
     const cy = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
 
     // Layer 1: 3D tilt on card inner
-    const rotY = (cx - 0.5) * 14;
-    const rotX = (cy - 0.5) * -10;
+    const rotY = (cx - 0.5) * 15.4;
+    const rotX = (cy - 0.5) * -11;
     const inner = innerRefs.current[slotIdx];
     if (inner) {
       inner.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg)`;
@@ -256,6 +256,7 @@ const Hero = () => {
   /* ── Scroll-derived values ────────────────────────────────────────── */
   const textOffset = scrollY * 0.25;
   const cardOffset = scrollY * 0.15;
+  const watermarkOffset = scrollY * 0.1;
 
   const isEmerging = phase === 'emerging';
   const isInteractive = phase === 'interactive';
@@ -267,15 +268,71 @@ const Hero = () => {
       className="relative bg-white flex flex-col items-center min-h-[85vh]"
       style={{ overflowX: 'clip' }}
     >
+      {/* ── Background watermark text ─────────────────────────── */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0 overflow-hidden"
+        style={{
+          maskImage: 'linear-gradient(to top, transparent 0%, transparent 35%, black 75%)',
+          WebkitMaskImage: 'linear-gradient(to top, transparent 0%, transparent 35%, black 75%)',
+          transform: `translateY(${-watermarkOffset}px)`,
+        }}
+      >
+        <div
+          className="absolute left-0 right-0 top-[calc(41%-31px)] md:top-[calc(45%-31px)] flex justify-center -translate-y-1/2"
+          style={{ perspective: '800px' }}
+        >
+          <div
+            className="flex items-end whitespace-nowrap select-none leading-none"
+            style={{
+              transformOrigin: 'center bottom',
+              transform: 'rotateX(25deg)',
+              gap: '48px',
+            }}
+          >
+            <span
+              className="text-[7rem] md:text-[11rem]"
+              style={{
+                letterSpacing: '0.05em',
+                transform: 'translateY(7px)',
+                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >POKEMON</span>
+            <span
+              className="text-[7rem] md:text-[11rem]"
+              style={{
+                letterSpacing: '0.05em',
+                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >POKEMON</span>
+            <span
+              className="text-[7rem] md:text-[11rem]"
+              style={{
+                letterSpacing: '0.05em',
+                transform: 'translateY(7px)',
+                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >POKEMON</span>
+          </div>
+        </div>
+      </div>
       {/* ── Text + Button ──────────────────────────────────────────── */}
       <div
         className="relative z-10 flex flex-col items-center text-center px-6 mt-[80px] md:mt-[8vh]"
-        style={{ transform: `translateY(${-textOffset}px)` }}
+        style={{ transform: `translateY(${-textOffset - 9}px)` }}
       >
-        <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase mb-5">
+        <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mb-5">
           {`Pok\u00e9mon TCG Store`}
         </p>
-        <h1 className="text-2xl md:text-5xl font-normal text-gray-900 leading-tight max-w-xl">
+        <h1 className="text-2xl md:text-5xl font-normal text-gray-800 leading-tight max-w-xl">
           {`The Home of Pok\u00e9mon`}<br />Packs, Boxes & Rare Pulls.
         </h1>
       </div>
@@ -283,7 +340,7 @@ const Hero = () => {
       {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
         className="relative w-full mt-9 z-10 flex justify-center"
-        style={{ height: '320px', transform: `translateY(${-25 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}
+        style={{ height: '320px', transform: `translateY(${-11 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}
       >
         <div
           className="hero-banner__cards"
@@ -343,7 +400,7 @@ const Hero = () => {
       </div>
 
       {/* ── Shop Now Button ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-30 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}>
+      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${24 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}>
         <a
           href="#products"
           className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"
