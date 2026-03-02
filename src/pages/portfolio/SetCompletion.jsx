@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronDown, ChevronUp, Package, ExternalLink,
   CheckCircle2, Circle, Search, X,
 } from 'lucide-react';
+import SEO from '../../components/SEO/SEO';
 
 /* ─── helpers ──────────────────────────────────────────────── */
 
@@ -136,6 +137,7 @@ const SetCompletion = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="Set Completion" noindex />
       {/* ── Header ── */}
       <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900">
         <div className="max-w-6xl mx-auto px-6 py-12">

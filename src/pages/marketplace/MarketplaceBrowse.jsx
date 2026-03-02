@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X, ChevronRight, Package, SlidersHorizontal } from 'lucide-react';
 import ListingCard from '../../components/marketplace/ListingCard';
 import { ELITE_API_URL } from '@/config/api';
+import SEO from '../../components/SEO/SEO';
 
 const API_BASE_URL = ELITE_API_URL;
 
@@ -115,6 +116,7 @@ const MarketplaceBrowse = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="Marketplace" description="Buy and sell Pokemon TCG cards on the EliteTCG marketplace. Find singles, sealed products, and accessories from verified sellers." path="/marketplace" />
 
       {/* Page Header */}
       <div className="bg-white border-b border-gray-100">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { getMyOrders } from '../../services/orderApi';
+import SEO from '../../components/SEO/SEO';
 
 const statusColors = {
   pending_payment: 'bg-yellow-100 text-yellow-800',
@@ -52,6 +53,7 @@ const OrderHistory = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="My Orders" noindex />
       <div className="max-w-4xl mx-auto px-6 py-12">
         <div className="mb-10">
           <h1 className="text-2xl font-medium text-gray-900">My Orders</h1>

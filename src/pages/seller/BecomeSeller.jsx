@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { ELITE_API_URL } from '@/config/api';
+import SEO from '../../components/SEO/SEO';
 
 const API_BASE_URL = ELITE_API_URL;
 
@@ -90,6 +91,7 @@ const BecomeSeller = () => {
   if (checking) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
+        <SEO title="Become a Seller" description="Start selling Pokemon TCG cards on the EliteTCG marketplace. Apply to become a verified seller today." path="/become-seller" />
         <div className="animate-spin h-8 w-8 border-2 border-gray-900 border-t-transparent rounded-full" />
       </div>
     );
@@ -99,6 +101,7 @@ const BecomeSeller = () => {
   if (!isAuthenticated) {
     return (
       <section className="min-h-[80vh] flex items-center justify-center px-6 py-16">
+        <SEO title="Become a Seller" description="Start selling Pokemon TCG cards on the EliteTCG marketplace. Apply to become a verified seller today." path="/become-seller" />
         <div className="max-w-md text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Become a Seller</h1>
           <p className="text-gray-600 mb-8">
@@ -130,6 +133,7 @@ const BecomeSeller = () => {
 
     return (
       <section className="min-h-[80vh] flex items-center justify-center px-6 py-16">
+        <SEO title="Become a Seller" description="Start selling Pokemon TCG cards on the EliteTCG marketplace. Apply to become a verified seller today." path="/become-seller" />
         <div className="max-w-lg text-center">
           {status === 'pending' && (
             <>
@@ -191,6 +195,7 @@ const BecomeSeller = () => {
   // Application form
   return (
     <section className="min-h-[80vh] flex items-center justify-center px-6 py-16">
+      <SEO title="Become a Seller" description="Start selling Pokemon TCG cards on the EliteTCG marketplace. Apply to become a verified seller today." path="/become-seller" />
       <div className="w-full max-w-md">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Seller Application</h1>
           <p className="text-gray-600 mb-8">Fill out the form below to apply</p>

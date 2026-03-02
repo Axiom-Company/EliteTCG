@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import SEO from '../../components/SEO/SEO';
 
 const PrivacyPolicy = () => {
   return (
     <div className="container py-12 max-w-3xl mx-auto">
+      <SEO title="Privacy Policy" description="EliteTCG privacy policy. Learn how we collect, use, and protect your personal information." path="/privacy-policy" />
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Privacy Policy</h1>
       <p className="text-sm text-gray-500 mb-8">Last updated: 2 March 2026</p>
 

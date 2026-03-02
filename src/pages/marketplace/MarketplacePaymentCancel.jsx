@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { XCircle } from 'lucide-react';
+import SEO from '../../components/SEO/SEO';
 
 const MarketplacePaymentCancel = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const MarketplacePaymentCancel = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="Payment Cancelled" noindex />
       <div className="max-w-2xl mx-auto px-6 py-16 text-center">
         {/* Cancel Icon */}
         <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">

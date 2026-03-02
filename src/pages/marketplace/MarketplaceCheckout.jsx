@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { ChevronRight, ShoppingBag, MapPin } from 'lucide-react';
 import { ELITE_API_URL, PAYMENTS_API_URL } from '../../config/api';
+import SEO from '../../components/SEO/SEO';
 
 const provinces = [
   'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
@@ -262,6 +263,7 @@ const MarketplaceCheckout = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="Marketplace Checkout" noindex />
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Breadcrumb */}
         <nav className="text-sm mb-8">

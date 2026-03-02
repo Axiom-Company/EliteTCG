@@ -4,6 +4,7 @@ import { Check, Star, Zap, Crown, Package, ArrowRight, Sparkles } from 'lucide-r
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { subscriptionApi } from '../../services/subscriptionApi';
 import { toast } from 'sonner';
+import SEO from '../../components/SEO/SEO';
 
 const PLANS = [
   {
@@ -261,6 +262,7 @@ const SubscriptionPlans = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="Subscription Boxes" description="Monthly Pokemon TCG subscription boxes delivered to your door. Choose from Starter, Collector, or Elite tiers." path="/subscription" />
       {/* Header */}
       <section className="pt-16 pb-12 md:pt-20 md:pb-16">
         <div className="container text-center">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { verifyPayflexReturn } from '../../services/payflexApi';
+import SEO from '../../components/SEO/SEO';
 
 const PayflexReturn = () => {
   const [searchParams] = useSearchParams();
@@ -119,6 +120,7 @@ const PayflexReturn = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="PayFlex Payment" noindex />
       <div className="max-w-lg mx-auto px-6 py-20 text-center">
         {config.icon}
 

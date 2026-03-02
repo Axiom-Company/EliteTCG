@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
+import SEO from '../../components/SEO/SEO';
 
 const MarketplacePaymentSuccess = () => {
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="Payment Successful" noindex />
       <div className="max-w-2xl mx-auto px-6 py-16 text-center">
         {/* Success Icon */}
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">

@@ -7,6 +7,7 @@ import PromotionBadge from '../../components/marketplace/PromotionBadge';
 import ReviewList from '../../components/marketplace/ReviewList';
 
 import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
+import SEO from '../../components/SEO/SEO';
 
 const conditionLabels = {
   mint: 'Mint',
@@ -96,6 +97,7 @@ const ListingDetail = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
+      {listing && <SEO title={listing.title} description={`${listing.title} - ${listing.condition ? listing.condition.replace('_', ' ') : ''} condition. R${Number(listing.price).toLocaleString()}`} path={`/marketplace/${id}`} image={listing.images?.[0] ? getImageUrl(listing.images[0]) : undefined} type="product" />}
       {/* Breadcrumb */}
       <nav className="text-sm mb-8">
         <ol className="flex items-center gap-1.5 text-gray-500">

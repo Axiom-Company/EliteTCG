@@ -220,6 +220,19 @@ export const productReviewsApi = {
   delete: (id) => apiFetch(`/product-reviews/${id}`, { method: 'DELETE' }),
 };
 
+// Email Admin API (FastAPI backend — webhook events + email logs)
+export const emailAdminApi = {
+  getStats: () => fastApiFetch('/email-webhooks/admin/stats'),
+  getLogs: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return fastApiFetch(`/email-webhooks/admin/logs${query ? `?${query}` : ''}`);
+  },
+  getEvents: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return fastApiFetch(`/email-webhooks/admin/events${query ? `?${query}` : ''}`);
+  },
+};
+
 // Custom hook for API calls with loading/error state
 export const useApiCall = () => {
   const [loading, setLoading] = useState(false);
@@ -242,4 +255,4 @@ export const useApiCall = () => {
   return { loading, error, execute, setError };
 };
 
-export default { productsApi, setsApi, categoriesApi, configApi, preordersApi, discountsApi, ordersApi, dashboardApi };
+export default { productsApi, setsApi, categoriesApi, configApi, preordersApi, discountsApi, ordersApi, dashboardApi, emailAdminApi };

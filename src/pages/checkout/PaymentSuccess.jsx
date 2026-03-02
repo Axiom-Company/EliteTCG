@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { trackOrder } from '../../services/orderApi';
+import SEO from '../../components/SEO/SEO';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -53,6 +54,7 @@ const PaymentSuccess = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="Payment Successful" noindex />
       <div className="max-w-2xl mx-auto px-6 py-16 text-center">
         {/* Success Icon */}
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">

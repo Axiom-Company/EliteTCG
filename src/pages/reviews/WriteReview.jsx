@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { ELITE_API_URL, getImageUrl } from '../../config/api';
+import SEO from '../../components/SEO/SEO';
 
 const StarPicker = ({ value, hover, onChange, onHover, onLeave }) => (
   <div className="flex items-center gap-1.5">
@@ -126,6 +127,7 @@ const WriteReview = () => {
 
   return (
     <div className="flex-1 bg-white flex flex-col items-center justify-start pt-16 px-6 pb-20">
+      <SEO title="Write Review" noindex />
       <div className="w-full max-w-[360px]">
 
         {/* Product image + name */}

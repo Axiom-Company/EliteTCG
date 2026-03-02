@@ -5,6 +5,7 @@ import { ELITE_API_URL } from '../../config/api';
 import { searchCards, evaluateCard, conditionToApiCode } from '../../services/cardEvaluationApi';
 import CardScanner from '../../components/marketplace/CardScanner';
 import { Search, Layers, Camera, Loader2 } from 'lucide-react';
+import SEO from '../../components/SEO/SEO';
 
 const conditions = [
   { value: 'mint', label: 'Mint' },
@@ -318,6 +319,7 @@ const CreateListing = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-12">
+      <SEO title="Create Listing" noindex />
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Listing</h1>
       <p className="text-gray-600 mb-8">List your Pokemon card for sale</p>
 

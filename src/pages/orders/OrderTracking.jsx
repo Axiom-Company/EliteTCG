@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { trackOrder } from '../../services/orderApi';
 import { getImageUrl } from '../../config/api';
+import SEO from '../../components/SEO/SEO';
 
 const ORDER_STATUSES = [
   { key: 'pending_payment', label: 'Payment Pending', icon: '○' },
@@ -69,6 +70,7 @@ const OrderTracking = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="Track Order" noindex />
       <div className="max-w-3xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="mb-10">

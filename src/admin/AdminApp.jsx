@@ -4,6 +4,7 @@ import AdminLayout from './components/AdminLayout';
 import AdminLogin from './components/AdminLogin';
 import { Dashboard, Settings, Products, Sets, Categories, Orders, Reviews } from './pages';
 import SellerApplications from './pages/SellerApplications';
+import SEO from '../components/SEO/SEO';
 
 // Placeholder pages for now
 const PlaceholderPage = ({ title, description }) => (
@@ -64,6 +65,7 @@ const AdminContent = () => {
 const AdminApp = () => {
   return (
     <AuthProvider>
+      <SEO title="Admin" noindex />
       <AdminContent />
     </AuthProvider>
   );

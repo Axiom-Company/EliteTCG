@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { getSellerOrders, updateOrderStatus, bookShipment } from '../../services/orderApi';
 import { ELITE_API_URL, getImageUrl } from '../../config/api';
+import SEO from '../../components/SEO/SEO';
 
 const ORDER_STATUS_OPTIONS = [
   { value: 'paid', label: 'Paid' },
@@ -149,6 +150,7 @@ const SellerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="Seller Dashboard" noindex />
       {/* Header */}
       <div className="bg-[#FFCB32]">
         <div className="max-w-6xl mx-auto px-6 py-12">

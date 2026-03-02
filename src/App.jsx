@@ -92,6 +92,10 @@ import UpdateNotification from './components/PWA/UpdateNotification';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
+// SEO
+import SEO from './components/SEO/SEO';
+import { organizationJsonLd, websiteJsonLd } from './config/seo';
+
 // Admin Application
 import AdminApp from './admin/AdminApp';
 import AnnouncementBar from './components/AnnouncementBar/AnnouncementBar';
@@ -100,6 +104,12 @@ const HomePage = () => {
   const navigate = useNavigate();
   return (
   <>
+    <SEO
+      title={null}
+      description="South Africa's premier destination for authentic Pokemon TCG products. Shop booster boxes, ETBs, singles, and more."
+      path="/"
+      jsonLd={[organizationJsonLd, websiteJsonLd]}
+    />
     <Hero onShopClick={() => navigate('/products')} />
     <ShopBySet />
     <ShopByCategory />

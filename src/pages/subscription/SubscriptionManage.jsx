@@ -4,6 +4,7 @@ import { Package, Calendar, CreditCard, ArrowUpRight, AlertCircle, Check, Chevro
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { subscriptionApi } from '../../services/subscriptionApi';
 import { toast } from 'sonner';
+import SEO from '../../components/SEO/SEO';
 
 const PLAN_DETAILS = {
   starter: { name: 'Starter', price: 299, color: 'gray' },
@@ -122,6 +123,7 @@ const SubscriptionManage = () => {
 
   return (
     <div className="min-h-screen bg-white py-12 md:py-16">
+      <SEO title="Manage Subscription" noindex />
       <div className="container max-w-3xl">
         {/* Header */}
         <div className="mb-8">

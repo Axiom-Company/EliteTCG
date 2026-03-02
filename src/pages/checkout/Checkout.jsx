@@ -6,6 +6,7 @@ import { getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 import { getShippingQuote } from '../../services/shippingApi';
 import { createDirectOrder } from '../../services/orderApi';
 import { getPayflexConfiguration, createPayflexOrder } from '../../services/payflexApi';
+import SEO from '../../components/SEO/SEO';
 
 const provinces = [
   'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
@@ -208,6 +209,7 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="Checkout" noindex />
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="mb-10">

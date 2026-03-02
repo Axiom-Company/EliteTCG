@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import SEO from '../../components/SEO/SEO';
 
 const TermsOfService = () => {
   return (
     <div className="container py-12 max-w-3xl mx-auto">
+      <SEO title="Terms of Service" description="EliteTCG terms of service. Read our terms and conditions for using the EliteTCG website and services." path="/terms-of-service" />
       <h1 className="text-3xl font-bold text-gray-900 mb-2">Terms of Service</h1>
       <p className="text-sm text-gray-500 mb-8">Last updated: 2 March 2026</p>
 
