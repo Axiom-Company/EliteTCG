@@ -67,6 +67,10 @@ import SubscriptionManage from './pages/subscription/SubscriptionManage';
 // Review page
 import WriteReview from './pages/reviews/WriteReview';
 
+// Legal pages
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import TermsOfService from './pages/legal/TermsOfService';
+
 // Customer Auth Provider
 import { CustomerAuthProvider } from './contexts/CustomerAuthContext';
 
@@ -163,6 +167,8 @@ function App() {
           <Route path="/portfolio/completion" element={<MainLayout><SetCompletion /></MainLayout>} />
           <Route path="/subscription" element={<MainLayout><SubscriptionPlans /></MainLayout>} />
           <Route path="/subscription/manage" element={<MainLayout><SubscriptionManage /></MainLayout>} />
+          <Route path="/privacy-policy" element={<MainLayout><PrivacyPolicy /></MainLayout>} />
+          <Route path="/terms-of-service" element={<MainLayout><TermsOfService /></MainLayout>} />
           <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
         <CartDrawer />

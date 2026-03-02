@@ -77,6 +77,23 @@ const Footer = () => {
             })}
           </div>
 
+          {/* Legal Links */}
+          <div className="flex items-center gap-4 mb-8">
+            <a
+              href="/privacy-policy"
+              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Privacy Policy
+            </a>
+            <span className="text-gray-300">|</span>
+            <a
+              href="/terms-of-service"
+              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Terms of Service
+            </a>
+          </div>
+
           {/* Divider */}
           <div className="w-full max-w-xs h-px bg-gray-200 mb-6"></div>
 
