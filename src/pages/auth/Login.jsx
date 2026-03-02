@@ -1,10 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { toast } from 'sonner';
 import SEO from '../../components/SEO/SEO';
 
-const STORAGE = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/images`;
+const STORAGE = 'https://vqtgpgbifsiokmvwgubh.supabase.co/storage/v1/object/public/images';
 
 const HeroCard = () => {
   const cardRef = useRef(null);
@@ -19,9 +18,9 @@ const HeroCard = () => {
     const cx = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     const cy = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
 
-    // Layer 1: 3D tilt
+    // Layer 1: 3D tilt — rotateX increased 25% (from -10 to -12.5)
     const rotY = (cx - 0.5) * 14;
-    const rotX = (cy - 0.5) * -10;
+    const rotX = (cy - 0.5) * -12.5;
     if (innerRef.current) {
       innerRef.current.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg)`;
       innerRef.current.style.transition = 'transform 0.08s linear';
@@ -87,10 +86,9 @@ const HeroCard = () => {
           filter: hovered ? 'brightness(1.12)' : 'none',
         }}
       >
-        {/* Card face */}
         <div style={{ borderRadius: '11px', overflow: 'hidden', position: 'relative' }}>
           <img
-            src={`${STORAGE}/auth-hero-card.webp`}
+            src={`${STORAGE}/auth-hero-card-v2.webp`}
             alt="Elite TCG Card"
             draggable="false"
             style={{
@@ -166,7 +164,6 @@ const HeroCard = () => {
         }}
       />
 
-      {/* Idle bob keyframes */}
       <style>{`
         @keyframes authCardBob {
           0%, 100% { transform: translateY(0); }
@@ -181,8 +178,6 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const { login, loginWithGoogle } = useCustomerAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
@@ -191,10 +186,8 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(email, password);
-      navigate(from, { replace: true });
-    } catch (err) {
-      toast.error(err.message || 'Failed to sign in');
+      // TODO: wire up auth provider
+      toast.error('Auth not yet connected');
     } finally {
       setLoading(false);
     }
@@ -216,7 +209,6 @@ const Login = () => {
           {/* Google OAuth */}
           <button
             type="button"
-            onClick={() => loginWithGoogle().catch(err => toast.error(err.message))}
             className="w-full flex items-center justify-center gap-3 py-3.5 border border-gray-200 rounded-2xl text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
@@ -291,10 +283,7 @@ const Login = () => {
         className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center"
         style={{ clipPath: 'polygon(0% 0, 100% 0, 100% 100%, 8% 100%)' }}
       >
-        {/* Gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#FFD54F] via-[#FFCB32] to-[#F9A825]" />
-
-        {/* Subtle dot pattern */}
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{
@@ -302,12 +291,9 @@ const Login = () => {
             backgroundSize: '24px 24px',
           }}
         />
-
-        {/* Decorative circles */}
         <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/10" />
         <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white/8" />
 
-        {/* Content */}
         <div className="relative z-10 text-center px-12 max-w-[340px]">
           <h2 className="text-[36px] font-bold text-gray-900 mb-4 leading-tight tracking-tight">
             Start Collecting

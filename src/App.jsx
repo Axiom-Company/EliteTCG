@@ -19,22 +19,6 @@ import TrustSection from './components/TrustSection/TrustSection';
 import Footer from './components/Footer/Footer';
 import ProductPage from './components/ProductPage/ProductPage';
 
-// Auth pages
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-
-// Seller pages
-import BecomeSeller from './pages/seller/BecomeSeller';
-import CreateListing from './pages/seller/CreateListing';
-import SellerDashboard from './pages/seller/SellerDashboard';
-
-// Marketplace pages
-import MarketplaceBrowse from './pages/marketplace/MarketplaceBrowse';
-import ListingDetail from './pages/marketplace/ListingDetail';
-import MarketplaceCheckout from './pages/marketplace/MarketplaceCheckout';
-import MarketplacePaymentSuccess from './pages/marketplace/MarketplacePaymentSuccess';
-import MarketplacePaymentCancel from './pages/marketplace/MarketplacePaymentCancel';
-
 // Products pages
 import Products from './pages/products/Products';
 
@@ -48,34 +32,9 @@ import SetDetail from './pages/sets/SetDetail';
 // Category pages
 import CategoryDetail from './pages/categories/CategoryDetail';
 
-// Checkout pages
-import Checkout from './pages/checkout/Checkout';
-import PaymentSuccess from './pages/checkout/PaymentSuccess';
-import PaymentCancel from './pages/checkout/PaymentCancel';
-import PayflexReturn from './pages/checkout/PayflexReturn';
-
-// Order pages
-import OrderTracking from './pages/orders/OrderTracking';
-import OrderHistory from './pages/orders/OrderHistory';
-
-// Portfolio pages
-import PortfolioDashboard from './pages/portfolio/PortfolioDashboard';
-import SetCompletion from './pages/portfolio/SetCompletion';
-// Subscription pages
-import SubscriptionPlans from './pages/subscription/SubscriptionPlans';
-import SubscriptionManage from './pages/subscription/SubscriptionManage';
-// Review page
-import WriteReview from './pages/reviews/WriteReview';
-
-// Legal pages
-import PrivacyPolicy from './pages/legal/PrivacyPolicy';
-import TermsOfService from './pages/legal/TermsOfService';
-
-// Customer Auth Provider
-import { CustomerAuthProvider } from './contexts/CustomerAuthContext';
-
-// Toast
-import { Toaster } from 'sonner';
+// Auth pages
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 
 // Cart Provider and Components
 import { CartProvider } from './contexts/CartContext';
@@ -84,20 +43,8 @@ import CartDrawer from './components/Cart/CartDrawer';
 // Wishlist Provider
 import { WishlistProvider } from './contexts/WishlistContext';
 
-// PWA Components
-import InstallPrompt from './components/PWA/InstallPrompt';
-import UpdateNotification from './components/PWA/UpdateNotification';
-
-// Analytics
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
-
 // SEO
 import SEO from './components/SEO/SEO';
-import { organizationJsonLd, websiteJsonLd } from './config/seo';
-
-// Admin Application
-import AdminApp from './admin/AdminApp';
 import AnnouncementBar from './components/AnnouncementBar/AnnouncementBar';
 
 const HomePage = () => {
@@ -108,7 +55,6 @@ const HomePage = () => {
       title={null}
       description="South Africa's premier destination for authentic Pokemon TCG products. Shop booster boxes, ETBs, singles, and more."
       path="/"
-      jsonLd={[organizationJsonLd, websiteJsonLd]}
     />
     <Hero onShopClick={() => navigate('/products')} />
     <ShopBySet />
@@ -144,8 +90,7 @@ const NavbarLayout = ({ children }) => (
 
 function App() {
   return (
-    <CustomerAuthProvider>
-      <WishlistProvider>
+    <WishlistProvider>
       <CartProvider>
         <ScrollToTop />
         <Routes>
@@ -156,45 +101,12 @@ function App() {
           <Route path="/sets/:id" element={<MainLayout><SetDetail /></MainLayout>} />
           <Route path="/categories/:slug" element={<MainLayout><CategoryDetail /></MainLayout>} />
           <Route path="/product/:id" element={<MainLayout><ProductPage /></MainLayout>} />
-          <Route path="/product/:id/review" element={<NavbarLayout><WriteReview /></NavbarLayout>} />
           <Route path="/login" element={<NavbarLayout><Login /></NavbarLayout>} />
           <Route path="/register" element={<NavbarLayout><Register /></NavbarLayout>} />
-          <Route path="/become-seller" element={<MainLayout><BecomeSeller /></MainLayout>} />
-          <Route path="/marketplace" element={<MainLayout><MarketplaceBrowse /></MainLayout>} />
-          <Route path="/marketplace/:id" element={<MainLayout><ListingDetail /></MainLayout>} />
-          <Route path="/marketplace/checkout/:listingId" element={<MainLayout><MarketplaceCheckout /></MainLayout>} />
-          <Route path="/marketplace/payment-success" element={<MainLayout><MarketplacePaymentSuccess /></MainLayout>} />
-          <Route path="/marketplace/payment-cancel" element={<MainLayout><MarketplacePaymentCancel /></MainLayout>} />
-          <Route path="/seller/create-listing" element={<MainLayout><CreateListing /></MainLayout>} />
-          <Route path="/seller/dashboard" element={<MainLayout><SellerDashboard /></MainLayout>} />
-          <Route path="/checkout" element={<MainLayout><Checkout /></MainLayout>} />
-          <Route path="/payment/success" element={<MainLayout><PaymentSuccess /></MainLayout>} />
-          <Route path="/payment/cancel" element={<MainLayout><PaymentCancel /></MainLayout>} />
-          <Route path="/checkout/payflex/return" element={<MainLayout><PayflexReturn /></MainLayout>} />
-          <Route path="/orders" element={<MainLayout><OrderHistory /></MainLayout>} />
-          <Route path="/orders/track" element={<MainLayout><OrderTracking /></MainLayout>} />
-          <Route path="/portfolio" element={<MainLayout><PortfolioDashboard /></MainLayout>} />
-          <Route path="/portfolio/completion" element={<MainLayout><SetCompletion /></MainLayout>} />
-          <Route path="/subscription" element={<MainLayout><SubscriptionPlans /></MainLayout>} />
-          <Route path="/subscription/manage" element={<MainLayout><SubscriptionManage /></MainLayout>} />
-          <Route path="/privacy-policy" element={<MainLayout><PrivacyPolicy /></MainLayout>} />
-          <Route path="/terms-of-service" element={<MainLayout><TermsOfService /></MainLayout>} />
-          <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
         <CartDrawer />
-        <Toaster
-          position="bottom-right"
-          mobilePosition="top-center"
-          theme="dark"
-          icons={{ error: null, success: null, warning: null, info: null, loading: null }}
-        />
-        <InstallPrompt />
-        <UpdateNotification />
-        <Analytics />
-        <SpeedInsights />
       </CartProvider>
-      </WishlistProvider>
-    </CustomerAuthProvider>
+    </WishlistProvider>
   );
 }
 
