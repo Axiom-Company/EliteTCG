@@ -47,6 +47,34 @@ const ProductPage = () => {
   const [imgNaturalSize, setImgNaturalSize] = useState({ w: 1, h: 1 });
   const imgContainerRef = useRef(null);
 
+  // Touch magnifier support
+  useEffect(() => {
+    const el = imgContainerRef.current;
+    if (!el) return;
+
+    const getPos = (e) => {
+      const rect = el.getBoundingClientRect();
+      const touch = e.touches[0];
+      return { show: true, x: touch.clientX - rect.left, y: touch.clientY - rect.top, w: rect.width, h: rect.height };
+    };
+
+    const onTouchStart = (e) => setMagnifier(getPos(e));
+    const onTouchMove = (e) => { e.preventDefault(); setMagnifier(getPos(e)); };
+    const onTouchEnd = () => setMagnifier(m => ({ ...m, show: false }));
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    el.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [product]);
+
   const handleAddToCart = () => {
     if (product && product.inventory?.quantity > 0) {
       addToCart(product, quantity);
@@ -177,27 +205,27 @@ const ProductPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="container py-12 lg:py-16">
+      <div className="container py-6 md:py-12 lg:py-16 px-2 md:px-0">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-10">
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-5 md:mb-10">
           <Link to="/products" className="hover:text-gray-900 transition-colors flex items-center gap-1 cursor-pointer">
             <ChevronLeft />
             Back to Shop
           </Link>
         </nav>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 lg:gap-16 max-w-5xl mx-auto">
           {/* Image Section */}
           <div className="space-y-3">
             {/* Main Image with arrows */}
             <div
               ref={imgContainerRef}
-              className="relative aspect-square bg-white rounded-2xl flex items-center justify-center overflow-hidden max-w-[85%] mx-auto"
+              className="relative aspect-square bg-white rounded-2xl flex items-center justify-center overflow-hidden max-w-full md:max-w-[85%] md:mx-auto"
             >
               <img
                 src={getImageUrl(images[selectedImage])}
                 alt={product.name}
-                className="w-[55%] h-[55%] object-contain cursor-crosshair"
+                className="w-[75%] h-[75%] md:w-[55%] md:h-[55%] object-contain cursor-crosshair"
                 onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
                 onLoad={(e) => setImgNaturalSize({ w: e.target.naturalWidth, h: e.target.naturalHeight })}
                 onMouseMove={(e) => {
@@ -218,8 +246,9 @@ const ProductPage = () => {
                 const ZOOM = 2.2;
                 const LENS = 160;
                 const { x, y, w, h } = magnifier;
-                // The CSS box is 55% of the container (square)
-                const boxSize = w * 0.55;
+                // Image is 75% of container on mobile, 55% on desktop
+                const pct = window.innerWidth < 768 ? 0.75 : 0.55;
+                const boxSize = w * pct;
                 // Compute actual rendered dimensions inside object-contain
                 const ar = imgNaturalSize.w / imgNaturalSize.h;
                 const renderedW = ar >= 1 ? boxSize : boxSize * ar;
@@ -288,7 +317,7 @@ const ProductPage = () => {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-colors cursor-pointer flex items-center justify-center bg-white ${
+                    className={`w-16 h-16 rounded-xl overflow-hidden border transition-colors cursor-pointer flex items-center justify-center bg-white ${
                       selectedImage === index ? 'border-gray-200' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
@@ -312,16 +341,16 @@ const ProductPage = () => {
               </span>
             )}
 
-            <h1 className="text-3xl font-medium text-gray-900 mb-4">{product.name}</h1>
+            <h1 className="text-xl md:text-3xl font-medium text-gray-900 mb-3 md:mb-4 leading-snug">{product.name}</h1>
 
             {(() => {
               const count = product.review_count ?? 0;
               const rating = count > 0 ? Math.round(product.rating || 0) : 0;
               return (
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-3 md:mb-4">
                   <div className="flex items-center gap-0.5">
                     {[1,2,3,4,5].map((s) => (
-                      <svg key={s} width="14" height="14" viewBox="0 0 24 24"
+                      <svg key={s} width="16" height="16" viewBox="0 0 24 24"
                         fill="currentColor" stroke="none"
                         className={s <= rating ? 'text-yellow-400' : 'text-gray-200'}
                       >
@@ -336,10 +365,10 @@ const ProductPage = () => {
               );
             })()}
 
-            <div className="flex items-baseline gap-3 mb-6">
-              <span className="text-3xl font-medium text-gray-900">{formatPrice(product.price)}</span>
+            <div className="flex items-baseline gap-3 mb-5 md:mb-6">
+              <span className="text-2xl md:text-3xl font-medium text-gray-900">{formatPrice(product.price)}</span>
               {product.compare_at_price && (
-                <span className="text-xl text-gray-400 line-through">{formatPrice(product.compare_at_price)}</span>
+                <span className="text-base md:text-xl text-gray-400 line-through">{formatPrice(product.compare_at_price)}</span>
               )}
             </div>
 
@@ -369,11 +398,11 @@ const ProductPage = () => {
               )}
             </div>
 
-            <div className="flex gap-3 mb-8">
+            <div className="flex gap-3 mb-6 md:mb-8">
               <button
                 onClick={handleAddToCart}
                 disabled={stockStatus.text === 'Out of Stock'}
-                className="py-3 px-8 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
+                className="flex-1 md:flex-none py-3 px-8 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
               >
                 Add to Cart
               </button>

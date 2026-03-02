@@ -109,7 +109,7 @@ const CartDrawer = () => {
             <Link
               to="/checkout"
               onClick={closeCart}
-              className="block w-full py-3 bg-gray-900 text-white text-center text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
+              className="block w-full py-3 mt-2 md:mt-0 bg-gray-900 text-white text-center text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
             >
               Proceed to Checkout
             </Link>
@@ -117,7 +117,7 @@ const CartDrawer = () => {
             <Link
               to="/products"
               onClick={closeCart}
-              className="block w-full py-2 mt-2 text-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              className="block w-full py-2 mt-2 mb-2 md:mb-0 text-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               Continue Shopping
             </Link>

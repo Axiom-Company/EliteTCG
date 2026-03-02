@@ -105,7 +105,7 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
 
       {/* Info */}
       <div className="p-4 flex flex-col gap-1">
-        <h3 className="text-sm font-medium text-gray-900 line-clamp-2 leading-snug mt-0.5">
+        <h3 className="text-[16px] font-medium text-gray-900 line-clamp-2 leading-snug mt-0.5">
           {product.name}
         </h3>
 
@@ -116,22 +116,22 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
           return (
             <div className="flex items-center gap-1 mt-0.5">
               {[1,2,3,4,5].map((s) => (
-                <svg key={s} width="13" height="13" viewBox="0 0 24 24"
+                <svg key={s} width="16" height="16" viewBox="0 0 24 24"
                   fill="currentColor" stroke="none"
                   className={s <= rating ? 'text-yellow-400' : 'text-gray-200'}
                 >
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                 </svg>
               ))}
-              <span className="text-[11px] text-gray-400 ml-0.5">({count})</span>
+              <span className="text-[13px] text-gray-400 ml-0.5">({count})</span>
             </div>
           );
         })()}
 
         <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-base font-medium text-gray-900">{formatPrice(product)}</span>
+          <span className="text-lg font-medium text-gray-900">{formatPrice(product)}</span>
           {comparePrice && (
-            <span className="text-xs text-gray-400 line-through">{comparePrice}</span>
+            <span className="text-sm text-gray-400 line-through">{comparePrice}</span>
           )}
         </div>
         {isLowStock && (

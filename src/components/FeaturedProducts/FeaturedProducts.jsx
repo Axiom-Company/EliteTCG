@@ -45,7 +45,7 @@ const FeaturedProducts = () => {
             <div className="text-gray-400">No products available</div>
           </div>
         ) : (
-          <div className="grid grid-cols-4 gap-4 lg:grid-cols-4 md:grid-cols-3 md:gap-4 max-[480px]:grid-cols-1">
+          <div className="grid grid-cols-4 gap-4 lg:grid-cols-4 md:grid-cols-3 md:gap-4 max-[480px]:grid-cols-2">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
