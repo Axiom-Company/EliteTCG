@@ -1,19 +1,8 @@
 import { Router } from 'express';
-import bcrypt from 'bcrypt';
 import { generateToken, authenticateToken } from '../middleware/auth.js';
-import { supabaseAdmin } from '../config/supabase.js';
+import { supabaseAdmin, supabase } from '../config/supabase.js';
 
 const router = Router();
-
-// Mock admin user for development (when Supabase not configured)
-const mockAdminUser = {
-  id: '1',
-  email: 'admin@elitetcg.com',
-  password_hash: '$2b$10$8K1p/a0dL1LXMIgoEDFrwOfMQDf.OS4Do4gSPAYLcJ4GTHX8E1Riy', // admin123
-  name: 'Admin',
-  role: 'super_admin',
-  is_active: true
-};
 
 // Login
 router.post('/login', async (req, res) => {
@@ -24,50 +13,48 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    let user;
-
-    if (supabaseAdmin) {
-      const { data, error } = await supabaseAdmin
-        .from('admin_users')
-        .select('*')
-        .eq('email', email.toLowerCase())
-        .eq('is_active', true)
-        .single();
-
-      if (error || !data) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-      user = data;
-    } else {
-      if (email.toLowerCase() !== mockAdminUser.email) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-      user = mockAdminUser;
+    if (!supabaseAdmin || !supabase) {
+      return res.status(503).json({ error: 'Auth service not configured' });
     }
 
-    const validPassword = await bcrypt.compare(password, user.password_hash);
+    // Verify credentials via Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: email.toLowerCase(),
+      password,
+    });
 
-    if (!validPassword) {
+    if (authError || !authData?.user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    if (supabaseAdmin) {
-      await supabaseAdmin
-        .from('admin_users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('id', user.id);
+    // Check admin_users table for role and active status
+    const { data: adminUser, error: dbError } = await supabaseAdmin
+      .from('admin_users')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .eq('is_active', true)
+      .single();
+
+    if (dbError || !adminUser) {
+      return res.status(401).json({ error: 'Access denied. Not an admin account.' });
     }
 
-    const token = generateToken(user);
+    // Update last login
+    await supabaseAdmin
+      .from('admin_users')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', adminUser.id);
+
+    const token = generateToken(adminUser);
 
     res.json({
       token,
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role
-      }
+        id: adminUser.id,
+        email: adminUser.email,
+        name: adminUser.name,
+        role: adminUser.role,
+      },
     });
   } catch (error) {
     console.error('Login error:', error);

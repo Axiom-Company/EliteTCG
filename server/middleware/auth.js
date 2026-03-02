@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { supabaseAdmin } from '../config/supabase.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
 
@@ -65,8 +66,36 @@ export const generateCustomerToken = (customer, sellerProfile = null) => {
   );
 };
 
+// Look up customer record from the customers table by Supabase user email
+const resolveSupabaseCustomer = async (token) => {
+  if (!supabaseAdmin) return null;
+  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+  if (error || !user) return null;
+
+  const { data: customer } = await supabaseAdmin
+    .from('customers')
+    .select('id, email, name, first_name, last_name, is_seller')
+    .eq('email', user.email)
+    .single();
+
+  if (!customer) return null;
+
+  let seller_id = null;
+  if (customer.is_seller) {
+    const { data: sp } = await supabaseAdmin
+      .from('seller_profiles')
+      .select('id')
+      .eq('customer_id', customer.id)
+      .eq('is_active', true)
+      .single();
+    seller_id = sp?.id || null;
+  }
+
+  return { ...customer, type: 'customer', seller_id };
+};
+
 // Verify JWT token for customers
-export const authenticateCustomer = (req, res, next) => {
+export const authenticateCustomer = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -74,35 +103,48 @@ export const authenticateCustomer = (req, res, next) => {
     return res.status(401).json({ error: 'Access token required' });
   }
 
+  // Try Supabase token first
+  try {
+    const customer = await resolveSupabaseCustomer(token);
+    if (customer) {
+      req.customer = customer;
+      return next();
+    }
+  } catch (_) {}
+
+  // Fall back to custom JWT
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-
-    // Ensure this is a customer token
     if (decoded.type !== 'customer') {
       return res.status(403).json({ error: 'Invalid token type' });
     }
-
     req.customer = decoded;
-    next();
+    return next();
   } catch (error) {
     return res.status(403).json({ error: 'Invalid or expired token' });
   }
 };
 
 // Optional customer authentication (sets req.customer if valid token, continues regardless)
-export const optionalCustomerAuth = (req, res, next) => {
+export const optionalCustomerAuth = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (token) {
     try {
+      const customer = await resolveSupabaseCustomer(token);
+      if (customer) {
+        req.customer = customer;
+        return next();
+      }
+    } catch (_) {}
+
+    try {
       const decoded = jwt.verify(token, JWT_SECRET);
       if (decoded.type === 'customer') {
         req.customer = decoded;
       }
-    } catch (error) {
-      // Token invalid, but continue anyway (it's optional)
-    }
+    } catch (_) {}
   }
 
   next();

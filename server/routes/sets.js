@@ -63,7 +63,7 @@ router.post('/', authenticateToken, requireRole('super_admin', 'admin'), async (
         is_active: setData.is_active !== false,
         is_new: setData.is_new || false,
         display_order: (count || 0) + 1,
-        image: setData.image || null,
+        logo_url: setData.image || null,
       })
       .select()
       .single();
@@ -80,11 +80,20 @@ router.post('/', authenticateToken, requireRole('super_admin', 'admin'), async (
 router.put('/:id', authenticateToken, requireRole('super_admin', 'admin', 'manager'), async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const { name, code, release_date, is_active, is_new, image, display_order } = req.body;
+
+    const dbUpdates = {};
+    if (name !== undefined) dbUpdates.name = name;
+    if (code !== undefined) dbUpdates.code = code;
+    if (release_date !== undefined) dbUpdates.release_date = release_date === '' ? null : release_date;
+    if (is_active !== undefined) dbUpdates.is_active = is_active;
+    if (is_new !== undefined) dbUpdates.is_new = is_new;
+    if (image !== undefined) dbUpdates.logo_url = image;
+    if (display_order !== undefined) dbUpdates.display_order = display_order;
 
     const { data, error } = await supabaseAdmin
       .from('sets')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();
@@ -93,7 +102,7 @@ router.put('/:id', authenticateToken, requireRole('super_admin', 'admin', 'manag
     res.json({ set: data });
   } catch (error) {
     console.error('Update set error:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 });
 

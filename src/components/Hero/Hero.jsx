@@ -58,9 +58,9 @@ const Hero = () => {
   const sheenRefs = useRef([]);
   const sparkleRefs = useRef([]);
   const hoveredSlot = useRef(null);
-  const isMobileRef = useRef(false);
+  const isMobileRef = useRef(typeof window !== 'undefined' ? window.innerWidth < 640 : false);
   const spreadVwRef = useRef(
-    (() => { const w = typeof window !== 'undefined' ? window.innerWidth : 1440; return w < 640 ? 60 : w < 1024 ? 50 : 48; })()
+    (() => { const w = typeof window !== 'undefined' ? window.innerWidth : 1440; return w < 640 ? 85 : w < 1024 ? 50 : 48; })()
   );
   const phaseRef = useRef('emerging');
 
@@ -72,7 +72,7 @@ const Hero = () => {
     const check = () => {
       const w = window.innerWidth;
       isMobileRef.current = w < 640;
-      spreadVwRef.current = w < 640 ? 60 : w < 1024 ? 50 : 48;
+      spreadVwRef.current = w < 640 ? 85 : w < 1024 ? 50 : 48;
       forceUpdate((n) => n + 1);
     };
     window.addEventListener('resize', check);
@@ -254,9 +254,8 @@ const Hero = () => {
   }, []);
 
   /* ── Scroll-derived values ────────────────────────────────────────── */
-  const textOffset      = scrollY * 0.25;
-  const cardOffset      = scrollY * 0.15;
-  const watermarkOffset = scrollY * 0.1;
+  const textOffset = scrollY * 0.25;
+  const cardOffset = scrollY * 0.15;
 
   const isEmerging = phase === 'emerging';
   const isInteractive = phase === 'interactive';
@@ -265,37 +264,12 @@ const Hero = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative bg-white flex flex-col items-center min-h-[85vh] overflow-x-clip"
+      className="relative bg-white flex flex-col items-center min-h-[85vh]"
+      style={{ overflowX: 'clip' }}
     >
-      {/* ── Background watermark text ──────────────────────────────── */}
-      <div
-        className="absolute inset-0 pointer-events-none z-0 overflow-hidden"
-        style={{
-          perspective: '800px',
-          maskImage: 'linear-gradient(to top, transparent 0%, transparent 35%, black 75%)',
-          WebkitMaskImage: 'linear-gradient(to top, transparent 0%, transparent 35%, black 75%)',
-          transform: `translateY(${-watermarkOffset}px)`,
-        }}
-      >
-        <div className="absolute left-0 right-0 top-[39%] md:top-[45%] flex justify-center -translate-y-1/2">
-          <p
-            className="text-[7rem] md:text-[11rem] text-[#e8e8e8] whitespace-nowrap select-none leading-none"
-            style={{
-              fontFamily: "'Bebas Neue', sans-serif",
-              transform: 'perspective(500px) rotateX(17.5deg)',
-              transformOrigin: 'center bottom',
-              letterSpacing: '0.05em',
-              WebkitTextStroke: '4px #e8e8e8',
-            }}
-          >
-            POKEMON POKEMON POKEMON
-          </p>
-        </div>
-      </div>
-
       {/* ── Text + Button ──────────────────────────────────────────── */}
       <div
-        className="relative z-10 flex flex-col items-center text-center px-6 mt-[95px] md:mt-[8vh]"
+        className="relative z-10 flex flex-col items-center text-center px-6 mt-[80px] md:mt-[8vh]"
         style={{ transform: `translateY(${-textOffset}px)` }}
       >
         <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase mb-5">
@@ -308,8 +282,8 @@ const Hero = () => {
 
       {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
-        className="relative w-full mt-9 z-10 flex justify-center -translate-y-[25px]"
-        style={{ height: '320px', transform: `translateY(${-cardOffset}px)` }}
+        className="relative w-full mt-9 z-10 flex justify-center"
+        style={{ height: '320px', transform: `translateY(${-25 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}
       >
         <div
           className="hero-banner__cards"
@@ -369,7 +343,7 @@ const Hero = () => {
       </div>
 
       {/* ── Shop Now Button ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-cardOffset}px)` }}>
+      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-30 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}>
         <a
           href="#products"
           className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"

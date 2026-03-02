@@ -85,7 +85,7 @@ const ShopBySet = () => {
             </button>
 
             <div
-              className="flex gap-4 overflow-x-auto scroll-snap-x-mandatory scrollbar-none py-2 px-1"
+              className="flex gap-4 overflow-x-auto overflow-y-hidden scroll-snap-x-mandatory scrollbar-none py-2 px-1"
               ref={scrollRef}
               onScroll={handleScroll}
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -101,7 +101,7 @@ const ShopBySet = () => {
                 >
                   <div className="relative h-[220px] bg-white flex items-center justify-center overflow-hidden md:h-[180px]">
                     <img
-                      src={getImageUrl(set.image)}
+                      src={getImageUrl(set.logo_url)}
                       alt={set.name}
                       className="w-full h-full object-contain p-2"
                       onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}

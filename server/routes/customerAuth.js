@@ -112,6 +112,13 @@ router.post('/register', async (req, res) => {
       }
 
       customer = data;
+
+      // Create Supabase Auth user so the frontend can sign in via supabase.auth.signInWithPassword
+      await supabaseAdmin.auth.admin.createUser({
+        email: email.toLowerCase(),
+        password,
+        email_confirm: true,
+      });
     } else {
       // Mock creation
       customer = {
