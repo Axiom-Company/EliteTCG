@@ -210,6 +210,14 @@ const Navbar = () => {
           >
             Pre-Orders
           </Link>
+
+          <Link
+            to="/subscription"
+            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            onClick={closeAll}
+          >
+            Subscribe
+          </Link>
         </nav>
 
         {/* Right Side */}
@@ -265,6 +273,13 @@ const Navbar = () => {
                       onClick={() => setIsUserOpen(false)}
                     >
                       Track Order
+                    </Link>
+                    <Link
+                      to="/subscription/manage"
+                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsUserOpen(false)}
+                    >
+                      My Subscription
                     </Link>
                     {isSeller && (
                       <Link
@@ -402,6 +417,14 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Pre-Orders
+            </Link>
+
+            <Link
+              to="/subscription"
+              className="px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Subscribe
             </Link>
 
             <div className="border-t border-gray-100 mt-2 pt-2">
