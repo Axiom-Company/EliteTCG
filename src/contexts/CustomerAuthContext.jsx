@@ -131,6 +131,15 @@ export const CustomerAuthProvider = ({ children }) => {
     }
   }, [fetchProfile]);
 
+  const loginWithGoogle = useCallback(async () => {
+    if (!supabase) throw new Error('Auth service not available');
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) throw new Error(error.message);
+  }, []);
+
   const login = useCallback(async (email, password) => {
     setLoading(true);
     setError(null);
@@ -213,6 +222,7 @@ export const CustomerAuthProvider = ({ children }) => {
     error,
     register,
     login,
+    loginWithGoogle,
     logout,
     updateProfile,
     changePassword,

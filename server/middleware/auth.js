@@ -66,19 +66,46 @@ export const generateCustomerToken = (customer, sellerProfile = null) => {
   );
 };
 
-// Look up customer record from the customers table by Supabase user email
+// Look up customer record from the customers table by Supabase user email.
+// If the Supabase auth user exists but has no customer row (e.g. first OAuth sign-in),
+// auto-create one from the provider metadata.
 const resolveSupabaseCustomer = async (token) => {
   if (!supabaseAdmin) return null;
   const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
   if (error || !user) return null;
 
-  const { data: customer } = await supabaseAdmin
+  let { data: customer } = await supabaseAdmin
     .from('customers')
     .select('id, email, name, first_name, last_name, is_seller')
     .eq('email', user.email)
     .single();
 
-  if (!customer) return null;
+  // Auto-create customer profile for OAuth users on first sign-in
+  if (!customer) {
+    const meta = user.user_metadata || {};
+    const firstName = meta.full_name?.split(' ')[0] || meta.name?.split(' ')[0] || '';
+    const lastName = meta.full_name?.split(' ').slice(1).join(' ') || meta.name?.split(' ').slice(1).join(' ') || '';
+
+    const { data: created, error: createErr } = await supabaseAdmin
+      .from('customers')
+      .insert({
+        email: user.email.toLowerCase(),
+        password_hash: 'oauth',
+        first_name: firstName,
+        last_name: lastName,
+        name: meta.full_name || meta.name || user.email.split('@')[0],
+        is_active: true,
+        is_seller: false,
+      })
+      .select('id, email, name, first_name, last_name, is_seller')
+      .single();
+
+    if (createErr) {
+      console.error('Auto-create customer for OAuth failed:', createErr);
+      return null;
+    }
+    customer = created;
+  }
 
   let seller_id = null;
   if (customer.is_seller) {
