@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../../components/HeroBanner/HeroBanner.css';
-import card1 from '../../assets/images/SingleCards/card1.png';
-import card2 from '../../assets/images/SingleCards/card2.png';
-import card3 from '../../assets/images/SingleCards/card3.png';
-import card4 from '../../assets/images/SingleCards/card4.png';
-import card5 from '../../assets/images/SingleCards/card5.png';
-import card6 from '../../assets/images/SingleCards/card6.png';
-import card7  from '../../assets/images/SingleCards/card7.png';
-import card8  from '../../assets/images/SingleCards/card8.png';
-import card9  from '../../assets/images/SingleCards/card9.png';
-import card10 from '../../assets/images/SingleCards/card10.png';
-import card11 from '../../assets/images/SingleCards/card11.png';
-import card12 from '../../assets/images/SingleCards/card12.png';
+import card1 from '../../assets/images/SingleCards/card1.webp';
+import card2 from '../../assets/images/SingleCards/card2.webp';
+import card3 from '../../assets/images/SingleCards/card3.webp';
+import card4 from '../../assets/images/SingleCards/card4.webp';
+import card5 from '../../assets/images/SingleCards/card5.webp';
+import card6 from '../../assets/images/SingleCards/card6.webp';
+import card7  from '../../assets/images/SingleCards/card7.webp';
+import card8  from '../../assets/images/SingleCards/card8.webp';
+import card9  from '../../assets/images/SingleCards/card9.webp';
+import card10 from '../../assets/images/SingleCards/card10.webp';
+import card11 from '../../assets/images/SingleCards/card11.webp';
+import card12 from '../../assets/images/SingleCards/card12.webp';
 
 //test
 const CARD_DATA = [

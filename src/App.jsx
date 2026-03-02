@@ -32,6 +32,10 @@ import SetDetail from './pages/sets/SetDetail';
 // Category pages
 import CategoryDetail from './pages/categories/CategoryDetail';
 
+// Auth pages
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+
 // Cart Provider and Components
 import { CartProvider } from './contexts/CartContext';
 import CartDrawer from './components/Cart/CartDrawer';
@@ -97,6 +101,8 @@ function App() {
           <Route path="/sets/:id" element={<MainLayout><SetDetail /></MainLayout>} />
           <Route path="/categories/:slug" element={<MainLayout><CategoryDetail /></MainLayout>} />
           <Route path="/product/:id" element={<MainLayout><ProductPage /></MainLayout>} />
+          <Route path="/login" element={<NavbarLayout><Login /></NavbarLayout>} />
+          <Route path="/register" element={<NavbarLayout><Register /></NavbarLayout>} />
         </Routes>
         <CartDrawer />
       </CartProvider>
