@@ -21,11 +21,10 @@ const MessageReactions = ({ reactions, currentUserId, onReact }) => {
             type="button"
             onClick={() => onReact(emoji)}
             className={cn(
-              'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs transition-colors',
-              'border hover:bg-gray-700',
+              'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs transition-colors border',
               hasReacted
-                ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-300'
-                : 'border-gray-700 bg-gray-800 text-gray-400'
+                ? 'border-amber-300 bg-amber-50 text-amber-700'
+                : 'border-gray-200 bg-gray-100 text-gray-600 hover:bg-gray-200'
             )}
             aria-label={`${emoji} ${userIds.length} reaction${userIds.length !== 1 ? 's' : ''}`}
           >
@@ -39,7 +38,7 @@ const MessageReactions = ({ reactions, currentUserId, onReact }) => {
         trigger={
           <button
             type="button"
-            className="inline-flex items-center justify-center h-6 w-6 rounded-full border border-gray-700 bg-gray-800 text-gray-500 hover:text-gray-300 hover:bg-gray-700 hover:border-gray-600 transition-colors"
+            className="inline-flex items-center justify-center h-6 w-6 rounded-full border border-gray-200 bg-gray-100 text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
             aria-label="Add reaction"
           >
             <Plus className="h-3 w-3" />

@@ -62,7 +62,7 @@ const EmojiPicker = ({ onSelect, trigger }) => {
         {trigger || (
           <button
             type="button"
-            className="flex items-center justify-center h-8 w-8 rounded-md text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-colors"
+            className="flex items-center justify-center h-8 w-8 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
             aria-label="Pick an emoji"
           >
             <Smile className="h-4 w-4" />
@@ -75,7 +75,7 @@ const EmojiPicker = ({ onSelect, trigger }) => {
           align="start"
           sideOffset={8}
           className={cn(
-            'z-[600] w-[280px] rounded-lg border border-gray-700 bg-gray-800 p-2 shadow-xl',
+            'z-[600] w-[280px] rounded-xl border border-gray-200 bg-white p-2 shadow-xl',
             'data-[state=open]:animate-in data-[state=closed]:animate-out',
             'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
             'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95'
@@ -87,7 +87,7 @@ const EmojiPicker = ({ onSelect, trigger }) => {
                 key={label}
                 type="button"
                 onClick={() => onSelect(emoji)}
-                className="flex items-center justify-center h-8 w-8 rounded-md text-lg hover:bg-gray-700 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="flex items-center justify-center h-8 w-8 rounded-md text-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-1 focus:ring-amber-400"
                 aria-label={label}
                 title={label}
               >
@@ -95,7 +95,7 @@ const EmojiPicker = ({ onSelect, trigger }) => {
               </button>
             ))}
           </div>
-          <Popover.Arrow className="fill-gray-700" />
+          <Popover.Arrow className="fill-gray-200" />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

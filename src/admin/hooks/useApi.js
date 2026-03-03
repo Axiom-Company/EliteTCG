@@ -4,7 +4,7 @@ import { supabase } from '@/config/supabase';
 
 const API_BASE = `${ELITE_API_URL}/api`;
 const FASTAPI_BASE = PAYMENTS_API_URL;
-// Get token from Supabase session
+// Get token from Supabase session (same auth as public site)
 const getToken = async () => {
   if (!supabase) return null;
   const { data: { session } } = await supabase.auth.getSession();

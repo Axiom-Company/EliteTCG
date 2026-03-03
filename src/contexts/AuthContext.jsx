@@ -124,4 +124,6 @@ export const useCustomerAuth = () => {
   return context;
 };
 
+export const useAuth = useCustomerAuth;
+
 export default AuthContext;

@@ -12,37 +12,31 @@ export function useChatSocket() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const token = getToken();
-    if (!token) return;
+    let cancelled = false;
 
-    const socket = io(ELITE_API_URL, {
-      auth: { token },
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-    });
+    (async () => {
+      const token = await getToken();
+      if (!token || cancelled) return;
 
-    socket.on('connect', () => {
-      setConnected(true);
-      setError(null);
-    });
+      const socket = io(ELITE_API_URL, {
+        auth: { token },
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+      });
 
-    socket.on('disconnect', () => setConnected(false));
+      socket.on('connect', () => { setConnected(true); setError(null); });
+      socket.on('disconnect', () => setConnected(false));
+      socket.on('connect_error', (err) => { setConnected(false); setError(err.message); });
+      socket.on('error', (data) => { setError(data.message || 'Socket error'); });
 
-    socket.on('connect_error', (err) => {
-      setConnected(false);
-      setError(err.message);
-    });
-
-    socket.on('error', (data) => {
-      setError(data.message || 'Socket error');
-    });
-
-    socketRef.current = socket;
+      socketRef.current = socket;
+    })();
 
     return () => {
-      socket.disconnect();
+      cancelled = true;
+      socketRef.current?.disconnect();
       socketRef.current = null;
     };
   }, [isAuthenticated, getToken]);

@@ -3,21 +3,12 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ImagePreview = ({ src, alt, isOpen, onClose }) => {
-  const handleKeyDown = useCallback(
-    (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    },
-    [onClose]
-  );
+  const handleKeyDown = useCallback((e) => { if (e.key === 'Escape') onClose(); }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
-
     document.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
-
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
@@ -39,9 +30,9 @@ const ImagePreview = ({ src, alt, isOpen, onClose }) => {
         onClick={onClose}
         className={cn(
           'absolute top-4 right-4 z-10 flex items-center justify-center',
-          'h-10 w-10 rounded-full bg-gray-900/80 text-gray-300',
-          'hover:bg-gray-800 hover:text-white transition-colors',
-          'focus:outline-none focus:ring-2 focus:ring-indigo-500'
+          'h-10 w-10 rounded-full bg-white/90 text-gray-700',
+          'hover:bg-white transition-colors',
+          'focus:outline-none focus:ring-2 focus:ring-amber-400'
         )}
         aria-label="Close image preview"
       >

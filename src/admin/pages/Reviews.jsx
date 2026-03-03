@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { productReviewsApi, useApiCall } from '../hooks/useApi';
-import { Trash2, Star, MessageSquare, Search, X } from 'lucide-react';
+import { Trash2, Star, MessageSquare, Search, X, Flag } from 'lucide-react';
 
 const StarDisplay = ({ rating, size = 'sm' }) => {
   const cls = size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4';
@@ -24,6 +24,8 @@ const Reviews = () => {
   const [reviews, setReviews] = useState([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
+  const [tab, setTab] = useState('all'); // 'all' | 'reported'
+  const [expandedReports, setExpandedReports] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const { loading, execute } = useApiCall();
 
@@ -53,15 +55,19 @@ const Reviews = () => {
     }
   };
 
-  const filtered = reviews.filter((r) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      r.name?.toLowerCase().includes(q) ||
-      r.comment?.toLowerCase().includes(q) ||
-      r.products?.name?.toLowerCase().includes(q)
-    );
-  });
+  const reportedReviews = reviews.filter(r => r.review_reports?.length > 0);
+
+  const filtered = reviews
+    .filter(r => tab === 'reported' ? r.review_reports?.length > 0 : true)
+    .filter((r) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        r.name?.toLowerCase().includes(q) ||
+        r.comment?.toLowerCase().includes(q) ||
+        r.products?.name?.toLowerCase().includes(q)
+      );
+    });
 
   // Compute average rating of displayed reviews
   const avgRating = filtered.length
@@ -83,6 +89,23 @@ const Reviews = () => {
             <span className="text-[#6b6b6b] text-sm">avg rating</span>
           </div>
         )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 bg-[#171717] border border-[#282828] rounded-xl p-1 w-fit">
+        {[{ key: 'all', label: 'All Reviews' }, { key: 'reported', label: `Reported${reportedReviews.length > 0 ? ` (${reportedReviews.length})` : ''}` }].map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`px-4 py-1.5 text-sm rounded-lg transition-colors ${
+              tab === t.key
+                ? 'bg-[#282828] text-[#f1f1f1] font-medium'
+                : 'text-[#6b6b6b] hover:text-[#c4c4c4]'
+            } ${t.key === 'reported' && reportedReviews.length > 0 && tab !== 'reported' ? 'text-red-400' : ''}`}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       {/* Search */}
@@ -181,8 +204,18 @@ const Reviews = () => {
                   )}
                 </div>
 
-                {/* Delete */}
-                <div className="flex items-center justify-end">
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-1">
+                  {review.review_reports?.length > 0 && (
+                    <button
+                      onClick={() => setExpandedReports(expandedReports === review.id ? null : review.id)}
+                      className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors"
+                      title="View reports"
+                    >
+                      <Flag className="w-3 h-3" strokeWidth={1.5} />
+                      {review.review_reports.length}
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDelete(review.id)}
                     disabled={deletingId === review.id}
@@ -196,6 +229,19 @@ const Reviews = () => {
                     )}
                   </button>
                 </div>
+
+                {/* Expanded reports */}
+                {expandedReports === review.id && review.review_reports?.length > 0 && (
+                  <div className="col-span-full mt-2 ml-9 bg-[#1a1a1a] border border-red-500/20 rounded-xl p-3 space-y-1.5">
+                    <p className="text-xs font-medium text-red-400 mb-2">Reports ({review.review_reports.length})</p>
+                    {review.review_reports.map(report => (
+                      <div key={report.id} className="flex items-center justify-between text-xs">
+                        <span className="text-[#c4c4c4]">{report.reason}</span>
+                        <span className="text-[#4a4a4a]">{formatDate(report.created_at)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>

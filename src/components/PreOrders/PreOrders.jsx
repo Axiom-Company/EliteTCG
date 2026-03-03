@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const getCurrencySymbol = (currency) => {
@@ -49,9 +50,9 @@ const PreOrders = () => {
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {preorders.map((item) => (
-              <a
+              <Link
                 key={item.id}
-                href={`/product/${item.slug || item.id}`}
+                to={`/product/${item.slug || item.id}`}
                 className="flex flex-col bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-250 hover:border-gray-300 group cursor-pointer"
               >
                 <div className="relative h-48 bg-white flex items-center justify-center overflow-hidden p-3">
@@ -76,7 +77,7 @@ const PreOrders = () => {
                     </span>
                   </div>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         )}

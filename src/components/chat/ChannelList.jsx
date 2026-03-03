@@ -24,20 +24,19 @@ function ChannelList({ channels, activeSlug, onSelectChannel }) {
       {channels.map((channel) => {
         const Icon = ICON_MAP[channel.icon] || Hash;
         const isActive = channel.slug === activeSlug;
-
         return (
           <li key={channel.slug}>
             <button
               type="button"
               onClick={() => onSelectChannel(channel.slug)}
               className={cn(
-                'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium transition-colors',
+                'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors',
                 isActive
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                  ? 'bg-amber-50 text-amber-700'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-amber-500' : 'text-gray-400')} />
               <span className="truncate">{channel.name}</span>
             </button>
           </li>

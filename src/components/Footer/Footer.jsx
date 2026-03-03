@@ -34,7 +34,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="mt-auto bg-gray-100 border-t border-gray-200">
+    <footer className="mt-auto bg-white border-t border-gray-100">
       <div className="container py-12">
         <div className="flex flex-col items-center text-center">
           {/* Logo */}
@@ -68,7 +68,7 @@ const Footer = () => {
                 <a
                   key={social.name}
                   href={social.href}
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 text-gray-600 transition-all hover:bg-gray-300 hover:text-gray-900"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 transition-all hover:bg-gray-200 hover:text-gray-900"
                   aria-label={social.name}
                 >
                   <Icon />
@@ -95,7 +95,7 @@ const Footer = () => {
           </div>
 
           {/* Divider */}
-          <div className="w-full max-w-xs h-px bg-gray-200 mb-6"></div>
+          <div className="w-full max-w-xs h-px bg-gray-100 mb-6"></div>
 
           {/* Copyright */}
           <p className="text-xs text-gray-500">
