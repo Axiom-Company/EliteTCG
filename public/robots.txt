@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /checkout
+Disallow: /payment/
+Disallow: /orders
+Disallow: /seller/
+Disallow: /portfolio
+Disallow: /subscription/manage
+Disallow: /wishlist
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://www.elitetcg.co.za/sitemap.xml

@@ -1,224 +1,204 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
-import { ELITE_API_URL, getImageUrl } from '../../config/api';
-
-const StarPicker = ({ value, hover, onChange, onHover, onLeave }) => (
-  <div className="flex items-center gap-1.5">
-    {[1, 2, 3, 4, 5].map((s) => (
-      <button
-        key={s}
-        type="button"
-        onClick={() => onChange(s)}
-        onMouseEnter={() => onHover(s)}
-        onMouseLeave={onLeave}
-        className="transition-transform active:scale-90 focus:outline-none"
-      >
-        <svg
-          width="24" height="24" viewBox="0 0 24 24"
-          fill="currentColor" stroke="none"
-          className={`transition-colors duration-100 ${s <= (hover || value) ? 'text-yellow-400' : 'text-gray-200 hover:text-yellow-200'}`}
-        >
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-        </svg>
-      </button>
-    ))}
-  </div>
-);
-
-const ratingLabels = { 1: 'Poor', 2: 'Fair', 3: 'Good', 4: 'Great', 5: 'Excellent' };
-
-const inputClass = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:border-gray-400 transition-colors";
-const labelClass = "block text-xs font-medium text-gray-500 mb-2";
+import { toast } from 'sonner';
+import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
+import SEO from '../../components/SEO/SEO';
 
 const WriteReview = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isAuthenticated, loading: authLoading } = useCustomerAuth();
 
   const [product, setProduct] = useState(null);
-  const [productLoading, setProductLoading] = useState(true);
-
-  const [rating, setRating] = useState(0);
-  const [hover, setHover] = useState(0);
-  const [title, setTitle] = useState('');
-  const [name, setName] = useState('');
-  const [comment, setComment] = useState('');
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
 
-  // Redirect unauthenticated users to login
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate('/login', {
-        replace: true,
-        state: { from: { pathname: `/product/${id}/review` } },
-      });
-    }
-  }, [authLoading, isAuthenticated, id, navigate]);
+  const [form, setForm] = useState({
+    name: '', email: '', rating: 0, title: '', comment: '',
+  });
+  const [hovered, setHovered] = useState(0);
 
-  // Pre-fill public name from user profile
   useEffect(() => {
-    if (user) {
-      const displayName = user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim();
-      setName(displayName);
-    }
-  }, [user]);
-
-  // Load product info (image + name)
-  useEffect(() => {
-    const load = async () => {
+    const fetchProduct = async () => {
       try {
         const res = await fetch(`${ELITE_API_URL}/api/products/${id}`);
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error('Product not found');
         const data = await res.json();
         setProduct(data.product);
       } catch {
-        // non-critical
+        toast.error('Could not load product');
+        navigate(`/product/${id}`);
       } finally {
-        setProductLoading(false);
+        setLoading(false);
       }
     };
-    load();
-  }, [id]);
+    fetchProduct();
+  }, [id, navigate]);
+
+  const set = (name, value) => setForm(p => ({ ...p, [name]: value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!rating) { setError('Please select a star rating.'); return; }
-    if (!name.trim()) { setError('Please enter your public name.'); return; }
+    if (form.rating === 0) { toast.error('Please select a star rating'); return; }
+    if (!form.name.trim()) { toast.error('Name is required'); return; }
 
     setSubmitting(true);
-    setError('');
     try {
       const res = await fetch(`${ELITE_API_URL}/api/product-reviews/product/${product.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), title: title.trim(), rating, comment: comment.trim() }),
+        body: JSON.stringify({
+          name: form.name.trim(),
+          email: form.email.trim() || undefined,
+          rating: form.rating,
+          title: form.title.trim() || undefined,
+          comment: form.comment.trim() || undefined,
+        }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to submit');
-      setSuccess(true);
+      if (!res.ok) throw new Error(data.error || 'Failed to submit review');
+      toast.success('Review submitted!');
+      navigate(`/product/${id}`);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (authLoading) return null;
-  if (!isAuthenticated) return null;
-
-  if (success) {
+  if (loading) {
     return (
-      <div className="flex-1 bg-white flex flex-col items-center justify-start pt-32 px-6 text-center">
-        <h2 className="text-lg font-medium text-gray-900 mb-1">Review submitted!</h2>
-        <p className="text-sm text-gray-400 mb-8">Thanks for sharing your experience.</p>
-        <Link
-          to={`/product/${id}`}
-          className="text-sm font-medium text-gray-900 underline underline-offset-4"
-        >
-          Back to product
-        </Link>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex-1 bg-white flex flex-col items-center justify-start pt-16 px-6 pb-20">
-      <div className="w-full max-w-[360px]">
+    <div className="min-h-screen bg-white">
+      <SEO title={`Review — ${product?.name}`} noindex />
+      <div className="max-w-xl mx-auto px-4 py-12">
 
-        {/* Product image + name */}
-        <div className="flex flex-col items-center mb-8">
-          {productLoading ? (
-            <div className="w-20 h-20 bg-gray-100 rounded-2xl animate-pulse mb-3" />
-          ) : product?.images?.[0] ? (
+        {/* Back */}
+        <Link
+          to={`/product/${id}`}
+          className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-900 transition-colors mb-8"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+          Back to product
+        </Link>
+
+        {/* Product preview */}
+        {product && (
+          <div className="flex items-center gap-4 mb-8">
             <img
-              src={getImageUrl(product.images[0])}
-              alt={product?.name}
-              className="w-20 h-20 object-contain mb-3"
+              src={product.images?.[0] ? getImageUrl(product.images[0]) : PLACEHOLDER_IMAGE}
+              alt={product.name}
+              className="w-14 h-14 object-contain rounded-lg bg-gray-50 shrink-0"
             />
-          ) : (
-            <div className="w-20 h-20 bg-gray-50 rounded-2xl mb-3" />
-          )}
-          {product?.name && (
-            <p className="text-xs text-gray-400 text-center max-w-[220px] line-clamp-2 leading-relaxed">{product.name}</p>
-          )}
-        </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900 leading-snug">{product.name}</p>
+            </div>
+          </div>
+        )}
 
-        {/* Heading */}
-        <h1 className="text-2xl font-medium text-gray-900 text-center mb-2">Write a review</h1>
-        <p className="text-sm text-gray-400 text-center mb-8">Share your experience with this product</p>
+        <h1 className="text-2xl font-medium text-gray-900 mb-8">Write a review</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Star picker */}
-          <div className="flex flex-col items-center gap-2 py-2">
-            <StarPicker
-              value={rating}
-              hover={hover}
-              onChange={setRating}
-              onHover={setHover}
-              onLeave={() => setHover(0)}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+
+          {/* Star rating */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">Rating <span className="text-red-400">*</span></label>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => set('rating', s)}
+                  onMouseEnter={() => setHovered(s)}
+                  onMouseLeave={() => setHovered(0)}
+                  className="p-0.5 transition-transform hover:scale-110"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none"
+                    className={s <= (hovered || form.rating) ? 'text-yellow-400' : 'text-gray-200'}
+                  >
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                </button>
+              ))}
+              {form.rating > 0 && (
+                <span className="ml-2 text-sm text-gray-400">
+                  {['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][form.rating]}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Name */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">Name <span className="text-red-400">*</span></label>
+            <input
+              type="text"
+              value={form.name}
+              onChange={e => set('name', e.target.value)}
+              required
+              placeholder="Your name"
+              className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 transition-colors"
             />
-            <p className="text-xs text-gray-400 h-4">
-              {hover || rating ? ratingLabels[hover || rating] : 'Select a rating'}
-            </p>
+          </div>
+
+          {/* Email */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Email <span className="font-normal text-gray-400">(optional)</span>
+            </label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={e => set('email', e.target.value)}
+              placeholder="you@example.com"
+              className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 transition-colors"
+            />
           </div>
 
           {/* Title */}
-          <div>
-            <label className={labelClass}>Review title</label>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Review title <span className="font-normal text-gray-400">(optional)</span>
+            </label>
             <input
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Summarise your experience"
-              maxLength={120}
-              className={inputClass}
-            />
-          </div>
-
-          {/* Public name */}
-          <div>
-            <label className={labelClass}>Your public name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Displayed on your review"
-              maxLength={80}
-              className={inputClass}
+              value={form.title}
+              onChange={e => set('title', e.target.value)}
+              placeholder="Sum it up in one line"
+              className="h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 transition-colors"
             />
           </div>
 
           {/* Comment */}
-          <div>
-            <label className={labelClass}>Review <span className="font-normal text-gray-300">(optional)</span></label>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Review <span className="font-normal text-gray-400">(optional)</span>
+            </label>
             <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Tell others about your experience"
-              rows={4}
+              value={form.comment}
+              onChange={e => set('comment', e.target.value)}
+              rows={5}
               maxLength={2000}
-              className={`${inputClass} resize-none`}
+              placeholder="Share your experience with this product..."
+              className="w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 transition-colors resize-none"
             />
+            <p className="text-xs text-gray-400 text-right">{form.comment.length}/2000</p>
           </div>
-
-          {error && <p className="text-xs text-red-500 text-center">{error}</p>}
 
           <button
             type="submit"
-            disabled={submitting || !rating || !name.trim()}
-            className="w-full py-3 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed mt-2"
+            disabled={submitting}
+            className="h-10 w-full rounded-md bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
           >
-            {submitting ? 'Submitting…' : 'Submit Review'}
+            {submitting ? 'Submitting...' : 'Submit Review'}
           </button>
-
-          <p className="text-center pt-1">
-            <Link to={`/product/${id}`} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-              Cancel
-            </Link>
-          </p>
         </form>
       </div>
     </div>

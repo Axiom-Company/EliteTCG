@@ -5,3 +5,5 @@ export { default as Sets } from './Sets';
 export { default as Categories } from './Categories';
 export { default as Orders } from './Orders';
 export { default as Reviews } from './Reviews';
+export { default as EmailManagement } from './EmailManagement';
+export { default as WebhookSettings } from './WebhookSettings';

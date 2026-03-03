@@ -1,72 +1,37 @@
 import { Link } from 'react-router-dom';
 
 const MarketplaceCTA = () => {
-  // Match Hero section dots
-  const renderDots = (rows, cols) => {
-    const dots = [];
-    for (let i = 0; i < rows * cols; i++) {
-      dots.push(<div key={i} className="w-1 h-1 bg-white rounded-full"></div>);
-    }
-    return dots;
-  };
-
   return (
-    <section className="relative bg-[#FFCB32] py-24 lg:py-32 overflow-hidden">
-      {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-between gap-10">
-        <div className="text-center lg:text-left">
-          <h2 className="text-3xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Buy & Sell Pokemon Cards
+    <section className="bg-gray-100 py-14 md:py-16">
+      <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+
+        {/* Heading */}
+        <div>
+          <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase mb-2">Marketplace</p>
+          <h2 className="text-2xl md:text-3xl font-medium text-gray-900 leading-snug mb-2">
+            Buy &amp; sell Pokémon cards
           </h2>
-          <p className="text-gray-800 text-lg max-w-xl">
-            Join our marketplace to buy rare cards from verified sellers or become a seller yourself and reach collectors across South Africa.
+          <p className="text-sm text-gray-500 leading-relaxed max-w-sm">
+            Discover rare singles from verified sellers, or list your own collection and reach collectors across South Africa.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
+        {/* Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 shrink-0">
           <Link
             to="/marketplace"
-            className="px-8 py-3 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors text-center"
+            className="inline-flex items-center justify-center px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
           >
             Browse Marketplace
           </Link>
           <Link
             to="/become-seller"
-            className="px-8 py-3 bg-white text-gray-900 font-medium rounded-full hover:bg-gray-100 transition-colors text-center"
+            className="inline-flex items-center justify-center px-6 py-2.5 border border-gray-200 text-gray-700 text-sm font-medium rounded-full hover:border-gray-400 hover:text-gray-900 transition-colors"
           >
             Start Selling
           </Link>
         </div>
-      </div>
 
-      {/* Decorative dots - bottom left */}
-      <div
-        className="absolute bottom-0 left-0 grid opacity-50"
-        style={{
-          gridTemplateColumns: 'repeat(11, minmax(0, 1fr))',
-          gridTemplateRows: 'repeat(6, minmax(0, 1fr))',
-          gap: '8px',
-          width: '124px',
-          height: '64px',
-          transform: 'translateX(20px) translateY(-20px)',
-        }}
-      >
-        {renderDots(6, 11)}
-      </div>
-
-      {/* Decorative dots - top right */}
-      <div
-        className="absolute top-0 right-0 grid opacity-50"
-        style={{
-          gridTemplateColumns: 'repeat(11, minmax(0, 1fr))',
-          gridTemplateRows: 'repeat(6, minmax(0, 1fr))',
-          gap: '8px',
-          width: '124px',
-          height: '64px',
-          transform: 'translateX(-20px) translateY(20px)',
-        }}
-      >
-        {renderDots(6, 11)}
       </div>
     </section>
   );

@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../../components/HeroBanner/HeroBanner.css';
-import card1 from '../../assets/images/SingleCards/card1.png';
-import card2 from '../../assets/images/SingleCards/card2.png';
-import card3 from '../../assets/images/SingleCards/card3.png';
-import card4 from '../../assets/images/SingleCards/card4.png';
-import card5 from '../../assets/images/SingleCards/card5.png';
-import card6 from '../../assets/images/SingleCards/card6.png';
-import card7  from '../../assets/images/SingleCards/card7.png';
-import card8  from '../../assets/images/SingleCards/card8.png';
-import card9  from '../../assets/images/SingleCards/card9.png';
-import card10 from '../../assets/images/SingleCards/card10.png';
-import card11 from '../../assets/images/SingleCards/card11.png';
-import card12 from '../../assets/images/SingleCards/card12.png';
+import card1 from '../../assets/images/SingleCards/card1.webp';
+import card2 from '../../assets/images/SingleCards/card2.webp';
+import card3 from '../../assets/images/SingleCards/card3.webp';
+import card4 from '../../assets/images/SingleCards/card4.webp';
+import card5 from '../../assets/images/SingleCards/card5.webp';
+import card6 from '../../assets/images/SingleCards/card6.webp';
+import card7  from '../../assets/images/SingleCards/card7.webp';
+import card8  from '../../assets/images/SingleCards/card8.webp';
+import card9  from '../../assets/images/SingleCards/card9.webp';
+import card10 from '../../assets/images/SingleCards/card10.webp';
+import card11 from '../../assets/images/SingleCards/card11.webp';
+import card12 from '../../assets/images/SingleCards/card12.webp';
 
 //test
 const CARD_DATA = [
@@ -45,7 +45,6 @@ function computeArc(slot, total, spreadVw) {
 const Hero = () => {
   // Phase: 'emerging' -> 'interactive'  (no pack phases)
   const [phase, setPhase] = useState('emerging');
-  const [scrollY, setScrollY] = useState(0);
   const [selectedCard, setSelectedCard] = useState(null);
   const [cardVisible, setCardVisible] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -85,13 +84,6 @@ const Hero = () => {
       const img = new Image();
       img.src = c.src;
     });
-  }, []);
-
-  /* ── Scroll tracking ──────────────────────────────────────────────── */
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   /* ── Emerge -> Interactive transition on page load ─────────────────── */
@@ -148,8 +140,8 @@ const Hero = () => {
     const cy = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
 
     // Layer 1: 3D tilt on card inner
-    const rotY = (cx - 0.5) * 14;
-    const rotX = (cy - 0.5) * -10;
+    const rotY = (cx - 0.5) * 15.4;
+    const rotX = (cy - 0.5) * -11;
     const inner = innerRefs.current[slotIdx];
     if (inner) {
       inner.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg)`;
@@ -253,10 +245,6 @@ const Hero = () => {
     };
   }, []);
 
-  /* ── Scroll-derived values ────────────────────────────────────────── */
-  const textOffset = scrollY * 0.25;
-  const cardOffset = scrollY * 0.15;
-
   const isEmerging = phase === 'emerging';
   const isInteractive = phase === 'interactive';
   const visibleCards = CARD_DATA.slice(Math.floor((TOTAL_CARDS - 7) / 2), Math.floor((TOTAL_CARDS - 7) / 2) + 7);
@@ -264,18 +252,72 @@ const Hero = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative bg-white flex flex-col items-center min-h-[85vh]"
-      style={{ overflowX: 'clip' }}
+      className="relative flex flex-col items-center min-h-[85vh] overflow-hidden"
     >
+      {/* ── Background watermark text ─────────────────────────── */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0 overflow-hidden"
+        style={{
+          maskImage: 'linear-gradient(to top, transparent 0%, transparent 35%, black 75%)',
+          WebkitMaskImage: 'linear-gradient(to top, transparent 0%, transparent 35%, black 75%)',
+        }}
+      >
+        <div
+          className="absolute left-0 right-0 top-[calc(41%-31px)] md:top-[calc(45%-31px)] flex justify-center -translate-y-1/2"
+          style={{ perspective: '800px' }}
+        >
+          <div
+            className="flex items-end whitespace-nowrap select-none leading-none"
+            style={{
+              transformOrigin: 'center bottom',
+              transform: 'rotateX(25deg)',
+              gap: '48px',
+            }}
+          >
+            <span
+              className="text-[7rem] md:text-[11rem]"
+              style={{
+                letterSpacing: '0.05em',
+                transform: 'translateY(7px)',
+                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            ></span>
+            <span
+              className="text-[7rem] md:text-[11rem]"
+              style={{
+                letterSpacing: '0.05em',
+                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            ></span>
+            <span
+              className="text-[7rem] md:text-[11rem]"
+              style={{
+                letterSpacing: '0.05em',
+                transform: 'translateY(7px)',
+                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            ></span>
+          </div>
+        </div>
+      </div>
       {/* ── Text + Button ──────────────────────────────────────────── */}
       <div
         className="relative z-10 flex flex-col items-center text-center px-6 mt-[80px] md:mt-[8vh]"
-        style={{ transform: `translateY(${-textOffset}px)` }}
+        style={{ transform: 'translateY(-9px)' }}
       >
-        <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase mb-5">
+        <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mb-5">
           {`Pok\u00e9mon TCG Store`}
         </p>
-        <h1 className="text-2xl md:text-5xl font-normal text-gray-900 leading-tight max-w-xl">
+        <h1 className="text-2xl md:text-5xl font-normal text-gray-800 leading-tight max-w-xl">
           {`The Home of Pok\u00e9mon`}<br />Packs, Boxes & Rare Pulls.
         </h1>
       </div>
@@ -283,7 +325,7 @@ const Hero = () => {
       {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
         className="relative w-full mt-9 z-10 flex justify-center"
-        style={{ height: '320px', transform: `translateY(${-25 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}
+        style={{ height: '320px', transform: `translateY(${-46 - (isMobileRef.current ? 50 : 0)}px)` }}
       >
         <div
           className="hero-banner__cards"
@@ -343,7 +385,7 @@ const Hero = () => {
       </div>
 
       {/* ── Shop Now Button ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-30 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}>
+      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-41 - (isMobileRef.current ? 50 : 0)}px)` }}>
         <a
           href="#products"
           className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"
