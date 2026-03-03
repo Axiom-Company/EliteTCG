@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useWishlist } from '../../contexts/WishlistContext';
+import { useCustomerAuth } from '../../contexts/AuthContext';
 import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 import SEO from '../SEO/SEO';
 import { buildProductJsonLd } from '../../config/seo';
@@ -40,6 +41,9 @@ const ProductPage = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsOffset, setReviewsOffset] = useState(0);
+  const [reviewsHasMore, setReviewsHasMore] = useState(false);
+  const [reviewsLoadingMore, setReviewsLoadingMore] = useState(false);
   const [magnifier, setMagnifier] = useState({ show: false, x: 0, y: 0, w: 1, h: 1 });
   const [openAccordions, setOpenAccordions] = useState(new Set(['box', 'dims']));
   const [reviewFilter, setReviewFilter] = useState(null);
@@ -132,15 +136,17 @@ const ProductPage = () => {
     fetchRelated();
   }, [product]);
 
-  // Fetch reviews
+  // Fetch reviews (first page)
   useEffect(() => {
     if (!product) return;
     const fetchReviews = async () => {
       setReviewsLoading(true);
       try {
-        const res = await fetch(`${ELITE_API_URL}/api/product-reviews/product/${product.id}`);
+        const res = await fetch(`${ELITE_API_URL}/api/product-reviews/product/${product.id}?limit=3&offset=0`);
         const data = await res.json();
         setReviews(data.reviews || []);
+        setReviewsHasMore(data.hasMore || false);
+        setReviewsOffset(3);
       } catch {
         // non-critical
       } finally {
@@ -149,6 +155,21 @@ const ProductPage = () => {
     };
     fetchReviews();
   }, [product]);
+
+  const loadMoreReviews = async () => {
+    setReviewsLoadingMore(true);
+    try {
+      const res = await fetch(`${ELITE_API_URL}/api/product-reviews/product/${product.id}?limit=3&offset=${reviewsOffset}`);
+      const data = await res.json();
+      setReviews(prev => [...prev, ...(data.reviews || [])]);
+      setReviewsHasMore(data.hasMore || false);
+      setReviewsOffset(prev => prev + 3);
+    } catch {
+      // non-critical
+    } finally {
+      setReviewsLoadingMore(false);
+    }
+  };
 
   const formatPrice = (price) => `R${Number(price).toLocaleString()}`;
 
@@ -336,106 +357,112 @@ const ProductPage = () => {
           </div>
 
           {/* Details Section */}
-          <div className="flex flex-col">
-            {product.category && (
-              <span className="text-xs text-gray-400 uppercase tracking-wider mb-2">
-                {product.category.replace('_', ' ')}
-              </span>
-            )}
+          <div className="flex flex-col gap-6">
+            {/* Title group */}
+            <div>
+              {product.category && (
+                <span className="text-xs text-gray-400 uppercase tracking-wider">
+                  {product.category.replace('_', ' ')}
+                </span>
+              )}
+              <h1 className="text-xl md:text-3xl font-medium text-gray-900 mt-2 leading-snug">{product.name}</h1>
+              {(() => {
+                const count = product.review_count ?? 0;
+                const rating = count > 0 ? Math.round(product.rating || 0) : 0;
+                return (
+                  <div className="flex items-center gap-2 mt-3">
+                    <div className="flex items-center gap-0.5">
+                      {[1,2,3,4,5].map((s) => (
+                        <svg key={s} width="16" height="16" viewBox="0 0 24 24"
+                          fill="currentColor" stroke="none"
+                          className={s <= rating ? 'text-yellow-400' : 'text-gray-200'}
+                        >
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-400">
+                      {count > 0 ? `${(product.rating || 0).toFixed(1)} (${count} review${count !== 1 ? 's' : ''})` : '(0)'}
+                    </span>
 
-            <h1 className="text-xl md:text-3xl font-medium text-gray-900 mb-3 md:mb-4 leading-snug">{product.name}</h1>
-
-            {(() => {
-              const count = product.review_count ?? 0;
-              const rating = count > 0 ? Math.round(product.rating || 0) : 0;
-              return (
-                <div className="flex items-center gap-2 mb-3 md:mb-4">
-                  <div className="flex items-center gap-0.5">
-                    {[1,2,3,4,5].map((s) => (
-                      <svg key={s} width="16" height="16" viewBox="0 0 24 24"
-                        fill="currentColor" stroke="none"
-                        className={s <= rating ? 'text-yellow-400' : 'text-gray-200'}
-                      >
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                      </svg>
-                    ))}
                   </div>
-                  <span className="text-sm text-gray-400">
-                    {count > 0 ? `${(product.rating || 0).toFixed(1)} (${count} review${count !== 1 ? 's' : ''})` : '(0)'}
-                  </span>
-                </div>
-              );
-            })()}
-
-            <div className="flex items-baseline gap-3 mb-5 md:mb-6">
-              <span className="text-2xl md:text-3xl font-medium text-gray-900">{formatPrice(product.price)}</span>
-              {product.compare_at_price && (
-                <span className="text-base md:text-xl text-gray-400 line-through">{formatPrice(product.compare_at_price)}</span>
-              )}
+                );
+              })()}
             </div>
 
-            <PayflexPriceSplitter price={product.price} />
-
-            <div className="flex items-center gap-4 mb-6">
-              <span className="text-sm font-medium text-gray-900">Quantity</span>
-              <div className="flex items-center border border-gray-200 rounded-lg">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
-                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  −
-                </button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  disabled={quantity >= (product?.inventory?.quantity || 99)}
-                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  +
-                </button>
+            {/* Price block */}
+            <div className="border-t border-gray-100 pt-6">
+              <div className="flex items-baseline gap-3">
+                <span className="text-2xl md:text-3xl font-medium text-gray-900">{formatPrice(product.price)}</span>
+                {product.compare_at_price && (
+                  <span className="text-base md:text-xl text-gray-400 line-through">{formatPrice(product.compare_at_price)}</span>
+                )}
               </div>
+              <PayflexPriceSplitter price={product.price} />
               {stockStatus.text && (
-                <span className={`text-sm font-medium ${stockStatus.color}`}>{stockStatus.text}</span>
+                <span className={`text-sm font-medium mt-1 block ${stockStatus.color}`}>{stockStatus.text}</span>
               )}
             </div>
 
-            <div className="flex gap-3 mb-6 md:mb-8">
+            {/* Quantity + CTA */}
+            <div className="border-t border-gray-100 pt-6 flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-900">Quantity</span>
+                <div className="flex items-center border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={quantity <= 1}
+                    className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    −
+                  </button>
+                  <span className="w-12 text-center font-medium">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    disabled={quantity >= (product?.inventory?.quantity || 99)}
+                    className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
               <button
                 onClick={handleAddToCart}
                 disabled={stockStatus.text === 'Out of Stock'}
-                className="flex-1 md:flex-none py-3 px-8 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full py-3 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
               >
                 Add to Cart
               </button>
               <button
                 onClick={() => product && toggleWishlist(product.id)}
-                className={`w-12 h-12 flex items-center justify-center transition-colors cursor-pointer ${
-                  product && isWishlisted(product.id) ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
+                className={`w-full py-3 border text-sm font-medium rounded-full transition-colors cursor-pointer ${
+                  product && isWishlisted(product.id)
+                    ? 'border-gray-900 text-gray-900 hover:bg-gray-50'
+                    : 'border-gray-300 text-gray-700 hover:border-gray-900 hover:text-gray-900'
                 }`}
-                aria-label={product && isWishlisted(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
               >
-                <HeartIcon filled={product && isWishlisted(product.id)} />
+                {product && isWishlisted(product.id) ? 'Wishlisted' : 'Add to Wishlist'}
               </button>
             </div>
 
-            <div className="border-t border-gray-100 pt-6 space-y-3">
+            {/* Meta */}
+            <div className="border-t border-gray-100 pt-6 space-y-2.5">
               {product.sku && (
                 <div className="flex items-center text-sm">
-                  <span className="text-gray-500 w-24">SKU:</span>
-                  <span className="text-gray-900">{product.sku}</span>
+                  <span className="text-gray-400 w-24">SKU</span>
+                  <span className="text-gray-700">{product.sku}</span>
                 </div>
               )}
               {product.category && (
                 <div className="flex items-center text-sm">
-                  <span className="text-gray-500 w-24">Category:</span>
-                  <span className="text-gray-900 capitalize">{product.category.replace('_', ' ')}</span>
+                  <span className="text-gray-400 w-24">Category</span>
+                  <span className="text-gray-700 capitalize">{product.category.replace('_', ' ')}</span>
                 </div>
               )}
               {product.sets && (
                 <div className="flex items-center text-sm">
-                  <span className="text-gray-500 w-24">Set:</span>
-                  <span className="text-gray-900">{product.sets.name}</span>
+                  <span className="text-gray-400 w-24">Set</span>
+                  <span className="text-gray-700">{product.sets.name}</span>
                 </div>
               )}
             </div>
@@ -521,7 +548,8 @@ const ProductPage = () => {
         {(() => {
           const avg = reviews.length
             ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
-            : 0;
+            : (product.rating || 0);
+          const totalCount = reviews.length || product.review_count || 0;
           const [filterRating, setFilterRating] = [reviewFilter, setReviewFilter];
           const filteredReviews = filterRating ? reviews.filter(r => r.rating === filterRating) : reviews;
 
@@ -553,8 +581,8 @@ const ProductPage = () => {
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-xl font-medium text-gray-900">
                   Customer Reviews
-                  {reviews.length > 0 && (
-                    <span className="text-gray-400 font-normal ml-2 text-base">({reviews.length})</span>
+                  {totalCount > 0 && (
+                    <span className="text-gray-400 font-normal ml-2 text-base">({totalCount})</span>
                   )}
                 </h2>
                 <button
@@ -566,13 +594,13 @@ const ProductPage = () => {
               </div>
 
               {/* Two-column layout when reviews exist */}
-              {reviews.length > 0 ? (
+              {totalCount > 0 ? (
                 <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 items-start">
                   {/* Left — summary */}
                   <div className="shrink-0 w-full sm:w-40 flex flex-col items-center gap-2">
                     <span className="text-6xl font-medium text-gray-900 tracking-tight">{avg.toFixed(1)}</span>
                     <StarRow rating={avg} size={20} />
-                    <span className="text-sm text-gray-400">{reviews.length} review{reviews.length !== 1 ? 's' : ''}</span>
+                    <span className="text-sm text-gray-400">{totalCount} review{totalCount !== 1 ? 's' : ''}</span>
                     <div className="relative">
                       <button
                         onClick={() => setShowFilterMenu(p => !p)}
@@ -618,13 +646,13 @@ const ProductPage = () => {
                           <p className="text-sm text-gray-400">No {filterRating}-star reviews yet.</p>
                         )}
                         {filteredReviews.map((review) => (
-                          <div key={review.id} className="py-5 border-b border-gray-100 last:border-0">
+                          <div key={review.id} className="py-5 border-b border-gray-100 last:border-0 last:mb-0">
                             {/* Content */}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-4 mb-1.5">
-                                <div>
+                                <div className="flex items-center gap-3">
                                   <p className="text-base font-medium text-gray-900 leading-none">{review.name}</p>
-                                  <p className="text-xs text-gray-400 mt-0.5">
+                                  <p className="text-xs text-gray-400">
                                     {new Date(review.created_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
                                   </p>
                                 </div>
@@ -640,6 +668,17 @@ const ProductPage = () => {
                             </div>
                           </div>
                         ))}
+                        {!filterRating && reviewsHasMore && (
+                          <div className="flex justify-center mt-4">
+                            <button
+                              onClick={loadMoreReviews}
+                              disabled={reviewsLoadingMore}
+                              className="px-6 py-2.5 border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              {reviewsLoadingMore ? 'Loading...' : 'Load more reviews'}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

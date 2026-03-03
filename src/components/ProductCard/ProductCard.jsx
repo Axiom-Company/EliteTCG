@@ -1,18 +1,10 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useWishlist } from '../../contexts/WishlistContext';
 import { getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
-const getBadgeStyle = (badge) => {
-  switch (badge?.toLowerCase()) {
-    case 'hot':      return 'bg-[#E3350D] text-white';
-    case 'sale':     return 'bg-[#E3350D] text-white';
-    case 'new':      return 'bg-[#FFCB32] text-gray-900';
-    case 'limited':  return 'bg-gray-900 text-white';
-    case 'preorder': return 'bg-blue-600 text-white';
-    default:         return 'bg-gray-900 text-white';
-  }
-};
+const getBadgeStyle = () => 'bg-gray-900 text-white';
 
 const formatPrice = (product) => {
   const symbol = product.currency === 'USD' ? '$' : product.currency === 'EUR' ? '€' : product.currency === 'GBP' ? '£' : 'R';
@@ -34,6 +26,16 @@ const getDiscountPct = (product) => {
 // showWishlist — show the heart toggle (wishlist page)
 const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
   const { toggleWishlist, isWishlisted } = useWishlist();
+  const [showSecond, setShowSecond] = useState(false);
+
+  const hasMultiple = (product.images?.length ?? 0) > 1;
+
+  useEffect(() => {
+    if (!hasMultiple) return;
+    if (!window.matchMedia('(hover: none)').matches) return;
+    const id = setInterval(() => setShowSecond(p => !p), 5000);
+    return () => clearInterval(id);
+  }, [hasMultiple]);
 
   const comparePrice = formatComparePrice(product);
   const discountPct = getDiscountPct(product);
@@ -56,14 +58,14 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
               src={getImageUrl(product.images[0])}
               alt={product.name}
               style={{ width: imageSize, height: imageSize }}
-              className={`object-contain transition-opacity duration-300 ${product.images.length > 1 ? 'group-hover:opacity-0' : ''}`}
+              className={`object-contain transition-opacity duration-300 ${hasMultiple ? (showSecond ? 'opacity-0' : 'group-hover:opacity-0') : ''}`}
             />
-            {product.images.length > 1 && (
+            {hasMultiple && (
               <img
                 src={getImageUrl(product.images[1])}
                 alt={product.name}
                 style={{ width: imageSize, height: imageSize }}
-                className="object-contain absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                className={`object-contain absolute transition-opacity duration-300 ${showSecond ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
               />
             )}
           </>
@@ -82,7 +84,7 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
             -{discountPct}%
           </span>
         ) : product.badge && product.badge !== 'none' && (
-          <span className={`absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full capitalize tracking-wide ${getBadgeStyle(product.badge)}`}>
+          <span className={`absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full capitalize tracking-wide ${getBadgeStyle()}`}>
             {product.badge}
           </span>
         ))}
