@@ -275,11 +275,11 @@ const Hero = () => {
             }}
           >
             <span
-              className="text-[7rem] md:text-[11rem]"
+              className="hidden md:block text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
                 transform: 'translateY(7px)',
-                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
+                background: 'linear-gradient(to top, #f4f4f4 0%, #ebebeb 30%, #e6e6e6 60%, #e2e2e2 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -289,19 +289,19 @@ const Hero = () => {
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
-                transform: 'translateY(-1px)',
-                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
+                transform: 'translateY(-3px)',
+                background: 'linear-gradient(to top, #f4f4f4 0%, #ebebeb 30%, #e6e6e6 60%, #e2e2e2 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
             ></span>
             <span
-              className="text-[7rem] md:text-[11rem]"
+              className="hidden md:block text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
                 transform: 'translateY(7px)',
-                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
+                background: 'linear-gradient(to top, #f4f4f4 0%, #ebebeb 30%, #e6e6e6 60%, #e2e2e2 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -313,7 +313,7 @@ const Hero = () => {
       {/* ── Text + Button ──────────────────────────────────────────── */}
       <div
         className="relative z-10 flex flex-col items-center text-center px-6 mt-[80px] md:mt-[8vh]"
-        style={{ transform: 'translateY(-10px)' }}
+        style={{ transform: 'translateY(-11px)' }}
       >
         <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mb-5">
           {`Pok\u00e9mon TCG Store`}
@@ -326,7 +326,7 @@ const Hero = () => {
       {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
         className="relative w-full mt-9 z-10 flex justify-center"
-        style={{ height: '320px', transform: `translateY(${-42 - (isMobileRef.current ? 50 : 0)}px)` }}
+        style={{ height: '320px', transform: `translateY(${-39 - (isMobileRef.current ? 50 : 0)}px)` }}
       >
         <div
           className="hero-banner__cards"
@@ -386,7 +386,7 @@ const Hero = () => {
       </div>
 
       {/* ── Shop Now Button ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-41 - (isMobileRef.current ? 50 : 0)}px)` }}>
+      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-38 - (isMobileRef.current ? 50 : 0)}px)` }}>
         <a
           href="#products"
           className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"

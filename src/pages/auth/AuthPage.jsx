@@ -193,6 +193,21 @@ const ShowcaseCard = ({ src, alt, animationName, duration, delay }) => {
 };
 
 /* ------------------------------------------------------------------ */
+/*  Eye icons for password toggle                                       */
+/* ------------------------------------------------------------------ */
+const EyeIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  </svg>
+);
+const EyeOffIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 4.411m0 0L21 21" />
+  </svg>
+);
+
+/* ------------------------------------------------------------------ */
 /*  Google SVG Icon (reused in both forms)                              */
 /* ------------------------------------------------------------------ */
 const GoogleIcon = () => (
@@ -232,6 +247,7 @@ const LoginForm = ({ onFlipToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { signIn, signInWithGoogle } = useCustomerAuth();
   const navigate = useNavigate();
@@ -253,10 +269,10 @@ const LoginForm = ({ onFlipToRegister }) => {
 
   return (
     <div className="w-full max-w-[420px]">
-      <h1 className="text-[32px] font-semibold text-gray-900 mb-2 tracking-tight">
+      <h1 className="text-[32px] font-semibold text-gray-900 mb-2 tracking-tight text-center">
         Welcome back
       </h1>
-      <p className="text-[15px] text-gray-400 mb-10">
+      <p className="text-[15px] text-gray-400 mb-10 text-center">
         Sign in to your EliteTCG account
       </p>
 
@@ -299,27 +315,37 @@ const LoginForm = ({ onFlipToRegister }) => {
               Forgot password?
             </Link>
           </div>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            placeholder="Enter your password"
-            className={inputClass}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              className={`${inputClass} pr-10`}
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={() => setShowPassword(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          </div>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 bg-gray-900 text-white text-[15px] font-medium rounded-full hover:bg-gray-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed mt-2"
+          className="w-full py-3.5 bg-gray-900 text-white text-[15px] font-medium rounded-full hover:bg-gray-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed mt-[11px]"
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
 
-      <p className="mt-12 text-center text-[14px] text-gray-400">
+      <p className="text-center text-[14px] text-gray-400" style={{ marginTop: '51px' }}>
         Don&apos;t have an account?{' '}
         <button
           type="button"
@@ -344,6 +370,8 @@ const RegisterForm = ({ onFlipToLogin }) => {
     phone: '', accepts_marketing: false,
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { signUp, signInWithGoogle } = useCustomerAuth();
   const navigate = useNavigate();
@@ -442,7 +470,7 @@ const RegisterForm = ({ onFlipToLogin }) => {
               value={formData.email} onChange={handleChange} required
               autoComplete="email" placeholder="you@example.com" />
             <button type="submit"
-              className="w-full py-3.5 bg-gray-900 text-white text-[15px] font-medium rounded-full hover:bg-gray-800 active:scale-[0.98] transition-all duration-200 mt-2">
+              className="w-full py-3.5 bg-gray-900 text-white text-[15px] font-medium rounded-full hover:bg-gray-800 active:scale-[0.98] transition-all duration-200 mt-[11px]">
               Continue
             </button>
           </form>
@@ -452,13 +480,33 @@ const RegisterForm = ({ onFlipToLogin }) => {
       {/* Step 1 - Password */}
       {step === 1 && (
         <form onSubmit={nextStep} className="space-y-5">
-          <Field label="Password" name="password" type="password"
-            value={formData.password} onChange={handleChange} required
-            autoComplete="new-password" placeholder="At least 8 characters" />
-          <Field label="Confirm password" name="confirmPassword" type="password"
-            value={formData.confirmPassword} onChange={handleChange} required
-            autoComplete="new-password" placeholder="Re-enter your password" />
-          <div className="flex gap-3 pt-3">
+          <div>
+            <label className={labelClass}>Password</label>
+            <div className="relative">
+              <input name="password" type={showPassword ? 'text' : 'password'}
+                value={formData.password} onChange={handleChange} required
+                autoComplete="new-password" placeholder="At least 8 characters"
+                className={`${inputClass} pr-10`} />
+              <button type="button" tabIndex={-1} onClick={() => setShowPassword(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className={labelClass}>Confirm password</label>
+            <div className="relative">
+              <input name="confirmPassword" type={showConfirm ? 'text' : 'password'}
+                value={formData.confirmPassword} onChange={handleChange} required
+                autoComplete="new-password" placeholder="Re-enter your password"
+                className={`${inputClass} pr-10`} />
+              <button type="button" tabIndex={-1} onClick={() => setShowConfirm(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
+                {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
+          </div>
+          <div className="flex gap-3 pt-[15px]">
             <button type="button" onClick={() => setStep(0)}
               className="flex-1 py-3.5 border border-gray-200 text-gray-700 text-[15px] font-medium rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all duration-200">
               Back
@@ -504,7 +552,7 @@ const RegisterForm = ({ onFlipToLogin }) => {
             <Link to="/privacy-policy" className="text-gray-600 underline underline-offset-2">Privacy Policy</Link>.
           </p>
 
-          <div className="flex gap-3 pt-1">
+          <div className="flex gap-3 pt-[7px]">
             <button type="button" onClick={() => setStep(1)}
               className="flex-1 py-3.5 border border-gray-200 text-gray-700 text-[15px] font-medium rounded-full hover:bg-gray-50 hover:border-gray-300 transition-all duration-200">
               Back
@@ -517,7 +565,7 @@ const RegisterForm = ({ onFlipToLogin }) => {
         </form>
       )}
 
-      <p className="mt-12 text-center text-[14px] text-gray-400">
+      <p className="text-center text-[14px] text-gray-400" style={{ marginTop: '51px' }}>
         Already have an account?{' '}
         <button
           type="button"
@@ -560,12 +608,12 @@ const AuthPage = () => {
     <section className="min-h-[calc(100vh-130px)] flex bg-white">
       <SEO title={mode === 'login' ? 'Login' : 'Create Account'} noindex />
 
-      {/* Left: Yellow Decorative Panel with Two Cards */}
+      {/* Left: Decorative Panel — navy for login, yellow for register */}
       <div
-        className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center order-1"
+        className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center order-1 transition-colors duration-700"
         style={{ clipPath: 'polygon(0% 0, 100% 0, 92% 100%, 0 100%)' }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FFD54F] via-[#FFCB32] to-[#F9A825]" />
+        <div className={`absolute inset-0 transition-all duration-700 ${mode === 'login' ? 'bg-gradient-to-br from-[#1a2f55] via-[#1b3464] to-[#0f1f3a]' : 'bg-gradient-to-br from-[#FFD54F] via-[#FFCB32] to-[#F9A825]'}`} />
         {/* Dot pattern overlay */}
         <div
           className="absolute inset-0 opacity-[0.04]"
@@ -576,13 +624,13 @@ const AuthPage = () => {
         />
         {/* Decorative circles */}
         <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/10" />
-        <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white/[0.08]" />
+        <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white/8" />
 
         <div className="relative z-10 text-center px-8">
-          <h2 className="text-[36px] font-bold text-gray-900 mb-4 leading-tight tracking-tight">
+          <h2 className={`text-[36px] font-bold mb-4 leading-tight tracking-tight transition-colors duration-700 ${mode === 'login' ? 'text-white' : 'text-gray-900'}`}>
             Start Collecting
           </h2>
-          <p className="text-gray-800/60 text-[16px] leading-relaxed mb-10 max-w-[340px] mx-auto">
+          <p className={`text-[16px] leading-relaxed mb-10 max-w-85 mx-auto transition-colors duration-700 ${mode === 'login' ? 'text-white/60' : 'text-gray-800/60'}`}>
             {`Join thousands of collectors trading Pok\u00e9mon cards on EliteTCG`}
           </p>
 
