@@ -45,7 +45,6 @@ function computeArc(slot, total, spreadVw) {
 const Hero = () => {
   // Phase: 'emerging' -> 'interactive'  (no pack phases)
   const [phase, setPhase] = useState('emerging');
-  const [scrollY, setScrollY] = useState(0);
   const [selectedCard, setSelectedCard] = useState(null);
   const [cardVisible, setCardVisible] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -85,13 +84,6 @@ const Hero = () => {
       const img = new Image();
       img.src = c.src;
     });
-  }, []);
-
-  /* ── Scroll tracking ──────────────────────────────────────────────── */
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   /* ── Emerge -> Interactive transition on page load ─────────────────── */
@@ -253,11 +245,6 @@ const Hero = () => {
     };
   }, []);
 
-  /* ── Scroll-derived values ────────────────────────────────────────── */
-  const textOffset = scrollY * 0.25;
-  const cardOffset = scrollY * 0.15;
-  const watermarkOffset = scrollY * 0.1;
-
   const isEmerging = phase === 'emerging';
   const isInteractive = phase === 'interactive';
   const visibleCards = CARD_DATA.slice(Math.floor((TOTAL_CARDS - 7) / 2), Math.floor((TOTAL_CARDS - 7) / 2) + 7);
@@ -265,8 +252,7 @@ const Hero = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative bg-white flex flex-col items-center min-h-[85vh]"
-      style={{ overflowX: 'clip' }}
+      className="relative flex flex-col items-center min-h-[85vh] overflow-hidden"
     >
       {/* ── Background watermark text ─────────────────────────── */}
       <div
@@ -274,7 +260,6 @@ const Hero = () => {
         style={{
           maskImage: 'linear-gradient(to top, transparent 0%, transparent 35%, black 75%)',
           WebkitMaskImage: 'linear-gradient(to top, transparent 0%, transparent 35%, black 75%)',
-          transform: `translateY(${-watermarkOffset}px)`,
         }}
       >
         <div
@@ -299,7 +284,7 @@ const Hero = () => {
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
-            >POKEMON</span>
+            ></span>
             <span
               className="text-[7rem] md:text-[11rem]"
               style={{
@@ -309,7 +294,7 @@ const Hero = () => {
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
-            >POKEMON</span>
+            ></span>
             <span
               className="text-[7rem] md:text-[11rem]"
               style={{
@@ -320,14 +305,14 @@ const Hero = () => {
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
-            >POKEMON</span>
+            ></span>
           </div>
         </div>
       </div>
       {/* ── Text + Button ──────────────────────────────────────────── */}
       <div
         className="relative z-10 flex flex-col items-center text-center px-6 mt-[80px] md:mt-[8vh]"
-        style={{ transform: `translateY(${-textOffset - 9}px)` }}
+        style={{ transform: 'translateY(-9px)' }}
       >
         <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mb-5">
           {`Pok\u00e9mon TCG Store`}
@@ -340,7 +325,7 @@ const Hero = () => {
       {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
         className="relative w-full mt-9 z-10 flex justify-center"
-        style={{ height: '320px', transform: `translateY(${-11 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}
+        style={{ height: '320px', transform: `translateY(${-46 - (isMobileRef.current ? 50 : 0)}px)` }}
       >
         <div
           className="hero-banner__cards"
@@ -400,7 +385,7 @@ const Hero = () => {
       </div>
 
       {/* ── Shop Now Button ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${24 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}>
+      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-41 - (isMobileRef.current ? 50 : 0)}px)` }}>
         <a
           href="#products"
           className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"
