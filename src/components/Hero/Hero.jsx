@@ -288,7 +288,7 @@ const Hero = () => {
             style={{
               transformOrigin: 'center bottom',
               transform: 'rotateX(19deg)',
-              gap: '14px',
+              gap: '26px',
             }}
           >
             <span

@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useCustomerAuth } from '../../contexts/AuthContext';
 import SEO from '../../components/SEO/SEO';
 import charizardImage from '../../assets/images/mew-ex-card.webp';
-import marillImage from '../../assets/images/SingleCards/card1.webp';
+import marillImage from '../../assets/images/auth-hero-card.webp';
 
 /* ------------------------------------------------------------------ */
 /*  Showcase Card (always-on holo + sway, hover = mouse-track override) */
@@ -565,7 +565,7 @@ const AuthPage = () => {
         className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center"
         style={{ clipPath: 'polygon(0% 0, 100% 0, 92% 100%, 0 100%)' }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FFD54F] via-[#FFCB32] to-[#F9A825]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a2f55] via-[#1b3464] to-[#0f1f3a]" />
         {/* Dot pattern overlay */}
         <div
           className="absolute inset-0 opacity-[0.04]"
@@ -579,10 +579,10 @@ const AuthPage = () => {
         <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white/[0.08]" />
 
         <div className="relative z-10 text-center px-8">
-          <h2 className="text-[36px] font-bold text-gray-900 mb-4 leading-tight tracking-tight">
+          <h2 className="text-[36px] font-bold text-white mb-4 leading-tight tracking-tight">
             Start Collecting
           </h2>
-          <p className="text-gray-800/60 text-[16px] leading-relaxed mb-10 max-w-[340px] mx-auto">
+          <p className="text-white/60 text-[16px] leading-relaxed mb-10 max-w-[340px] mx-auto">
             {`Join thousands of collectors trading Pok\u00e9mon cards on EliteTCG`}
           </p>
 

@@ -82,7 +82,7 @@ const Navbar = () => {
         <div className="flex items-center">
           <Link to="/" className="flex items-center gap-3">
             <span
-              className="text-xl font-medium elite-tcg-text"
+              className="text-2xl font-bold elite-tcg-text tracking-tight"
               style={{ paddingLeft: '7px' }}
             >
               Elite TCG
