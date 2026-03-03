@@ -4,10 +4,8 @@ import { supabase } from '@/config/supabase';
 
 const API_BASE = `${ELITE_API_URL}/api`;
 const FASTAPI_BASE = PAYMENTS_API_URL;
-// Get token — admin JWT from localStorage first, then Supabase session fallback
+// Get token from Supabase session (same auth as public site)
 const getToken = async () => {
-  const adminToken = localStorage.getItem('admin_token');
-  if (adminToken) return adminToken;
   if (!supabase) return null;
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token || null;
