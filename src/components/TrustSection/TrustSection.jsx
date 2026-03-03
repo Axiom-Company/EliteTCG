@@ -26,10 +26,12 @@ const TrustSection = () => {
       <div className="container max-w-5xl mx-auto px-6">
 
         {/* Header */}
-        <div className="text-center mb-14">
-          <p className="text-xs font-medium tracking-[0.2em] text-gray-400 uppercase mb-3">Who we are</p>
+        <div className="text-center mb-12">
+          <span className="inline-block text-[11px] font-medium tracking-[0.2em] uppercase text-primary mb-4">
+            Who we are
+          </span>
           <h2 className="text-2xl md:text-3xl font-medium text-gray-900 mb-4">About Elite TCG</h2>
-          <p className="text-sm text-gray-500 max-w-xl mx-auto leading-relaxed">
+          <p className="text-sm text-gray-500 max-w-lg mx-auto leading-relaxed">
             South Africa's online store for authentic Pokémon TCG products. Shop sealed products, singles, and accessories — or join our marketplace to buy and sell with other collectors.
           </p>
         </div>
@@ -37,15 +39,17 @@ const TrustSection = () => {
         {/* Trust items */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {items.map(({ title, body }) => (
-            <div key={title} className="flex flex-col items-center text-center gap-2">
-              <h3 className="text-sm font-medium text-gray-900">{title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">{body}</p>
+            <div key={title} className="flex flex-col gap-2 p-6 rounded-2xl border border-gray-100 bg-gray-50">
+              <div className="flex flex-col gap-1">
+                <h3 className="text-sm font-medium text-gray-900">{title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{body}</p>
+              </div>
             </div>
           ))}
         </div>
 
         {/* CTA */}
-        <div className="flex justify-center mt-12">
+        <div className="flex justify-center mt-10">
           <Link
             to="/products"
             className="inline-flex items-center justify-center gap-2 py-3 px-8 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors"
