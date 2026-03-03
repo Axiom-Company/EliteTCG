@@ -306,7 +306,7 @@ const Hero = () => {
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
-                transform: 'translateY(1px)',
+                transform: 'translateY(0px) rotateX(-2.7deg)',
                 background: 'linear-gradient(to bottom, #d1d1d1 0%, #b7b7b7 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -403,7 +403,7 @@ const Hero = () => {
       </div>
 
       {/* ── Shop Now Button ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${26 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}>
+      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${32 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}>
         <a
           href="#products"
           className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"
