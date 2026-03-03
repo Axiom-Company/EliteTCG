@@ -49,6 +49,8 @@ const Hero = () => {
   const [cardVisible, setCardVisible] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [, forceUpdate] = useState(0);
+  const [textOffset, setTextOffset] = useState(0);
+  const [cardOffset, setCardOffset] = useState(0);
 
   const sectionRef = useRef(null);
   const cardElRefs = useRef([]);
@@ -76,6 +78,18 @@ const Hero = () => {
     };
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
+  }, []);
+
+  /* ── Parallax scroll (desktop only) ──────────────────────────────── */
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isMobileRef.current) return;
+      const y = window.scrollY;
+      setTextOffset(y * 0.18);
+      setCardOffset(y * 0.28);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   /* ── Preload card images ──────────────────────────────────────────── */
