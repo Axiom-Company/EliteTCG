@@ -295,8 +295,8 @@ const Hero = () => {
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
-                transform: 'translateY(-5px)',
-                background: 'linear-gradient(to bottom, #d1d1d1 0%, #b7b7b7 100%)',
+                transform: 'translateY(6px)',
+                background: 'linear-gradient(to bottom right, #d1d1d1 0%, #d1d1d1 30%, #d9d9d9 50%, #e6e6e6 80%, #ebebeb 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -306,8 +306,8 @@ const Hero = () => {
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
-                transform: 'translateY(0px) rotateX(-2.7deg)',
-                background: 'linear-gradient(to bottom, #d1d1d1 0%, #b7b7b7 100%)',
+                transform: 'translateY(-10px) rotateX(-2.7deg)',
+                background: 'linear-gradient(to bottom right, #d1d1d1 0%, #d1d1d1 30%, #d9d9d9 50%, #e6e6e6 80%, #ebebeb 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -317,8 +317,8 @@ const Hero = () => {
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
-                transform: 'translateY(-5px)',
-                background: 'linear-gradient(to bottom, #d1d1d1 0%, #b7b7b7 100%)',
+                transform: 'translateY(6px)',
+                background: 'linear-gradient(to bottom right, #d1d1d1 0%, #d1d1d1 30%, #d9d9d9 50%, #e6e6e6 80%, #ebebeb 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -330,7 +330,7 @@ const Hero = () => {
       {/* ── Text + Button ──────────────────────────────────────────── */}
       <div
         className="relative z-10 flex flex-col items-center text-center px-6 mt-[80px] md:mt-[8vh]"
-        style={{ transform: `translateY(${-textOffset - 18}px)` }}
+        style={{ transform: `translateY(${-textOffset - 20}px)` }}
       >
         <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mb-5">
           {`Pok\u00e9mon TCG Store`}
@@ -343,7 +343,7 @@ const Hero = () => {
       {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
         className="relative w-full mt-9 z-10 flex justify-center"
-        style={{ height: '320px', transform: `translateY(${4 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}
+        style={{ height: '320px', transform: `translateY(${7 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}
       >
         <div
           className="hero-banner__cards"
@@ -403,7 +403,7 @@ const Hero = () => {
       </div>
 
       {/* ── Shop Now Button ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${32 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}>
+      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${35 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}>
         <a
           href="#products"
           className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"
