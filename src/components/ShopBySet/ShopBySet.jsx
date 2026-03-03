@@ -58,7 +58,7 @@ const ShopBySet = () => {
   };
 
   return (
-    <section id="sets" className="-mt-[31px] pb-16 bg-white md:pt-8 md:pb-10" style={{ paddingTop: '3px' }}>
+    <section id="sets" className="-mt-[28px] pb-16 bg-white md:pt-8 md:pb-10" style={{ paddingTop: '3px' }}>
       <div className="container">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-medium mb-2" style={{ transform: 'translateY(1px)' }}>Shop by Sets</h2>
