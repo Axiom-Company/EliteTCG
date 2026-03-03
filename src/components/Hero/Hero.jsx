@@ -49,9 +49,6 @@ const Hero = () => {
   const [cardVisible, setCardVisible] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [, forceUpdate] = useState(0);
-  const [textOffset, setTextOffset] = useState(0);
-  const [cardOffset, setCardOffset] = useState(0);
-  const [watermarkOffset, setWatermarkOffset] = useState(0);
 
   const sectionRef = useRef(null);
   const cardElRefs = useRef([]);
@@ -79,19 +76,6 @@ const Hero = () => {
     };
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
-  }, []);
-
-  /* ── Parallax scroll (desktop only) ──────────────────────────────── */
-  useEffect(() => {
-    const handleScroll = () => {
-      if (isMobileRef.current) return;
-      const y = window.scrollY;
-      setTextOffset(y * 0.25);
-      setCardOffset(y * 0.15);
-      setWatermarkOffset(y * 0.1);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   /* ── Preload card images ──────────────────────────────────────────── */
@@ -276,61 +260,59 @@ const Hero = () => {
         style={{
           maskImage: 'linear-gradient(to top, transparent 0%, transparent 35%, black 75%)',
           WebkitMaskImage: 'linear-gradient(to top, transparent 0%, transparent 35%, black 75%)',
-          transform: `translateY(${-watermarkOffset}px)`,
         }}
       >
         <div
-          className="absolute left-0 right-0 top-[calc(41%-66px)] md:top-[calc(45%-66px)] flex justify-center -translate-y-1/2"
+          className="absolute left-0 right-0 top-[calc(41%-31px)] md:top-[calc(45%-31px)] flex justify-center -translate-y-1/2"
           style={{ perspective: '800px' }}
         >
           <div
             className="flex items-end whitespace-nowrap select-none leading-none"
             style={{
               transformOrigin: 'center bottom',
-              transform: 'rotateX(19deg)',
-              gap: '26px',
+              transform: 'rotateX(25deg)',
+              gap: '48px',
             }}
           >
             <span
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
-                transform: 'translateY(6px)',
-                background: 'linear-gradient(to bottom right, #d1d1d1 0%, #d1d1d1 30%, #d9d9d9 50%, #e6e6e6 80%, #ebebeb 100%)',
+                transform: 'translateY(7px)',
+                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
-            >POKEMON</span>
+            ></span>
             <span
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
-                transform: 'translateY(-10px) rotateX(-2.7deg)',
-                background: 'linear-gradient(to bottom right, #d1d1d1 0%, #d1d1d1 30%, #d9d9d9 50%, #e6e6e6 80%, #ebebeb 100%)',
+                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
-            >POKEMON</span>
+            ></span>
             <span
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
-                transform: 'translateY(6px)',
-                background: 'linear-gradient(to bottom right, #d1d1d1 0%, #d1d1d1 30%, #d9d9d9 50%, #e6e6e6 80%, #ebebeb 100%)',
+                transform: 'translateY(7px)',
+                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
-            >POKEMON</span>
+            ></span>
           </div>
         </div>
       </div>
       {/* ── Text + Button ──────────────────────────────────────────── */}
       <div
         className="relative z-10 flex flex-col items-center text-center px-6 mt-[80px] md:mt-[8vh]"
-        style={{ transform: `translateY(${-textOffset - 20}px)` }}
+        style={{ transform: 'translateY(-9px)' }}
       >
         <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mb-5">
           {`Pok\u00e9mon TCG Store`}
@@ -343,7 +325,7 @@ const Hero = () => {
       {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
         className="relative w-full mt-9 z-10 flex justify-center"
-        style={{ height: '320px', transform: `translateY(${7 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}
+        style={{ height: '320px', transform: `translateY(${-46 - (isMobileRef.current ? 50 : 0)}px)` }}
       >
         <div
           className="hero-banner__cards"
@@ -403,7 +385,7 @@ const Hero = () => {
       </div>
 
       {/* ── Shop Now Button ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${35 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}>
+      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-41 - (isMobileRef.current ? 50 : 0)}px)` }}>
         <a
           href="#products"
           className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"
