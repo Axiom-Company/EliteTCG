@@ -227,14 +227,14 @@ const Navbar = () => {
               <CartIcon />
             </div>
           ) : (
-            <div className="hidden md:flex items-center" style={{ gap: '19px' }}>
+            <div className="hidden md:flex items-center" style={{ gap: '13px' }}>
+              <CartIcon />
               <Link
                 to="/login"
                 className="inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-full hover:bg-gray-800 active:scale-[0.97] transition-all duration-200"
               >
                 Sign In
               </Link>
-              <CartIcon />
             </div>
           )}
 

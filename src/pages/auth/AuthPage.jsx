@@ -3,8 +3,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '../../contexts/AuthContext';
 import SEO from '../../components/SEO/SEO';
-import charizardImage from '../../assets/images/mew-ex-card.webp';
-import marillImage from '../../assets/images/auth-hero-card.webp';
+import mewExCard from '../../assets/images/mew-ex-card.webp';
+import authHeroCard from '../../assets/images/auth-hero-card.webp';
 
 /* ------------------------------------------------------------------ */
 /*  Showcase Card (always-on holo + sway, hover = mouse-track override) */
@@ -339,13 +339,13 @@ const LoginForm = ({ onFlipToRegister }) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 bg-gray-900 text-white text-[15px] font-medium rounded-full hover:bg-gray-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed mt-[11px]"
+          className="w-full py-3.5 bg-gray-900 text-white text-[15px] font-medium rounded-full hover:bg-gray-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed mt-[15px]"
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
 
-      <p className="text-center text-[14px] text-gray-400" style={{ marginTop: '51px' }}>
+      <p className="text-center text-[14px] text-gray-400" style={{ marginTop: '55px' }}>
         Don&apos;t have an account?{' '}
         <button
           type="button"
@@ -470,7 +470,7 @@ const RegisterForm = ({ onFlipToLogin }) => {
               value={formData.email} onChange={handleChange} required
               autoComplete="email" placeholder="you@example.com" />
             <button type="submit"
-              className="w-full py-3.5 bg-gray-900 text-white text-[15px] font-medium rounded-full hover:bg-gray-800 active:scale-[0.98] transition-all duration-200 mt-[11px]">
+              className="w-full py-3.5 bg-gray-900 text-white text-[15px] font-medium rounded-full hover:bg-gray-800 active:scale-[0.98] transition-all duration-200 mt-[15px]">
               Continue
             </button>
           </form>
@@ -565,7 +565,7 @@ const RegisterForm = ({ onFlipToLogin }) => {
         </form>
       )}
 
-      <p className="text-center text-[14px] text-gray-400" style={{ marginTop: '51px' }}>
+      <p className="text-center text-[14px] text-gray-400" style={{ marginTop: '55px' }}>
         Already have an account?{' '}
         <button
           type="button"
@@ -587,6 +587,8 @@ const AuthPage = () => {
   const initialMode = location.pathname === '/register' ? 'register' : 'login';
   const [mode, setMode] = useState(initialMode);
   const [flipped, setFlipped] = useState(initialMode === 'register');
+  // panelSide swaps mid-flip so the jump is invisible
+  const [panelSide, setPanelSide] = useState(initialMode === 'register' ? 'left' : 'right');
   const navigate = useNavigate();
 
   // Sync with route changes (browser back/forward)
@@ -595,12 +597,17 @@ const AuthPage = () => {
     if (newMode !== mode) {
       setMode(newMode);
       setFlipped(newMode === 'register');
+      setPanelSide(newMode === 'register' ? 'left' : 'right');
     }
   }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFlip = useCallback((newMode) => {
     setFlipped(newMode === 'register');
     setMode(newMode);
+    // Swap panel side at 350ms (mid-flip, panel edge-on so jump is invisible)
+    setTimeout(() => {
+      setPanelSide(newMode === 'register' ? 'left' : 'right');
+    }, 350);
     navigate(newMode === 'register' ? '/register' : '/login', { replace: true });
   }, [navigate]);
 
@@ -608,90 +615,102 @@ const AuthPage = () => {
     <section className="min-h-[calc(100vh-130px)] flex bg-white">
       <SEO title={mode === 'login' ? 'Login' : 'Create Account'} noindex />
 
-      {/* Left: Decorative Panel — navy for login, yellow for register */}
+      {/* Form Panel — white background, swaps sides based on mode */}
       <div
-        className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center order-1 transition-colors duration-700"
-        style={{ clipPath: 'polygon(0% 0, 100% 0, 92% 100%, 0 100%)' }}
+        className="w-full lg:w-[55%] flex items-center justify-center px-8 py-20 lg:px-16 xl:px-24"
+        style={{ order: panelSide === 'right' ? 1 : 2 }}
       >
-        <div className={`absolute inset-0 transition-all duration-700 ${mode === 'login' ? 'bg-gradient-to-br from-[#1a2f55] via-[#1b3464] to-[#0f1f3a]' : 'bg-gradient-to-br from-[#FFD54F] via-[#FFCB32] to-[#F9A825]'}`} />
-        {/* Dot pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(0,0,0,0.3) 1px, transparent 0)',
-            backgroundSize: '24px 24px',
-          }}
-        />
-        {/* Decorative circles */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/10" />
-        <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white/8" />
-
-        <div className="relative z-10 text-center px-8">
-          <h2 className={`text-[36px] font-bold mb-4 leading-tight tracking-tight transition-colors duration-700 ${mode === 'login' ? 'text-white' : 'text-gray-900'}`}>
-            Start Collecting
-          </h2>
-          <p className={`text-[16px] leading-relaxed mb-10 max-w-85 mx-auto transition-colors duration-700 ${mode === 'login' ? 'text-white/60' : 'text-gray-800/60'}`}>
-            {`Join thousands of collectors trading Pok\u00e9mon cards on EliteTCG`}
-          </p>
-
-          {/* Two showcase cards side by side */}
-          <div className="flex items-center justify-center gap-6">
-            <ShowcaseCard
-              src={charizardImage}
-              alt="Mew EX"
-              animationName="cardShowcaseLeft"
-              duration={10}
-              delay="0s"
-            />
-            <ShowcaseCard
-              src={marillImage}
-              alt="Auth Hero Card"
-              animationName="cardShowcaseRight"
-              duration={12}
-              delay="-4s"
-            />
-          </div>
+        <div className="w-full max-w-[460px]">
+          {mode === 'login' ? (
+            <LoginForm onFlipToRegister={() => handleFlip('register')} />
+          ) : (
+            <RegisterForm onFlipToLogin={() => handleFlip('login')} />
+          )}
         </div>
       </div>
 
-      {/* Right: Navy Flipping Form Panel */}
+      {/* Decorative Panel — flips between blue (login/right) and yellow (register/left) */}
       <div
-        className="w-full lg:w-[55%] flex items-center justify-center px-8 py-20 lg:px-16 xl:px-24 order-2 bg-gradient-to-br from-[#1a2f55] via-[#1b3464] to-[#0f1f3a]"
-        style={{ perspective: '1200px' }}
+        className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center"
+        style={{
+          order: panelSide === 'right' ? 2 : 1,
+          clipPath: panelSide === 'right'
+            ? 'polygon(8% 0, 100% 0, 100% 100%, 0 100%)'
+            : 'polygon(0 0, 100% 0, 92% 100%, 0 100%)',
+          perspective: '1200px',
+        }}
       >
+        {/* Flipping panel container */}
         <div
-          className="bg-white rounded-3xl shadow-2xl px-10 py-12 w-full max-w-[460px]"
           style={{
-            position: 'relative',
+            position: 'absolute',
+            inset: 0,
             transformStyle: 'preserve-3d',
-            transformOrigin: 'left center',
-            transform: flipped ? 'rotateY(-180deg)' : 'rotateY(0deg)',
+            transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
             transition: 'transform 0.7s cubic-bezier(0.645, 0.045, 0.355, 1)',
           }}
         >
-          {/* Front face - Login (always rendered, CSS hides when flipped) */}
+          {/* Front face — Navy/Blue (Login — panel on RIGHT) */}
           <div
+            className="absolute inset-0 flex items-center justify-center"
             style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
+              background: 'linear-gradient(135deg, #1a2f55 0%, #1b3464 50%, #0f1f3a 100%)',
             }}
           >
-            <LoginForm onFlipToRegister={() => handleFlip('register')} />
+            <div
+              className="absolute inset-0 opacity-[0.04]"
+              style={{
+                backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)',
+                backgroundSize: '24px 24px',
+              }}
+            />
+            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/10" />
+            <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white/8" />
+            <div className="relative z-10 text-center px-8">
+              <h2 className="text-[36px] font-bold mb-4 leading-tight tracking-tight text-white">
+                Start Collecting
+              </h2>
+              <p className="text-[16px] leading-relaxed mb-10 max-w-85 mx-auto text-white/60">
+                {`Join thousands of collectors trading Pok\u00e9mon cards on EliteTCG`}
+              </p>
+              <div className="flex items-center justify-center gap-6">
+                <ShowcaseCard src={mewExCard} alt="Mew EX" animationName="cardShowcaseLeft" duration={10} delay="0s" />
+              </div>
+            </div>
           </div>
 
-          {/* Back face - Register (always rendered, pre-rotated 180deg) */}
+          {/* Back face — Yellow (Register — panel on LEFT) */}
           <div
+            className="absolute inset-0 flex items-center justify-center"
             style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              transform: 'rotateY(180deg)',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
+              transform: 'rotateY(180deg)',
+              background: 'linear-gradient(135deg, #FFCB05 0%, #FFD700 50%, #FFB800 100%)',
             }}
           >
-            <RegisterForm onFlipToLogin={() => handleFlip('login')} />
+            <div
+              className="absolute inset-0 opacity-[0.04]"
+              style={{
+                backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(0,0,0,0.3) 1px, transparent 0)',
+                backgroundSize: '24px 24px',
+              }}
+            />
+            <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-white/10" />
+            <div className="absolute -bottom-16 -right-16 w-48 h-48 rounded-full bg-white/8" />
+            <div className="relative z-10 text-center px-8">
+              <h2 className="text-[36px] font-bold mb-4 leading-tight tracking-tight text-gray-900">
+                Join EliteTCG
+              </h2>
+              <p className="text-[16px] leading-relaxed mb-10 max-w-85 mx-auto text-gray-800/60">
+                {`Create your account and start collecting Pok\u00e9mon cards`}
+              </p>
+              <div className="flex items-center justify-center gap-6">
+                <ShowcaseCard src={authHeroCard} alt="Auth Hero Card" animationName="cardShowcaseRight" duration={12} delay="-4s" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
