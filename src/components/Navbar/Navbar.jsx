@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import CartIcon from '../Cart/CartIcon';
 import { useCustomerAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 
 const UserAvatar = ({ user, session, onSignOut }) => {
   const [open, setOpen] = useState(false);
@@ -56,6 +57,7 @@ const Navbar = () => {
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const { user, session, isAuthenticated, loading, signOut } = useCustomerAuth();
+  const { itemCount, openCart } = useCart();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -119,7 +121,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-40 bg-white border-b border-gray-100">
+    <nav className="bg-white border-b border-gray-100">
       <div className="flex items-center justify-between max-w-7xl mx-auto px-6 h-16">
         {/* Logo */}
         <div className="flex items-center">
@@ -218,7 +220,9 @@ const Navbar = () => {
               Sign In
             </Link>
           )}
-          <CartIcon />
+          <div className="hidden md:block">
+            <CartIcon />
+          </div>
 
           {/* Mobile Menu Toggle */}
           <button
@@ -287,6 +291,18 @@ const Navbar = () => {
             >
               Wishlist
             </Link>
+
+            <button
+              onClick={() => { setIsMenuOpen(false); openCart(); }}
+              className="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <span>Cart</span>
+              {itemCount > 0 && (
+                <span className="text-xs font-medium bg-gray-900 text-white rounded-full w-5 h-5 flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </button>
 
             <div className="border-t border-gray-100 mt-2 pt-2">
               {isAuthenticated ? (

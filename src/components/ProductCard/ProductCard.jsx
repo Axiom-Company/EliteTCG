@@ -4,7 +4,6 @@ import { Heart } from 'lucide-react';
 import { useWishlist } from '../../contexts/WishlistContext';
 import { getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
-const getBadgeStyle = () => 'bg-gray-900 text-white';
 
 const formatPrice = (product) => {
   const symbol = product.currency === 'USD' ? '$' : product.currency === 'EUR' ? '€' : product.currency === 'GBP' ? '£' : 'R';
@@ -80,11 +79,11 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
 
         {/* Badge — discount % takes priority */}
         {!isOutOfStock && (discountPct ? (
-          <span className="absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-gray-900 text-white">
+          <span className="absolute top-2.5 left-2.5 inline-flex items-center px-3 py-1 text-xs font-medium uppercase tracking-wider rounded-full bg-primary text-white">
             -{discountPct}%
           </span>
         ) : product.badge && product.badge !== 'none' && (
-          <span className={`absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full capitalize tracking-wide ${getBadgeStyle()}`}>
+          <span className="absolute top-2.5 left-2.5 inline-flex items-center px-3 py-1 text-xs font-medium uppercase tracking-wider rounded-full bg-primary text-white">
             {product.badge}
           </span>
         ))}

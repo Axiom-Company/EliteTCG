@@ -1,8 +1,18 @@
 @import "tailwindcss";
 
+/* Override browser autofill background on dark inputs */
+.autofill-dark:-webkit-autofill,
+.autofill-dark:-webkit-autofill:hover,
+.autofill-dark:-webkit-autofill:focus,
+.autofill-dark:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #0a0a0a inset !important;
+  -webkit-text-fill-color: #f1f1f1 !important;
+  caret-color: #f1f1f1;
+}
+
 @keyframes marquee {
   from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  to   { transform: translateX(-12.5%); }
 }
 
 .animate-marquee {

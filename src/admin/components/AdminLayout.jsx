@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { cn } from '@/lib/utils';
-import { LogOut, ExternalLink, Menu, X } from 'lucide-react';
+import { LogOut, ExternalLink, Menu, X, ChevronDown } from 'lucide-react';
 
 const AdminLayout = ({ children, currentPage, onNavigate }) => {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const navRef = useRef(null);
 
-  // Add admin-dark to body so Radix portals (Dialog, Select) also get dark styling
   useEffect(() => {
     document.body.classList.add('admin-dark');
     document.body.style.backgroundColor = '#0f0f0f';
@@ -17,21 +18,27 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
     };
   }, []);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = isMenuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [isMenuOpen]);
 
-  const navSections = [
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const navGroups = [
     {
+      id: 'store',
       label: 'Store',
       items: [
-        { id: 'dashboard', label: 'Dashboard' },
         { id: 'products', label: 'Products' },
         { id: 'orders', label: 'Orders' },
         { id: 'sets', label: 'Sets' },
@@ -39,6 +46,7 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
       ],
     },
     {
+      id: 'business',
       label: 'Business',
       items: [
         { id: 'crm', label: 'Customers' },
@@ -47,6 +55,7 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
       ],
     },
     {
+      id: 'operations',
       label: 'Operations',
       items: [
         { id: 'preorders', label: 'Pre-Orders' },
@@ -60,15 +69,29 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
     },
   ];
 
-  const navItems = navSections.flatMap((s) => s.items);
+  // All items flat (for mobile)
+  const navSections = [
+    { label: 'Store', items: navGroups[0].items },
+    { label: 'Business', items: navGroups[1].items },
+    { label: 'Operations', items: navGroups[2].items },
+  ];
+
+  const isGroupActive = (group) => group.items.some((i) => i.id === currentPage);
+
+  const handleNavigate = (id) => {
+    onNavigate(id);
+    setOpenDropdown(null);
+    setIsMenuOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
       {/* Top Nav */}
-      <header className="sticky top-0 z-[300] h-[52px] bg-[#111111] border-b border-[#282828] flex items-center px-6 gap-5">
+      <header className="sticky top-0 z-[300] h-[52px] bg-[#111111] border-b border-[#282828] flex items-center px-6 gap-4">
+
         {/* Logo */}
         <button
-          onClick={() => onNavigate('dashboard')}
+          onClick={() => handleNavigate('dashboard')}
           className="flex items-center gap-2.5 shrink-0"
         >
           <div className="w-7 h-7 rounded-md bg-[#3ECF8E] flex items-center justify-center">
@@ -77,33 +100,69 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
           <span className="text-sm font-medium text-[#f1f1f1]">EliteTCG</span>
         </button>
 
-        {/* Divider */}
         <div className="w-px h-4 bg-[#282828] shrink-0" />
 
-        {/* Nav Items — desktop only */}
-        <nav className="hidden md:flex items-center gap-0.5 flex-1 overflow-x-auto scrollbar-none">
-          {navSections.map((section, si) => (
-            <div key={section.label} className="flex items-center gap-0.5">
-              {si > 0 && <div className="w-px h-4 bg-[#282828] mx-1.5 shrink-0" />}
-              {section.items.map((item) => {
-                const isActive = currentPage === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => onNavigate(item.id)}
-                    className={cn(
-                      "px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap",
-                      isActive
-                        ? "text-[#f1f1f1] bg-[#1c1c1c]"
-                        : "text-[#6b6b6b] hover:text-[#c4c4c4] hover:bg-[#1a1a1a]"
-                    )}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+        {/* Desktop Nav */}
+        <nav ref={navRef} className="hidden md:flex items-center gap-0.5 flex-1">
+
+          {/* Dashboard — standalone */}
+          <button
+            onClick={() => handleNavigate('dashboard')}
+            className={cn(
+              'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+              currentPage === 'dashboard'
+                ? 'text-[#f1f1f1] bg-[#1c1c1c]'
+                : 'text-[#6b6b6b] hover:text-[#c4c4c4] hover:bg-[#1a1a1a]'
+            )}
+          >
+            Dashboard
+          </button>
+
+          <div className="w-px h-4 bg-[#282828] mx-1 shrink-0" />
+
+          {/* Dropdown groups */}
+          {navGroups.map((group) => {
+            const isOpen = openDropdown === group.id;
+            const isActive = isGroupActive(group);
+            return (
+              <div key={group.id} className="relative">
+                <button
+                  onClick={() => setOpenDropdown(isOpen ? null : group.id)}
+                  className={cn(
+                    'flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+                    isActive || isOpen
+                      ? 'text-[#f1f1f1] bg-[#1c1c1c]'
+                      : 'text-[#6b6b6b] hover:text-[#c4c4c4] hover:bg-[#1a1a1a]'
+                  )}
+                >
+                  {group.label}
+                  <ChevronDown
+                    className={cn('w-3.5 h-3.5 transition-transform duration-150', isOpen && 'rotate-180')}
+                    strokeWidth={2}
+                  />
+                </button>
+
+                {isOpen && (
+                  <div className="absolute top-full left-0 mt-1.5 bg-[#171717] border border-[#282828] rounded-xl shadow-xl py-1.5 z-50 min-w-[160px]">
+                    {group.items.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => handleNavigate(item.id)}
+                        className={cn(
+                          'w-full text-left px-4 py-2 text-sm transition-colors',
+                          currentPage === item.id
+                            ? 'text-[#f1f1f1] bg-[#222]'
+                            : 'text-[#a0a0a0] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
+                        )}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
         {/* Right side */}
@@ -120,7 +179,6 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
 
           <div className="hidden sm:block w-px h-4 bg-[#282828]" />
 
-          {/* User */}
           <div className="hidden md:flex items-center gap-2">
             <div className="w-7 h-7 bg-[#282828] text-[#a0a0a0] rounded-full flex items-center justify-center text-xs font-medium shrink-0">
               {user?.name?.charAt(0) || 'A'}
@@ -134,48 +192,54 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
             </button>
           </div>
 
-          {/* Hamburger — mobile only */}
+          {/* Hamburger — mobile */}
           <button
             className="md:hidden flex items-center justify-center w-8 h-8 text-[#6b6b6b] hover:text-[#f1f1f1] transition-colors"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Menu"
           >
-            {isMenuOpen ? (
-              <X className="w-5 h-5" strokeWidth={1.5} />
-            ) : (
-              <Menu className="w-5 h-5" strokeWidth={1.5} />
-            )}
+            {isMenuOpen ? <X className="w-5 h-5" strokeWidth={1.5} /> : <Menu className="w-5 h-5" strokeWidth={1.5} />}
           </button>
         </div>
       </header>
 
-      {/* Mobile Menu — full-screen overlay */}
+      {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden fixed top-13 left-0 right-0 bottom-0 bg-[#111111] border-t border-[#282828] z-299 overflow-y-auto">
+        <div className="md:hidden fixed top-13 left-0 right-0 bottom-0 bg-[#111111] border-t border-[#282828] z-[299] overflow-y-auto">
           <nav className="flex flex-col p-3">
+            {/* Dashboard */}
+            <button
+              onClick={() => handleNavigate('dashboard')}
+              className={cn(
+                'w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors mb-1',
+                currentPage === 'dashboard'
+                  ? 'text-[#f1f1f1] bg-[#1c1c1c]'
+                  : 'text-[#6b6b6b] hover:text-[#c4c4c4] hover:bg-[#1a1a1a]'
+              )}
+            >
+              Dashboard
+            </button>
+
             {navSections.map((section, si) => (
               <div key={section.label}>
-                {si > 0 && <div className="border-t border-[#282828] my-2" />}
+                <div className="border-t border-[#282828] my-2" />
                 <div className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#4a4a4a]">
                   {section.label}
                 </div>
-                {section.items.map((item) => {
-                  const isActive = currentPage === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => { onNavigate(item.id); setIsMenuOpen(false); }}
-                      className={cn(
-                        "w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors",
-                        isActive
-                          ? "text-[#f1f1f1] bg-[#1c1c1c]"
-                          : "text-[#6b6b6b] hover:text-[#c4c4c4] hover:bg-[#1a1a1a]"
-                      )}
-                    >
-                      {item.label}
-                    </button>
-                  );
-                })}
+                {section.items.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavigate(item.id)}
+                    className={cn(
+                      'w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors',
+                      currentPage === item.id
+                        ? 'text-[#f1f1f1] bg-[#1c1c1c]'
+                        : 'text-[#6b6b6b] hover:text-[#c4c4c4] hover:bg-[#1a1a1a]'
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
             ))}
 

@@ -89,10 +89,16 @@ const HomePage = () => {
   );
 };
 
-const MainLayout = ({ children }) => (
-  <div className="flex flex-col min-h-screen">
+const StickyHeader = () => (
+  <div className="sticky top-0 z-40">
     <Navbar />
     <AnnouncementBar />
+  </div>
+);
+
+const MainLayout = ({ children }) => (
+  <div className="flex flex-col min-h-screen">
+    <StickyHeader />
     <main className="flex-1">
       {children}
     </main>
@@ -102,8 +108,7 @@ const MainLayout = ({ children }) => (
 
 const NavbarLayout = ({ children }) => (
   <div className="flex flex-col min-h-screen">
-    <Navbar />
-    <AnnouncementBar />
+    <StickyHeader />
     <main className="flex-1">
       {children}
     </main>

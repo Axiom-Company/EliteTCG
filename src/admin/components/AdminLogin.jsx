@@ -12,7 +12,6 @@ const AdminLogin = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       await login(email, password);
     } catch (err) {
@@ -23,71 +22,67 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f] p-4">
-      <div className="w-full max-w-[380px]">
-        {/* Card */}
-        <div className="bg-[#171717] border border-[#282828] rounded-xl p-8">
-          {/* Logo + title */}
-          <div className="text-center mb-8">
-            <div className="w-10 h-10 rounded-lg bg-[#3ECF8E] flex items-center justify-center mx-auto mb-4">
-              <span className="text-[#0f0f0f] text-sm font-medium">E</span>
-            </div>
-            <h1 className="text-lg font-medium text-[#f1f1f1]">EliteTCG Admin</h1>
-            <p className="text-sm text-[#6b6b6b] mt-1">Sign in to manage your store</p>
-          </div>
+    <section className="min-h-screen flex items-center justify-center bg-[#0a0a0a] px-6">
+      <div className="w-full max-w-[360px] flex flex-col gap-8">
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
+        {/* Header */}
+        <div className="flex flex-col gap-2 text-center">
+          <h1 className="text-2xl font-medium tracking-tight text-[#f1f1f1]">Sign in</h1>
+          <p className="text-sm text-[#6b6b6b]">Enter your credentials to access the admin panel</p>
+        </div>
+
+        {/* Form */}
+        <div className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+
             {error && (
-              <div className="px-3 py-2.5 bg-red-950/40 border border-red-900/40 text-red-400 text-sm rounded-lg">
+              <div className="px-3 py-2.5 bg-red-950/40 border border-red-900/40 text-red-400 text-sm rounded-md">
                 {error}
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <label className="text-sm text-[#c4c4c4]" htmlFor="email">Email</label>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium leading-none text-[#c4c4c4]">Email</label>
               <input
                 type="email"
-                id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@elitetcg.com"
                 required
                 autoComplete="email"
-                className="w-full px-3 py-2 bg-[#1c1c1c] border border-[#282828] rounded-lg text-sm text-[#f1f1f1] placeholder-[#4a4a4a] outline-none focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/50 transition-colors"
+                placeholder="admin@elitetcg.com"
+                className="autofill-dark h-10 w-full rounded-md border border-[#282828] bg-transparent px-3 text-sm text-[#f1f1f1] shadow-xs placeholder-[#4a4a4a] focus:outline-none focus:ring-1 focus:ring-[#f1f1f1]/30 focus:border-[#444] transition-colors"
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm text-[#c4c4c4]" htmlFor="password">Password</label>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium leading-none text-[#c4c4c4]">Password</label>
               <input
                 type="password"
-                id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
                 required
                 autoComplete="current-password"
-                className="w-full px-3 py-2 bg-[#1c1c1c] border border-[#282828] rounded-lg text-sm text-[#f1f1f1] placeholder-[#4a4a4a] outline-none focus:border-[#3ECF8E] focus:ring-1 focus:ring-[#3ECF8E]/50 transition-colors"
+                placeholder="••••••••"
+                className="autofill-dark h-10 w-full rounded-md border border-[#282828] bg-transparent px-3 text-sm text-[#f1f1f1] shadow-xs placeholder-[#4a4a4a] focus:outline-none focus:ring-1 focus:ring-[#f1f1f1]/30 focus:border-[#444] transition-colors"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-2.5 px-4 bg-[#3ECF8E] hover:bg-[#2db87a] active:bg-[#25a067] text-[#0f0f0f] text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-10 w-full rounded-md bg-[#f1f1f1] text-[#0a0a0a] text-sm font-medium hover:bg-white active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xs"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-xs text-[#4a4a4a]">
-              Authorized personnel only
-            </p>
-          </div>
         </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-[#4a4a4a]">
+          Authorized personnel only
+        </p>
       </div>
-    </div>
+    </section>
   );
 };
 
