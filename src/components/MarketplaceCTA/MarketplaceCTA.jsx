@@ -33,7 +33,7 @@ const MarketplaceCTA = () => {
             Browse Marketplace
           </Link>
           <Link
-            to="/become-seller"
+            to="/register"
             className="px-8 py-3 bg-white text-gray-900 font-medium rounded-full hover:bg-gray-100 transition-colors text-center"
           >
             Start Selling

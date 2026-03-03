@@ -683,9 +683,8 @@ const AuthPage = () => {
           <div
             style={{
               position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
+              inset: 0,
+              padding: '3rem 2.5rem',
               transform: 'rotateY(180deg)',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
