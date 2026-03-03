@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '../../contexts/AuthContext';
 import SEO from '../../components/SEO/SEO';
-import charizardImage from '../../assets/images/charizard-base-set.webp';
+import charizardImage from '../../assets/images/auth-hero-card-v1.webp';
 import marillImage from '../../assets/images/SingleCards/card1.webp';
 
 /* ------------------------------------------------------------------ */
