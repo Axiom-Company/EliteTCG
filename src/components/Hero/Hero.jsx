@@ -128,7 +128,7 @@ const Hero = () => {
     const { clientX, clientY } = e.touches ? e.touches[0] : e;
     const nx = (clientX / window.innerWidth) * 2 - 1;
     const ny = (clientY / window.innerHeight) * 2 - 1;
-    setTilt({ x: ny * -18, y: nx * 18 });
+    setTilt({ x: ny * -21, y: nx * 21 });
   }, [cardVisible]);
 
   /* ── 5-layer holographic hover effect ─────────────────────────────── */
@@ -139,14 +139,14 @@ const Hero = () => {
     const cx = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const cy = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
 
-    // Layer 1: 3D tilt on card inner
-    const rotY = (cx - 0.5) * 15.4;
-    const rotX = (cy - 0.5) * -11;
+    // Layer 1: 3D tilt on card inner (20% more aggressive)
+    const rotY = (cx - 0.5) * 18.5;
+    const rotX = (cy - 0.5) * -13.2;
     const inner = innerRefs.current[slotIdx];
     if (inner) {
       inner.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg)`;
       inner.style.transition = 'transform 0.08s linear';
-      inner.style.boxShadow = '0 8px 24px rgba(0,0,0,0.25)';
+      inner.style.boxShadow = '0 12px 30px rgba(0,0,0,0.32)';
       inner.style.borderRadius = '11px';
     }
 
@@ -214,7 +214,7 @@ const Hero = () => {
     el.classList.remove('hero-card--idle');
     requestAnimationFrame(() => {
       if (hoveredSlot.current === slotIdx) {
-        el.style.transform = 'translateX(var(--card-x)) translateY(calc(var(--card-y) - 16px)) rotate(var(--card-rot))';
+        el.style.transform = 'translateX(var(--card-x)) translateY(calc(var(--card-y) - 19px)) rotate(var(--card-rot))';
       }
     });
   }, [resetCard]);
@@ -275,11 +275,11 @@ const Hero = () => {
             }}
           >
             <span
-              className="text-[7rem] md:text-[11rem]"
+              className="hidden md:block text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
                 transform: 'translateY(7px)',
-                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
+                background: 'linear-gradient(to top, #f4f4f4 0%, #ebebeb 30%, #e6e6e6 60%, #e2e2e2 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -289,18 +289,19 @@ const Hero = () => {
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
-                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
+                transform: 'translateY(-3px)',
+                background: 'linear-gradient(to top, #f4f4f4 0%, #ebebeb 30%, #e6e6e6 60%, #e2e2e2 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
             ></span>
             <span
-              className="text-[7rem] md:text-[11rem]"
+              className="hidden md:block text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
                 transform: 'translateY(7px)',
-                background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
+                background: 'linear-gradient(to top, #f4f4f4 0%, #ebebeb 30%, #e6e6e6 60%, #e2e2e2 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -312,7 +313,7 @@ const Hero = () => {
       {/* ── Text + Button ──────────────────────────────────────────── */}
       <div
         className="relative z-10 flex flex-col items-center text-center px-6 mt-[80px] md:mt-[8vh]"
-        style={{ transform: 'translateY(-9px)' }}
+        style={{ transform: 'translateY(-11px)' }}
       >
         <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mb-5">
           {`Pok\u00e9mon TCG Store`}
@@ -325,7 +326,7 @@ const Hero = () => {
       {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
         className="relative w-full mt-9 z-10 flex justify-center"
-        style={{ height: '320px', transform: `translateY(${-46 - (isMobileRef.current ? 50 : 0)}px)` }}
+        style={{ height: '320px', transform: `translateY(${-39 - (isMobileRef.current ? 50 : 0)}px)` }}
       >
         <div
           className="hero-banner__cards"
@@ -385,7 +386,7 @@ const Hero = () => {
       </div>
 
       {/* ── Shop Now Button ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-41 - (isMobileRef.current ? 50 : 0)}px)` }}>
+      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-38 - (isMobileRef.current ? 50 : 0)}px)` }}>
         <a
           href="#products"
           className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"

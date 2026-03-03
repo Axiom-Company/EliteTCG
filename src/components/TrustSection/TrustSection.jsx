@@ -49,12 +49,12 @@ const items = [
 
 const TrustSection = () => {
   return (
-    <section className="bg-white py-20 md:py-24">
+    <section className="bg-white pb-20 md:pb-24" style={{ paddingTop: '71px' }}>
       <div className="container max-w-5xl mx-auto px-6">
 
         {/* Header */}
-        <div className="text-center mb-12">
-          <span className="inline-block text-[11px] font-medium tracking-[0.2em] uppercase text-primary mb-4">
+        <div className="text-center" style={{ marginBottom: '57px' }}>
+          <span className="inline-block text-[11px] font-medium tracking-[0.2em] uppercase mb-4" style={{ color: '#C42020' }}>
             Who we are
           </span>
           <h2 className="text-2xl md:text-3xl font-medium text-gray-900 mb-4">About Elite TCG</h2>
@@ -77,7 +77,7 @@ const TrustSection = () => {
         </div>
 
         {/* CTA */}
-        <div className="flex justify-center mt-10">
+        <div className="flex justify-center mt-[47px]">
           <Link
             to="/products"
             className="inline-flex items-center justify-center gap-2 py-3 px-8 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors"

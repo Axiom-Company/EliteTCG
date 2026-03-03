@@ -45,10 +45,12 @@ import SetDetail from './pages/sets/SetDetail';
 import CategoryDetail from './pages/categories/CategoryDetail';
 
 // Auth pages
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
 import AuthPage from './pages/auth/AuthPage';
 import WriteReview from './pages/reviews/WriteReview';
+
+// Legal pages
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import TermsOfService from './pages/legal/TermsOfService';
 
 // Community pages
 import ChatPage from './pages/community/ChatPage';
@@ -134,10 +136,11 @@ function App() {
           <Route path="/categories/:slug" element={<MainLayout><CategoryDetail /></MainLayout>} />
           <Route path="/product/:id" element={<MainLayout><ProductPage /></MainLayout>} />
           <Route path="/product/:id/review" element={<NavbarLayout><WriteReview /></NavbarLayout>} />
-          <Route path="/login" element={<NavbarLayout><Login /></NavbarLayout>} />
-          <Route path="/register" element={<NavbarLayout><Register /></NavbarLayout>} />
+          <Route path="/login" element={<NavbarLayout><AuthPage /></NavbarLayout>} />
+          <Route path="/register" element={<NavbarLayout><AuthPage /></NavbarLayout>} />
           <Route path="/marketplace" element={<MainLayout><Products /></MainLayout>} />
-          <Route path="/become-seller" element={<NavbarLayout><AuthPage /></NavbarLayout>} />
+          <Route path="/privacy-policy" element={<MainLayout><PrivacyPolicy /></MainLayout>} />
+          <Route path="/terms-of-service" element={<MainLayout><TermsOfService /></MainLayout>} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/chat/:channelSlug" element={<ChatPage />} />
           <Route path="/admin/*" element={<AdminApp />} />
