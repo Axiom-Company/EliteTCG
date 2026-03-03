@@ -279,34 +279,34 @@ const Hero = () => {
               style={{
                 letterSpacing: '0.05em',
                 transform: 'translateY(-3px)',
-                background: 'linear-gradient(to top, #d4d4d4 0%, #e0e0e0 50%, #f2f2f2 100%)',
+                background: 'linear-gradient(to top, #c8c8c8 0%, #d8d8d8 50%, #ebebeb 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
-            ></span>
+            >POK&Eacute;MON</span>
             <span
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
                 transform: 'translateY(4px)',
-                background: 'linear-gradient(to top, #d4d4d4 0%, #e0e0e0 50%, #f2f2f2 100%)',
+                background: 'linear-gradient(to top, #c8c8c8 0%, #d8d8d8 50%, #ebebeb 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
-            ></span>
+            >POK&Eacute;MON</span>
             <span
               className="hidden md:block text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
                 transform: 'translateY(-3px)',
-                background: 'linear-gradient(to top, #d4d4d4 0%, #e0e0e0 50%, #f2f2f2 100%)',
+                background: 'linear-gradient(to top, #c8c8c8 0%, #d8d8d8 50%, #ebebeb 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
-            ></span>
+            >POK&Eacute;MON</span>
           </div>
         </div>
       </div>

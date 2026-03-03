@@ -580,122 +580,95 @@ const RegisterForm = ({ onFlipToLogin }) => {
 };
 
 /* ------------------------------------------------------------------ */
-/*  AuthPage - Combined Login/Register with page flip                   */
+/*  AuthPage - Login / Register with dynamic panel (no flip)            */
 /* ------------------------------------------------------------------ */
 const AuthPage = () => {
   const location = useLocation();
   const initialMode = location.pathname === '/register' ? 'register' : 'login';
   const [mode, setMode] = useState(initialMode);
-  const [flipped, setFlipped] = useState(initialMode === 'register');
   const navigate = useNavigate();
 
-  // Sync with route changes (browser back/forward)
   useEffect(() => {
     const newMode = location.pathname === '/register' ? 'register' : 'login';
-    if (newMode !== mode) {
-      setMode(newMode);
-      setFlipped(newMode === 'register');
-    }
+    if (newMode !== mode) setMode(newMode);
   }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFlip = useCallback((newMode) => {
-    setFlipped(newMode === 'register');
     setMode(newMode);
     navigate(newMode === 'register' ? '/register' : '/login', { replace: true });
   }, [navigate]);
 
+  const isLogin = mode === 'login';
+
   return (
     <section className="min-h-[calc(100vh-130px)] flex bg-white">
-      <SEO title={mode === 'login' ? 'Login' : 'Create Account'} noindex />
+      <SEO title={isLogin ? 'Login' : 'Create Account'} noindex />
 
-      {/* Left: Decorative Panel — navy for login, yellow for register */}
+      {/* Left: Decorative Panel — navy (login) or yellow (register) */}
       <div
-        className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center order-1 transition-colors duration-700"
+        className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center"
         style={{ clipPath: 'polygon(0% 0, 100% 0, 92% 100%, 0 100%)' }}
       >
-        <div className={`absolute inset-0 transition-all duration-700 ${mode === 'login' ? 'bg-gradient-to-br from-[#1a2f55] via-[#1b3464] to-[#0f1f3a]' : 'bg-gradient-to-br from-[#FFD54F] via-[#FFCB32] to-[#F9A825]'}`} />
-        {/* Dot pattern overlay */}
+        {/* Background — transitions between navy and yellow */}
+        <div
+          className="absolute inset-0 transition-all duration-700"
+          style={{
+            background: isLogin
+              ? 'linear-gradient(135deg, #1a2f55 0%, #1b3464 50%, #0f1f3a 100%)'
+              : 'linear-gradient(135deg, #FFD54F 0%, #FFCB32 50%, #F9A825 100%)',
+          }}
+        />
+        {/* Subtle dot pattern */}
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(0,0,0,0.3) 1px, transparent 0)',
+            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(0,0,0,0.4) 1px, transparent 0)',
             backgroundSize: '24px 24px',
           }}
         />
-        {/* Decorative circles */}
         <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/10" />
         <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white/8" />
 
         <div className="relative z-10 text-center px-8">
-          <h2 className={`text-[36px] font-bold mb-4 leading-tight tracking-tight transition-colors duration-700 ${mode === 'login' ? 'text-white' : 'text-gray-900'}`}>
-            Start Collecting
+          <h2
+            className="text-[36px] font-bold mb-4 leading-tight tracking-tight transition-colors duration-700"
+            style={{ color: isLogin ? '#ffffff' : '#111827' }}
+          >
+            {isLogin ? 'Welcome Back' : 'Start Collecting'}
           </h2>
-          <p className={`text-[16px] leading-relaxed mb-10 max-w-85 mx-auto transition-colors duration-700 ${mode === 'login' ? 'text-white/60' : 'text-gray-800/60'}`}>
-            {`Join thousands of collectors trading Pok\u00e9mon cards on EliteTCG`}
+          <p
+            className="text-[16px] leading-relaxed mb-10 mx-auto transition-colors duration-700"
+            style={{ color: isLogin ? 'rgba(255,255,255,0.6)' : 'rgba(17,24,39,0.6)' }}
+          >
+            {isLogin
+              ? `Sign in to your EliteTCG account`
+              : `Join thousands of collectors trading Pok\u00e9mon cards`}
           </p>
 
-          {/* Two showcase cards side by side */}
-          <div className="flex items-center justify-center gap-6">
+          {/* Single card — Mew EX for login, Pikachu for register */}
+          <div className="flex items-center justify-center">
             <ShowcaseCard
-              src={charizardImage}
-              alt="Mew EX"
-              animationName="cardShowcaseLeft"
-              duration={10}
+              key={mode}
+              src={isLogin ? charizardImage : marillImage}
+              alt={isLogin ? 'Mew EX' : 'Auth Hero Card'}
+              animationName={isLogin ? 'cardShowcaseLeft' : 'cardShowcaseRight'}
+              duration={isLogin ? 10 : 11}
               delay="0s"
             />
-            <ShowcaseCard
-              src={marillImage}
-              alt="Auth Hero Card"
-              animationName="cardShowcaseRight"
-              duration={12}
-              delay="-4s"
-            />
           </div>
         </div>
       </div>
 
-      {/* Right: Navy Flipping Form Panel */}
-      <div
-        className="w-full lg:w-[55%] flex items-center justify-center px-8 py-20 lg:px-16 xl:px-24 order-2 bg-gradient-to-br from-[#1a2f55] via-[#1b3464] to-[#0f1f3a]"
-        style={{ perspective: '1200px' }}
-      >
-        <div
-          className="bg-white rounded-3xl shadow-2xl px-10 py-12 w-full max-w-[460px]"
-          style={{
-            position: 'relative',
-            transformStyle: 'preserve-3d',
-            transformOrigin: 'left center',
-            transform: flipped ? 'rotateY(-180deg)' : 'rotateY(0deg)',
-            transition: 'transform 0.7s cubic-bezier(0.645, 0.045, 0.355, 1)',
-          }}
-        >
-          {/* Front face - Login (always rendered, CSS hides when flipped) */}
-          <div
-            style={{
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
-            }}
-          >
-            <LoginForm onFlipToRegister={() => handleFlip('register')} />
-          </div>
-
-          {/* Back face - Register (always rendered, pre-rotated 180deg) */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              padding: '3rem 2.5rem',
-              transform: 'rotateY(180deg)',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
-            }}
-          >
-            <RegisterForm onFlipToLogin={() => handleFlip('login')} />
-          </div>
+      {/* Right: Navy form panel — shows LoginForm or RegisterForm */}
+      <div className="w-full lg:w-[55%] flex items-center justify-center px-8 py-20 lg:px-16 xl:px-24 bg-gradient-to-br from-[#1a2f55] via-[#1b3464] to-[#0f1f3a]">
+        <div className="bg-white rounded-3xl shadow-2xl px-10 py-12 w-full max-w-[460px]">
+          {isLogin
+            ? <LoginForm onFlipToRegister={() => handleFlip('register')} />
+            : <RegisterForm onFlipToLogin={() => handleFlip('login')} />
+          }
         </div>
       </div>
 
-      {/* All keyframes */}
       <style>{`
         @keyframes cardShowcaseLeft {
           0%, 100% { transform: rotateY(-3deg) rotateX(0.8deg) translateZ(0px) translateY(0px); }
@@ -704,25 +677,21 @@ const AuthPage = () => {
           70% { transform: rotateY(4deg) rotateX(-0.8deg) translateZ(12px) translateY(-2px); }
           90% { transform: rotateY(-1deg) rotateX(0.5deg) translateZ(6px) translateY(0px); }
         }
-
         @keyframes cardShowcaseRight {
           0%, 100% { transform: rotateY(3deg) rotateX(-0.5deg) translateZ(0px) translateY(0px); }
           25% { transform: rotateY(-3.5deg) rotateX(0.8deg) translateZ(8px) translateY(1px); }
           50% { transform: rotateY(2deg) rotateX(-0.3deg) translateZ(12px) translateY(-1px); }
           75% { transform: rotateY(-4deg) rotateX(0.6deg) translateZ(5px) translateY(2px); }
         }
-
         @keyframes holoShimmer {
           0% { background-position: 0% 50%; opacity: 0.3; }
           50% { background-position: 100% 50%; opacity: 0.45; }
           100% { background-position: 0% 50%; opacity: 0.3; }
         }
-
         @keyframes sheenMove {
           0%, 100% { transform: translateX(-100%); }
           50% { transform: translateX(100%); }
         }
-
         @keyframes sparkleShift {
           0% { background-position: 0px 0px, 5px 5px; }
           100% { background-position: 20px 20px, 25px 25px; }
