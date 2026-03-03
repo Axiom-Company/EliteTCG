@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, LayoutGrid } from 'lucide-react';
 import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
+import SEO from '../../components/SEO/SEO';
 
 const SetCardSkeleton = () => (
   <div className="bg-white rounded-2xl overflow-hidden animate-pulse">
@@ -34,6 +35,7 @@ const Sets = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="Pokemon TCG Sets" description="Explore all Pokemon TCG sets available at EliteTCG. Find booster boxes, packs, and singles from every set." path="/sets" />
       <div className="max-w-7xl mx-auto px-6 pt-4 pb-0">
         <nav className="flex items-center gap-1.5 text-xs text-gray-400">
           <Link to="/" className="hover:text-gray-700 transition-colors">Home</Link>

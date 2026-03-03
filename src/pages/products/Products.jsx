@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X, ChevronRight, Package, SlidersHorizontal } from 'lucide-react';
 import ProductCard from '../../components/ProductCard/ProductCard';
+import SEO from '../../components/SEO/SEO';
 import { ELITE_API_URL } from '../../config/api';
 
 const categories = [
@@ -123,6 +124,7 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="Shop All Products" description="Browse our full range of Pokemon TCG products including booster boxes, ETBs, singles, and accessories." path="/products" />
 
       {/* ── Page Header ── */}
       <div className="bg-white">

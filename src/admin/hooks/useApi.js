@@ -1,11 +1,14 @@
 import { useState, useCallback } from 'react';
 import { ELITE_API_URL, PAYMENTS_API_URL } from '@/config/api';
+import { supabase } from '@/config/supabase';
 
 const API_BASE = `${ELITE_API_URL}/api`;
 const FASTAPI_BASE = PAYMENTS_API_URL;
-// Get token from localStorage (set by useAuth on login)
+// Get token from Supabase session
 const getToken = async () => {
-  return localStorage.getItem('adminToken') || null;
+  if (!supabase) return null;
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token || null;
 };
 
 // Base fetch wrapper
@@ -220,6 +223,38 @@ export const productReviewsApi = {
   delete: (id) => apiFetch(`/product-reviews/${id}`, { method: 'DELETE' }),
 };
 
+// Email Admin API (FastAPI backend — webhook events + email logs)
+export const emailAdminApi = {
+  getStats: () => fastApiFetch('/email-webhooks/admin/stats'),
+  getLogs: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return fastApiFetch(`/email-webhooks/admin/logs${query ? `?${query}` : ''}`);
+  },
+  getEvents: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return fastApiFetch(`/email-webhooks/admin/events${query ? `?${query}` : ''}`);
+  },
+};
+
+// Webhook Admin API (FastAPI backend)
+export const webhookApi = {
+  getAll: () => fastApiFetch('/admin/webhooks'),
+  create: (data) => fastApiFetch('/admin/webhooks', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => fastApiFetch(`/admin/webhooks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: async (id) => {
+    const token = await getToken();
+    const response = await fetch(`${FASTAPI_BASE}/admin/webhooks/${id}`, {
+      method: 'DELETE',
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Delete failed' }));
+      throw new Error(error.detail || 'Delete failed');
+    }
+  },
+  test: (id) => fastApiFetch(`/admin/webhooks/${id}/test`, { method: 'POST' }),
+};
+
 // Custom hook for API calls with loading/error state
 export const useApiCall = () => {
   const [loading, setLoading] = useState(false);
@@ -242,4 +277,4 @@ export const useApiCall = () => {
   return { loading, error, execute, setError };
 };
 
-export default { productsApi, setsApi, categoriesApi, configApi, preordersApi, discountsApi, ordersApi, dashboardApi };
+export default { productsApi, setsApi, categoriesApi, configApi, preordersApi, discountsApi, ordersApi, dashboardApi, emailAdminApi, webhookApi };

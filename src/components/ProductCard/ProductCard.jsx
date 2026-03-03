@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Heart, Package } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { useWishlist } from '../../contexts/WishlistContext';
-import { getImageUrl } from '../../config/api';
+import { getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 
 const getBadgeStyle = (badge) => {
   switch (badge?.toLowerCase()) {
@@ -68,7 +68,12 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
             )}
           </>
         ) : (
-          <Package className="w-12 h-12 text-gray-200" />
+          <img
+            src={PLACEHOLDER_IMAGE}
+            alt="Product image not available"
+            style={{ width: imageSize, height: imageSize }}
+            className="object-contain"
+          />
         )}
 
         {/* Badge — discount % takes priority */}

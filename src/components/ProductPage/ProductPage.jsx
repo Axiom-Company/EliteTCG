@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useWishlist } from '../../contexts/WishlistContext';
-import { useCustomerAuth } from '../../contexts/CustomerAuthContext';
 import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
+import SEO from '../SEO/SEO';
+import { buildProductJsonLd } from '../../config/seo';
 import PayflexPriceSplitter from '../Payflex/PayflexPriceSplitter';
 import ProductCard from '../ProductCard/ProductCard';
 
@@ -205,6 +206,7 @@ const ProductPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      {product && <SEO title={product.name} description={product.description ? product.description.substring(0, 155) : `Buy ${product.name} at EliteTCG.`} path={`/product/${id}`} image={product.images?.[0] ? getImageUrl(product.images[0]) : undefined} type="product" jsonLd={buildProductJsonLd(product)} />}
       <div className="container py-6 md:py-12 lg:py-16 px-2 md:px-0">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-gray-500 mb-5 md:mb-10">
