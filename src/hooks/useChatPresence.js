@@ -7,7 +7,7 @@ export function useChatPresence(socket) {
     if (!socket) return;
 
     const onPresence = (data) => {
-      setOnlineUsers(data.onlineUsers || []);
+      setOnlineUsers(Array.isArray(data) ? data : (data.onlineUsers || []));
     };
 
     socket.on('presence:update', onPresence);

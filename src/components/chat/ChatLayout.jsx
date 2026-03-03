@@ -11,12 +11,8 @@ import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import {
   getChannels,
   getDMList,
-  getDMMessages,
   getOrCreateDM,
   getChannelPinned,
-  sendDMMessage,
-  editDMMessage,
-  deleteDMMessage,
 } from '@/services/chatApi';
 import ChannelSidebar from './ChannelSidebar';
 import ChannelHeader from './ChannelHeader';
@@ -59,7 +55,7 @@ const ChatLayout = () => {
     reactToMessage,
   } = useChatSocket();
 
-  const { messages, loading, setInitialMessages } = useChatMessages(socket, isDM ? null : activeSlug, isDM);
+  const { messages, loading } = useChatMessages(socket, isDM ? activeDMId : activeSlug, isDM);
   const { onlineUsers, onlineCount } = useChatPresence(socket);
   const { typingUsers, sendTyping } = useTypingIndicator(socket, isDM ? null : activeSlug);
 
@@ -76,7 +72,7 @@ const ChatLayout = () => {
     if (!token) return;
     let cancelled = false;
     getDMList(token)
-      .then((data) => { if (!cancelled) setDmConversations(Array.isArray(data) ? data : data?.conversations || []); })
+      .then((data) => { if (!cancelled) setDmConversations(Array.isArray(data) ? data : data?.dms || []); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, [token]);
@@ -100,33 +96,28 @@ const ChatLayout = () => {
     if (!token || !activeSlug) return;
     let cancelled = false;
     getChannelPinned(activeSlug, token)
-      .then((data) => { if (!cancelled) setPinnedMessages(Array.isArray(data) ? data : data?.messages || []); })
+      .then((data) => { if (!cancelled) setPinnedMessages(Array.isArray(data) ? data : data?.pinned || []); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, [activeSlug, isDM, token]);
 
-  useEffect(() => {
-    if (!isDM || !activeDMId || !token) return;
-    let cancelled = false;
-    getDMMessages(token, activeDMId)
-      .then((data) => { if (!cancelled) setInitialMessages(Array.isArray(data) ? data : data?.messages || []); })
-      .catch(() => { if (!cancelled) toast.error('Failed to load messages.'); });
-    return () => { cancelled = true; };
-  }, [activeDMId, isDM, token, setInitialMessages]);
-
   useEffect(() => { setReplyTo(null); setShowPinned(false); }, [activeSlug, activeDMId]);
 
   const handleSelectChannel = useCallback((slug) => {
+    if (prevSlugRef.current) { leaveChannel(prevSlugRef.current); }
     setIsDM(false); setActiveDMId(null); setDmUserName(''); setShowSidebar(false);
+    prevSlugRef.current = null;
     navigate(`/chat/${slug}`);
-  }, [navigate]);
+  }, [navigate, leaveChannel]);
 
   const handleSelectDM = useCallback((channelId) => {
+    if (prevSlugRef.current) { leaveChannel(prevSlugRef.current); }
     const dm = dmConversations.find((d) => d.channel_id === channelId);
     setIsDM(true); setActiveDMId(channelId); setDmUserName(dm?.other_user?.name || 'Direct Message');
     setActiveChannel(null); setShowSidebar(false);
-    if (prevSlugRef.current) { leaveChannel(prevSlugRef.current); prevSlugRef.current = null; }
-  }, [dmConversations, leaveChannel]);
+    joinChannel(channelId);
+    prevSlugRef.current = channelId;
+  }, [dmConversations, leaveChannel, joinChannel]);
 
   const handleNewDM = useCallback(() => { toast.info('Select a user from the online list to start a DM.'); }, []);
 
@@ -136,35 +127,34 @@ const ChatLayout = () => {
       const result = await getOrCreateDM(token, userId);
       const channelId = result?.channel_id || result?.id;
       if (!channelId) throw new Error('Invalid response');
+      if (prevSlugRef.current) { leaveChannel(prevSlugRef.current); }
       setIsDM(true); setActiveDMId(channelId); setDmUserName(result?.other_user?.name || 'Direct Message');
       setActiveChannel(null);
-      if (prevSlugRef.current) { leaveChannel(prevSlugRef.current); prevSlugRef.current = null; }
+      joinChannel(channelId);
+      prevSlugRef.current = channelId;
       const updated = await getDMList(token);
-      setDmConversations(Array.isArray(updated) ? updated : updated?.conversations || []);
+      setDmConversations(Array.isArray(updated) ? updated : updated?.dms || []);
     } catch (err) { toast.error(err?.message || 'Failed to start conversation.'); }
-  }, [token, leaveChannel]);
+  }, [token, leaveChannel, joinChannel]);
 
   const handleSend = useCallback((content) => {
-    if (isDM) {
-      sendDMMessage(token, activeDMId, content, replyTo?.id || null).catch((err) => toast.error(err?.message || 'Failed to send message.'));
-    } else {
-      sendMessage(activeSlug, content, replyTo || null);
-    }
+    const slug = isDM ? activeDMId : activeSlug;
+    sendMessage(slug, content, replyTo || null);
     setReplyTo(null);
-  }, [isDM, activeSlug, activeDMId, sendMessage, replyTo, token]);
+  }, [isDM, activeSlug, activeDMId, sendMessage, replyTo]);
 
   const handleEdit = useCallback((message) => {
     const newContent = prompt('Edit message:', message.content);
     if (newContent === null || newContent.trim() === '' || newContent === message.content) return;
-    if (isDM) { editDMMessage(token, activeDMId, message.id, newContent.trim()).catch((err) => toast.error(err?.message || 'Failed to edit.')); }
-    else { editMessage(activeSlug, message.id, newContent.trim()); }
-  }, [isDM, activeSlug, activeDMId, editMessage, token]);
+    const slug = isDM ? activeDMId : activeSlug;
+    editMessage(slug, message.id, newContent.trim());
+  }, [isDM, activeSlug, activeDMId, editMessage]);
 
   const handleDelete = useCallback((messageId) => {
     if (!confirm('Delete this message?')) return;
-    if (isDM) { deleteDMMessage(token, activeDMId, messageId).catch((err) => toast.error(err?.message || 'Failed to delete.')); }
-    else { deleteMessage(activeSlug, messageId); }
-  }, [isDM, activeSlug, activeDMId, deleteMessage, token]);
+    const slug = isDM ? activeDMId : activeSlug;
+    deleteMessage(slug, messageId);
+  }, [isDM, activeSlug, activeDMId, deleteMessage]);
 
   const handlePin = useCallback((messageId) => { if (!isDM) pinMessage(activeSlug, messageId); }, [isDM, activeSlug, pinMessage]);
   const handleReact = useCallback((messageId, emoji) => { if (!isDM) reactToMessage(activeSlug, messageId, emoji); }, [isDM, activeSlug, reactToMessage]);
@@ -239,7 +229,7 @@ const ChatLayout = () => {
           isDM={isDM}
           channelId={activeDMId}
           token={token}
-          disabled={!connected && !isDM}
+          disabled={!connected}
         />
       </div>
 

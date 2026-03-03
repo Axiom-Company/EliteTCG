@@ -15,42 +15,46 @@ export function useChatMessages(socket, channelSlug, isDM = false) {
     setMessages([]);
     setLoading(true);
 
-    const onHistory = (data) => {
-      if (data.channelSlug === slugRef.current) {
-        setMessages(data.messages || []);
+    const onHistory = ({ channelSlug: slug, messages: msgs }) => {
+      if (slug === slugRef.current) {
+        setMessages(msgs || []);
         setLoading(false);
       }
     };
 
-    const onNewMessage = (msg) => {
-      if (isDM || msg.channel_slug === slugRef.current) {
-        setMessages((prev) => [...prev, msg]);
+    const onNewMessage = ({ channelSlug: slug, message }) => {
+      if (isDM || slug === slugRef.current) {
+        setMessages((prev) => [...prev, message]);
       }
     };
 
-    const onEdited = (data) => {
+    const onEdited = ({ message }) => {
+      if (!message) return;
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === data.id ? { ...m, content: data.content, is_edited: true, edited_at: data.edited_at } : m
+          m.id === message.id
+            ? { ...m, content: message.content, is_edited: true, edited_at: message.edited_at }
+            : m
         )
       );
     };
 
-    const onDeleted = (data) => {
+    const onDeleted = ({ messageId }) => {
       setMessages((prev) =>
-        prev.map((m) => (m.id === data.id ? { ...m, is_deleted: true, content: '' } : m))
+        prev.map((m) => (m.id === messageId ? { ...m, is_deleted: true, content: '' } : m))
       );
     };
 
-    const onPinned = (data) => {
+    const onPinned = ({ message }) => {
+      if (!message) return;
       setMessages((prev) =>
-        prev.map((m) => (m.id === data.message?.id ? { ...m, is_pinned: true } : m))
+        prev.map((m) => (m.id === message.id ? { ...m, is_pinned: true } : m))
       );
     };
 
-    const onReaction = (data) => {
+    const onReaction = ({ messageId, reactions }) => {
       setMessages((prev) =>
-        prev.map((m) => (m.id === data.messageId ? { ...m, reactions: data.reactions } : m))
+        prev.map((m) => (m.id === messageId ? { ...m, reactions } : m))
       );
     };
 

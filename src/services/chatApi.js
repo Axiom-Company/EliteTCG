@@ -40,7 +40,7 @@ export function getDMList(token) {
 export function getOrCreateDM(token, userId) {
   return request('/dm', token, {
     method: 'POST',
-    body: JSON.stringify({ user_id: userId }),
+    body: JSON.stringify({ recipient_id: userId }),
   });
 }
 
