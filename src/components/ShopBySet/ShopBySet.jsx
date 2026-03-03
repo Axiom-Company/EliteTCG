@@ -61,7 +61,7 @@ const ShopBySet = () => {
     <section id="sets" className="-mt-[31px] pb-16 bg-white md:pt-8 md:pb-10">
       <div className="container">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-medium mb-2" style={{ transform: 'translateY(3px)' }}>Shop by Sets</h2>
+          <h2 className="text-3xl font-medium mb-2" style={{ transform: 'translateY(1px)' }}>Shop by Sets</h2>
           <p className="text-sm text-gray-500">Explore the latest Pokémon TCG expansions</p>
         </div>
 

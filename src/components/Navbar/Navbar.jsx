@@ -99,7 +99,7 @@ const Navbar = () => {
                 setIsShopOpen(!isShopOpen);
               }}
               className={`flex items-center gap-1 text-sm font-medium transition-colors ${
-                isShopOpen ? 'text-gray-900' : 'text-gray-800 hover:text-gray-900'
+                isShopOpen ? 'text-gray-900' : 'text-gray-900 hover:text-black'
               }`}
             >
               Shop
@@ -146,7 +146,7 @@ const Navbar = () => {
 
           <Link
             to="/#preorders"
-            className="text-sm font-medium text-gray-800 hover:text-gray-900 transition-colors"
+            className="text-sm font-medium text-gray-900 hover:text-black transition-colors"
             onClick={closeAll}
           >
             Pre-Orders
@@ -154,7 +154,7 @@ const Navbar = () => {
 
           <Link
             to="/wishlist"
-            className="text-sm font-medium text-gray-800 hover:text-gray-900 transition-colors"
+            className="text-sm font-medium text-gray-900 hover:text-black transition-colors"
             onClick={closeAll}
           >
             Wishlist
@@ -164,11 +164,13 @@ const Navbar = () => {
         {/* Right Side */}
         <div className="flex items-center gap-4">
           {loading ? (
-            <div className="hidden md:flex items-center">
+            <div className="hidden md:flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+              <CartIcon />
             </div>
           ) : isAuthenticated ? (
-            <div ref={userRef} className="relative hidden md:block">
+            <div className="hidden md:flex items-center gap-2">
+            <div ref={userRef} className="relative">
               <button
                 onClick={() => setIsUserOpen(!isUserOpen)}
                 className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
@@ -222,17 +224,19 @@ const Navbar = () => {
                 </div>
               )}
             </div>
+              <CartIcon />
+            </div>
           ) : (
-            <Link
-              to="/login"
-              className="hidden md:inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium text-gray-800 hover:text-gray-900 border border-gray-200 rounded-full hover:bg-gray-50 transition-all duration-200"
-            >
-              Sign In
-            </Link>
+            <div className="hidden md:flex items-center gap-2">
+              <Link
+                to="/login"
+                className="inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-full hover:bg-gray-800 active:scale-[0.97] transition-all duration-200"
+              >
+                Sign In
+              </Link>
+              <CartIcon />
+            </div>
           )}
-          <div className="hidden md:block">
-            <CartIcon />
-          </div>
 
           {/* Mobile Menu Toggle */}
           <button
