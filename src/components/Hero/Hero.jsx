@@ -278,22 +278,22 @@ const Hero = () => {
         }}
       >
         <div
-          className="absolute left-0 right-0 top-[calc(41%-31px)] md:top-[calc(45%-31px)] flex justify-center -translate-y-1/2"
+          className="absolute left-0 right-0 top-[calc(41%-35px)] md:top-[calc(45%-35px)] flex justify-center -translate-y-1/2"
           style={{ perspective: '800px' }}
         >
           <div
             className="flex items-end whitespace-nowrap select-none leading-none"
             style={{
               transformOrigin: 'center bottom',
-              transform: 'rotateX(25deg)',
-              gap: '48px',
+              transform: 'rotateX(19deg)',
+              gap: '14px',
             }}
           >
             <span
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
-                transform: 'translateY(7px)',
+                transform: 'translateY(-5px)',
                 background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -304,6 +304,7 @@ const Hero = () => {
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
+                transform: 'translateY(1px)',
                 background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -314,7 +315,7 @@ const Hero = () => {
               className="text-[7rem] md:text-[11rem]"
               style={{
                 letterSpacing: '0.05em',
-                transform: 'translateY(7px)',
+                transform: 'translateY(-5px)',
                 background: 'linear-gradient(to bottom, #dcdcdc 0%, #c0c0c0 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -327,7 +328,7 @@ const Hero = () => {
       {/* ── Text + Button ──────────────────────────────────────────── */}
       <div
         className="relative z-10 flex flex-col items-center text-center px-6 mt-[80px] md:mt-[8vh]"
-        style={{ transform: `translateY(${-textOffset - 9}px)` }}
+        style={{ transform: `translateY(${-textOffset - 14}px)` }}
       >
         <p className="text-xs font-medium tracking-[0.2em] text-gray-500 uppercase mb-5">
           {`Pok\u00e9mon TCG Store`}
@@ -340,7 +341,7 @@ const Hero = () => {
       {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
         className="relative w-full mt-9 z-10 flex justify-center"
-        style={{ height: '320px', transform: `translateY(${-11 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}
+        style={{ height: '320px', transform: `translateY(${-6 - (isMobileRef.current ? 50 : 0) - cardOffset}px)` }}
       >
         <div
           className="hero-banner__cards"

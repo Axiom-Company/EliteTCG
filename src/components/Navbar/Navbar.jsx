@@ -1,11 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import CartIcon from '../Cart/CartIcon';
+import { useCustomerAuth } from '../../contexts/AuthContext';
 
 const Navbar = () => {
+  const { user, isAuthenticated, isSeller, loading, signOut } = useCustomerAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
+  const [isUserOpen, setIsUserOpen] = useState(false);
+  const userRef = useRef(null);
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -27,6 +31,7 @@ const Navbar = () => {
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (shopRef.current && !shopRef.current.contains(e.target)) setIsShopOpen(false);
+      if (userRef.current && !userRef.current.contains(e.target)) setIsUserOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -150,12 +155,73 @@ const Navbar = () => {
 
         {/* Right Side */}
         <div className="flex items-center gap-4">
-          <Link
-            to="/login"
-            className="hidden md:inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium text-gray-800 hover:text-gray-900 border border-gray-200 rounded-full hover:bg-gray-50 transition-all duration-200"
-          >
-            Sign In
-          </Link>
+          {loading ? (
+            <div className="hidden md:flex items-center">
+              <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+            </div>
+          ) : isAuthenticated ? (
+            <div ref={userRef} className="relative hidden md:block">
+              <button
+                onClick={() => setIsUserOpen(!isUserOpen)}
+                className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <div className="w-8 h-8 bg-[#FFCB32] rounded-full flex items-center justify-center text-gray-900 font-medium text-sm">
+                  {(user?.name || user?.email)?.charAt(0).toUpperCase()}
+                </div>
+              </button>
+
+              {isUserOpen && (
+                <div className="absolute top-full right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-lg min-w-[200px] z-50">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {user?.name || 'User'}
+                    </p>
+                    <p className="text-[11px] text-gray-400 truncate mt-0.5">
+                      {user?.email}
+                    </p>
+                  </div>
+                  <div className="p-1.5">
+                    <Link
+                      to="/orders"
+                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsUserOpen(false)}
+                    >
+                      My Orders
+                    </Link>
+                    <Link
+                      to="/orders/track"
+                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsUserOpen(false)}
+                    >
+                      Track Order
+                    </Link>
+                    {isSeller && (
+                      <Link
+                        to="/seller/dashboard"
+                        className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                        onClick={() => setIsUserOpen(false)}
+                      >
+                        Seller Dashboard
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => { signOut(); setIsUserOpen(false); }}
+                      className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="hidden md:inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium text-gray-800 hover:text-gray-900 border border-gray-200 rounded-full hover:bg-gray-50 transition-all duration-200"
+            >
+              Sign In
+            </Link>
+          )}
           <CartIcon />
 
           {/* Mobile Menu Toggle */}
@@ -225,6 +291,39 @@ const Navbar = () => {
             >
               Wishlist
             </Link>
+
+            <div className="border-t border-gray-100 mt-2 pt-2">
+              {isAuthenticated ? (
+                <>
+                  <div className="px-4 py-3 text-sm text-gray-500">
+                    {user?.name || user?.email}
+                  </div>
+                  {isSeller && (
+                    <Link
+                      to="/seller/dashboard"
+                      className="block px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Seller Dashboard
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => { signOut(); setIsMenuOpen(false); }}
+                    className="w-full text-left px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  className="block px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign In
+                </Link>
+              )}
+            </div>
           </nav>
         </div>
       )}

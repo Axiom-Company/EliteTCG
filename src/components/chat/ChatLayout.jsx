@@ -29,8 +29,9 @@ import PinnedMessages from './PinnedMessages';
 const ChatLayout = () => {
   const { channelSlug } = useParams();
   const navigate = useNavigate();
-  const { user, getToken } = useAuth();
+  const { user, session } = useAuth();
 
+  const token = session?.access_token || null;
   const activeSlug = channelSlug || 'general';
 
   const [channels, setChannels] = useState([]);
@@ -58,276 +59,129 @@ const ChatLayout = () => {
     reactToMessage,
   } = useChatSocket();
 
-  const { messages, loading, setInitialMessages } = useChatMessages(
-    socket,
-    isDM ? null : activeSlug,
-    isDM
-  );
-
+  const { messages, loading, setInitialMessages } = useChatMessages(socket, isDM ? null : activeSlug, isDM);
   const { onlineUsers, onlineCount } = useChatPresence(socket);
   const { typingUsers, sendTyping } = useTypingIndicator(socket, isDM ? null : activeSlug);
 
-  // Fetch channels on mount
   useEffect(() => {
-    let cancelled = false;
-    const token = getToken();
     if (!token) return;
-
+    let cancelled = false;
     getChannels(token)
-      .then((data) => {
-        if (cancelled) return;
-        const list = Array.isArray(data) ? data : data?.channels || [];
-        setChannels(list);
-      })
-      .catch(() => {
-        if (!cancelled) toast.error('Failed to load channels.');
-      });
-
+      .then((data) => { if (!cancelled) setChannels(Array.isArray(data) ? data : data?.channels || []); })
+      .catch(() => { if (!cancelled) toast.error('Failed to load channels.'); });
     return () => { cancelled = true; };
-  }, [getToken]);
+  }, [token]);
 
-  // Fetch DM list
   useEffect(() => {
-    let cancelled = false;
-    const token = getToken();
     if (!token) return;
-
+    let cancelled = false;
     getDMList(token)
-      .then((data) => {
-        if (cancelled) return;
-        setDmConversations(Array.isArray(data) ? data : data?.conversations || []);
-      })
+      .then((data) => { if (!cancelled) setDmConversations(Array.isArray(data) ? data : data?.conversations || []); })
       .catch(() => {});
-
     return () => { cancelled = true; };
-  }, [getToken]);
+  }, [token]);
 
-  // Set active channel object when slug or channels change
   useEffect(() => {
     if (isDM || channels.length === 0) return;
-    const found = channels.find((c) => c.slug === activeSlug);
-    setActiveChannel(found || null);
+    setActiveChannel(channels.find((c) => c.slug === activeSlug) || null);
   }, [activeSlug, channels, isDM]);
 
-  // Join/leave channels when slug changes
   useEffect(() => {
     if (!connected || isDM) return;
-
     const prev = prevSlugRef.current;
-    if (prev && prev !== activeSlug) {
-      leaveChannel(prev);
-    }
+    if (prev && prev !== activeSlug) leaveChannel(prev);
     joinChannel(activeSlug);
     prevSlugRef.current = activeSlug;
-
-    return () => {
-      if (activeSlug) {
-        leaveChannel(activeSlug);
-      }
-    };
+    return () => { if (activeSlug) leaveChannel(activeSlug); };
   }, [activeSlug, connected, isDM, joinChannel, leaveChannel]);
 
-  // Fetch pinned messages when channel changes
   useEffect(() => {
-    if (isDM) {
-      setPinnedMessages([]);
-      return;
-    }
-
-    let cancelled = false;
-    const token = getToken();
+    if (isDM) { setPinnedMessages([]); return; }
     if (!token || !activeSlug) return;
-
-    getChannelPinned(activeSlug, token)
-      .then((data) => {
-        if (cancelled) return;
-        setPinnedMessages(Array.isArray(data) ? data : data?.messages || []);
-      })
-      .catch(() => {});
-
-    return () => { cancelled = true; };
-  }, [activeSlug, isDM, getToken]);
-
-  // Fetch DM messages when activeDMId changes
-  useEffect(() => {
-    if (!isDM || !activeDMId) return;
-
     let cancelled = false;
-    const token = getToken();
-    if (!token) return;
-
-    getDMMessages(token, activeDMId)
-      .then((data) => {
-        if (cancelled) return;
-        const msgs = Array.isArray(data) ? data : data?.messages || [];
-        setInitialMessages(msgs);
-      })
-      .catch(() => {
-        if (!cancelled) toast.error('Failed to load messages.');
-      });
-
+    getChannelPinned(activeSlug, token)
+      .then((data) => { if (!cancelled) setPinnedMessages(Array.isArray(data) ? data : data?.messages || []); })
+      .catch(() => {});
     return () => { cancelled = true; };
-  }, [activeDMId, isDM, getToken, setInitialMessages]);
+  }, [activeSlug, isDM, token]);
 
-  // Clear reply when channel changes
   useEffect(() => {
-    setReplyTo(null);
-    setShowPinned(false);
-  }, [activeSlug, activeDMId]);
+    if (!isDM || !activeDMId || !token) return;
+    let cancelled = false;
+    getDMMessages(token, activeDMId)
+      .then((data) => { if (!cancelled) setInitialMessages(Array.isArray(data) ? data : data?.messages || []); })
+      .catch(() => { if (!cancelled) toast.error('Failed to load messages.'); });
+    return () => { cancelled = true; };
+  }, [activeDMId, isDM, token, setInitialMessages]);
 
-  const handleSelectChannel = useCallback(
-    (slug) => {
-      setIsDM(false);
-      setActiveDMId(null);
-      setDmUserName('');
-      setShowSidebar(false);
-      navigate(`/chat/${slug}`);
-    },
-    [navigate]
-  );
+  useEffect(() => { setReplyTo(null); setShowPinned(false); }, [activeSlug, activeDMId]);
 
-  const handleSelectDM = useCallback(
-    (channelId) => {
-      const dm = dmConversations.find((d) => d.channel_id === channelId);
-      setIsDM(true);
-      setActiveDMId(channelId);
-      setDmUserName(dm?.other_user?.name || 'Direct Message');
+  const handleSelectChannel = useCallback((slug) => {
+    setIsDM(false); setActiveDMId(null); setDmUserName(''); setShowSidebar(false);
+    navigate(`/chat/${slug}`);
+  }, [navigate]);
+
+  const handleSelectDM = useCallback((channelId) => {
+    const dm = dmConversations.find((d) => d.channel_id === channelId);
+    setIsDM(true); setActiveDMId(channelId); setDmUserName(dm?.other_user?.name || 'Direct Message');
+    setActiveChannel(null); setShowSidebar(false);
+    if (prevSlugRef.current) { leaveChannel(prevSlugRef.current); prevSlugRef.current = null; }
+  }, [dmConversations, leaveChannel]);
+
+  const handleNewDM = useCallback(() => { toast.info('Select a user from the online list to start a DM.'); }, []);
+
+  const handleStartDM = useCallback(async (userId) => {
+    if (!token) return;
+    try {
+      const result = await getOrCreateDM(token, userId);
+      const channelId = result?.channel_id || result?.id;
+      if (!channelId) throw new Error('Invalid response');
+      setIsDM(true); setActiveDMId(channelId); setDmUserName(result?.other_user?.name || 'Direct Message');
       setActiveChannel(null);
-      setShowSidebar(false);
+      if (prevSlugRef.current) { leaveChannel(prevSlugRef.current); prevSlugRef.current = null; }
+      const updated = await getDMList(token);
+      setDmConversations(Array.isArray(updated) ? updated : updated?.conversations || []);
+    } catch (err) { toast.error(err?.message || 'Failed to start conversation.'); }
+  }, [token, leaveChannel]);
 
-      if (prevSlugRef.current) {
-        leaveChannel(prevSlugRef.current);
-        prevSlugRef.current = null;
-      }
-    },
-    [dmConversations, leaveChannel]
-  );
-
-  const handleNewDM = useCallback(async () => {
-    toast.info('Select a user from the online list to start a DM.');
-  }, []);
-
-  const handleStartDM = useCallback(
-    async (userId) => {
-      const token = getToken();
-      if (!token) return;
-
-      try {
-        const result = await getOrCreateDM(token, userId);
-        const channelId = result?.channel_id || result?.id;
-        if (!channelId) throw new Error('Invalid response');
-
-        setIsDM(true);
-        setActiveDMId(channelId);
-        setDmUserName(result?.other_user?.name || 'Direct Message');
-        setActiveChannel(null);
-
-        if (prevSlugRef.current) {
-          leaveChannel(prevSlugRef.current);
-          prevSlugRef.current = null;
-        }
-
-        const updated = await getDMList(token);
-        setDmConversations(Array.isArray(updated) ? updated : updated?.conversations || []);
-      } catch (err) {
-        toast.error(err?.message || 'Failed to start conversation.');
-      }
-    },
-    [getToken, leaveChannel]
-  );
-
-  const handleSend = useCallback(
-    (content) => {
-      if (isDM) {
-        const token = getToken();
-        sendDMMessage(token, activeDMId, content, replyTo?.id || null).catch((err) =>
-          toast.error(err?.message || 'Failed to send message.')
-        );
-      } else {
-        sendMessage(activeSlug, content, replyTo || null);
-      }
-      setReplyTo(null);
-    },
-    [isDM, activeSlug, activeDMId, sendMessage, replyTo, getToken]
-  );
-
-  const handleEdit = useCallback(
-    (message) => {
-      const newContent = prompt('Edit message:', message.content);
-      if (newContent === null || newContent.trim() === '' || newContent === message.content) return;
-
-      if (isDM) {
-        const token = getToken();
-        editDMMessage(token, activeDMId, message.id, newContent.trim()).catch((err) =>
-          toast.error(err?.message || 'Failed to edit message.')
-        );
-      } else {
-        editMessage(activeSlug, message.id, newContent.trim());
-      }
-    },
-    [isDM, activeSlug, activeDMId, editMessage, getToken]
-  );
-
-  const handleDelete = useCallback(
-    (messageId) => {
-      if (!confirm('Delete this message?')) return;
-
-      if (isDM) {
-        const token = getToken();
-        deleteDMMessage(token, activeDMId, messageId).catch((err) =>
-          toast.error(err?.message || 'Failed to delete message.')
-        );
-      } else {
-        deleteMessage(activeSlug, messageId);
-      }
-    },
-    [isDM, activeSlug, activeDMId, deleteMessage, getToken]
-  );
-
-  const handlePin = useCallback(
-    (messageId) => {
-      if (isDM) return;
-      pinMessage(activeSlug, messageId);
-    },
-    [isDM, activeSlug, pinMessage]
-  );
-
-  const handleReact = useCallback(
-    (messageId, emoji) => {
-      if (isDM) return;
-      reactToMessage(activeSlug, messageId, emoji);
-    },
-    [isDM, activeSlug, reactToMessage]
-  );
-
-  const handleTyping = useCallback(() => {
-    if (!isDM) {
-      sendTyping();
+  const handleSend = useCallback((content) => {
+    if (isDM) {
+      sendDMMessage(token, activeDMId, content, replyTo?.id || null).catch((err) => toast.error(err?.message || 'Failed to send message.'));
+    } else {
+      sendMessage(activeSlug, content, replyTo || null);
     }
-  }, [isDM, sendTyping]);
+    setReplyTo(null);
+  }, [isDM, activeSlug, activeDMId, sendMessage, replyTo, token]);
 
-  const isModOrAdmin =
-    user?.user_metadata?.role === 'admin' || user?.user_metadata?.role === 'moderator';
+  const handleEdit = useCallback((message) => {
+    const newContent = prompt('Edit message:', message.content);
+    if (newContent === null || newContent.trim() === '' || newContent === message.content) return;
+    if (isDM) { editDMMessage(token, activeDMId, message.id, newContent.trim()).catch((err) => toast.error(err?.message || 'Failed to edit.')); }
+    else { editMessage(activeSlug, message.id, newContent.trim()); }
+  }, [isDM, activeSlug, activeDMId, editMessage, token]);
+
+  const handleDelete = useCallback((messageId) => {
+    if (!confirm('Delete this message?')) return;
+    if (isDM) { deleteDMMessage(token, activeDMId, messageId).catch((err) => toast.error(err?.message || 'Failed to delete.')); }
+    else { deleteMessage(activeSlug, messageId); }
+  }, [isDM, activeSlug, activeDMId, deleteMessage, token]);
+
+  const handlePin = useCallback((messageId) => { if (!isDM) pinMessage(activeSlug, messageId); }, [isDM, activeSlug, pinMessage]);
+  const handleReact = useCallback((messageId, emoji) => { if (!isDM) reactToMessage(activeSlug, messageId, emoji); }, [isDM, activeSlug, reactToMessage]);
+  const handleTyping = useCallback(() => { if (!isDM) sendTyping(); }, [isDM, sendTyping]);
+
+  const isModOrAdmin = user?.role === 'admin' || user?.role === 'moderator';
 
   return (
-    <div className="flex h-screen bg-gray-950 text-gray-100">
-      {/* Mobile sidebar overlay */}
+    <div className="flex h-screen bg-stone-50 text-gray-900">
       {showSidebar && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setShowSidebar(false)}
-          aria-hidden="true"
-        />
+        <div className="fixed inset-0 z-40 bg-black/20 lg:hidden" onClick={() => setShowSidebar(false)} aria-hidden="true" />
       )}
 
-      {/* Sidebar */}
-      <div
-        className={cn(
-          'fixed inset-y-0 left-0 z-50 lg:relative lg:z-auto',
-          'transition-transform duration-200 ease-in-out',
-          showSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        )}
-      >
+      <div className={cn(
+        'fixed inset-y-0 left-0 z-50 lg:relative lg:z-auto transition-transform duration-200 ease-in-out',
+        showSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      )}>
         <ChannelSidebar
           channels={channels}
           activeSlug={isDM ? null : activeSlug}
@@ -340,14 +194,12 @@ const ChatLayout = () => {
         />
       </div>
 
-      {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Mobile menu button + Header */}
         <div className="flex items-center">
           <button
             type="button"
             onClick={() => setShowSidebar((s) => !s)}
-            className="flex items-center justify-center h-12 w-12 text-gray-400 hover:text-gray-200 lg:hidden"
+            className="flex items-center justify-center h-12 w-12 text-gray-400 hover:text-gray-600 lg:hidden"
             aria-label="Toggle sidebar"
           >
             {showSidebar ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -365,7 +217,6 @@ const ChatLayout = () => {
           </div>
         </div>
 
-        {/* Messages */}
         <MessageList
           messages={messages}
           currentUserId={user?.id}
@@ -378,10 +229,8 @@ const ChatLayout = () => {
           isModOrAdmin={isModOrAdmin}
         />
 
-        {/* Typing indicator */}
         <TypingIndicator typingUsers={typingUsers} />
 
-        {/* Input */}
         <MessageInput
           onSend={handleSend}
           onTyping={handleTyping}
@@ -389,24 +238,18 @@ const ChatLayout = () => {
           onCancelReply={() => setReplyTo(null)}
           isDM={isDM}
           channelId={activeDMId}
-          token={getToken()}
+          token={token}
           disabled={!connected && !isDM}
         />
       </div>
 
-      {/* Online users - hidden on mobile */}
       {!isDM && (
         <div className="hidden lg:block">
           <OnlineUserList onlineUsers={onlineUsers} onStartDM={handleStartDM} />
         </div>
       )}
 
-      {/* Pinned messages panel */}
-      <PinnedMessages
-        pinned={pinnedMessages}
-        isOpen={showPinned}
-        onClose={() => setShowPinned(false)}
-      />
+      <PinnedMessages pinned={pinnedMessages} isOpen={showPinned} onClose={() => setShowPinned(false)} />
     </div>
   );
 };

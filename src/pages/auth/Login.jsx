@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '../../contexts/AuthContext';
 import SEO from '../../components/SEO/SEO';
-import cardImage from '../../assets/images/SingleCards/card1.webp';
+import cardImage from '../../assets/images/mew-ex-card.webp';
 
 const HeroCard = () => {
   const cardRef = useRef(null);

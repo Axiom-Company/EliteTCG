@@ -1,8 +1,8 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useCustomerAuth } from '../contexts/AuthContext';
 
 const ProtectedRoute = ({ children, requireSeller = false, requireAdmin = false }) => {
-  const { isAuthenticated, isSeller, isAdmin, loading } = useAuth();
+  const { user, isAuthenticated, isSeller, loading } = useCustomerAuth();
   const location = useLocation();
 
   if (loading) {
@@ -21,7 +21,7 @@ const ProtectedRoute = ({ children, requireSeller = false, requireAdmin = false 
     return <Navigate to="/become-seller" replace />;
   }
 
-  if (requireAdmin && !isAdmin) {
+  if (requireAdmin && user?.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
 

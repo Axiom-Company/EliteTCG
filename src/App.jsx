@@ -45,8 +45,10 @@ import SetDetail from './pages/sets/SetDetail';
 import CategoryDetail from './pages/categories/CategoryDetail';
 
 // Auth pages
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
+import AuthPage from './pages/auth/AuthPage';
+
+// Community pages
+import ChatPage from './pages/community/ChatPage';
 
 // Cart Provider and Components
 import { CartProvider } from './contexts/CartContext';
@@ -117,10 +119,12 @@ function App() {
           <Route path="/sets/:id" element={<MainLayout><SetDetail /></MainLayout>} />
           <Route path="/categories/:slug" element={<MainLayout><CategoryDetail /></MainLayout>} />
           <Route path="/product/:id" element={<MainLayout><ProductPage /></MainLayout>} />
-          <Route path="/login" element={<NavbarLayout><Login /></NavbarLayout>} />
-          <Route path="/register" element={<NavbarLayout><Register /></NavbarLayout>} />
+          <Route path="/login" element={<NavbarLayout><AuthPage /></NavbarLayout>} />
+          <Route path="/register" element={<NavbarLayout><AuthPage /></NavbarLayout>} />
           <Route path="/marketplace" element={<MainLayout><Products /></MainLayout>} />
-          <Route path="/become-seller" element={<NavbarLayout><Register /></NavbarLayout>} />
+          <Route path="/become-seller" element={<NavbarLayout><AuthPage /></NavbarLayout>} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/chat/:channelSlug" element={<ChatPage />} />
           <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
         <CartDrawer />

@@ -12,16 +12,7 @@ const MAX_ROWS = 5;
 const LINE_HEIGHT_PX = 20;
 const PADDING_PX = 16;
 
-const MessageInput = ({
-  onSend,
-  onTyping,
-  replyTo,
-  onCancelReply,
-  isDM,
-  channelId,
-  token,
-  disabled,
-}) => {
+const MessageInput = ({ onSend, onTyping, replyTo, onCancelReply, isDM, channelId, token, disabled }) => {
   const [content, setContent] = useState('');
   const [uploading, setUploading] = useState(false);
   const textareaRef = useRef(null);
@@ -31,78 +22,44 @@ const MessageInput = ({
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
-    const maxHeight = LINE_HEIGHT_PX * MAX_ROWS + PADDING_PX;
-    el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`;
+    el.style.height = `${Math.min(el.scrollHeight, LINE_HEIGHT_PX * MAX_ROWS + PADDING_PX)}px`;
   }, []);
 
-  useEffect(() => {
-    adjustHeight();
-  }, [content, adjustHeight]);
+  useEffect(() => { adjustHeight(); }, [content, adjustHeight]);
 
   const handleSend = useCallback(() => {
     const trimmed = content.trim();
     if (!trimmed || trimmed.length > MAX_CHARS) return;
     onSend(trimmed);
     setContent('');
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
   }, [content, onSend]);
 
-  const handleKeyDown = useCallback(
-    (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleSend();
-      }
-    },
-    [handleSend]
-  );
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  }, [handleSend]);
 
-  const handleChange = useCallback(
-    (e) => {
-      const val = e.target.value;
-      if (val.length > MAX_CHARS) return;
-      setContent(val);
-      onTyping?.();
-    },
-    [onTyping]
-  );
+  const handleChange = useCallback((e) => {
+    if (e.target.value.length > MAX_CHARS) return;
+    setContent(e.target.value);
+    onTyping?.();
+  }, [onTyping]);
 
-  const handleImageUpload = useCallback(
-    async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-
-      if (!file.type.startsWith('image/')) {
-        toast.error('Only image files are allowed.');
-        return;
-      }
-
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('Image must be under 10MB.');
-        return;
-      }
-
-      setUploading(true);
-      try {
-        const compressed = await compressImage(file);
-        const result = await uploadDMImage(token, channelId, compressed);
-        if (result?.url) {
-          onSend(result.url);
-        }
-      } catch (err) {
-        toast.error(err?.message || 'Failed to upload image.');
-      } finally {
-        setUploading(false);
-      }
-    },
-    [token, channelId, onSend]
-  );
+  const handleImageUpload = useCallback(async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (!file.type.startsWith('image/')) { toast.error('Only image files are allowed.'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error('Image must be under 10MB.'); return; }
+    setUploading(true);
+    try {
+      const compressed = await compressImage(file);
+      const result = await uploadDMImage(token, channelId, compressed);
+      if (result?.url) onSend(result.url);
+    } catch (err) {
+      toast.error(err?.message || 'Failed to upload image.');
+    } finally { setUploading(false); }
+  }, [token, channelId, onSend]);
 
   const charCount = content.length;
   const showCharCount = charCount > CHAR_WARN_THRESHOLD;
@@ -110,46 +67,23 @@ const MessageInput = ({
   const canSend = content.trim().length > 0 && !isOverLimit && !disabled;
 
   return (
-    <div className="border-t border-gray-800 bg-gray-900 px-4 pb-4 pt-2">
+    <div className="bg-white border-t border-gray-100 px-4 pb-4 pt-2">
       <ReplyPreview replyTo={replyTo} onCancel={onCancelReply} />
-
-      <div
-        className={cn(
-          'flex items-end gap-2 rounded-lg border border-gray-700 bg-gray-800 px-3 py-2',
-          replyTo && 'rounded-t-none border-t-0',
-          disabled && 'opacity-50'
-        )}
-      >
+      <div className={cn('flex items-end gap-2 rounded-full bg-gray-100 px-4 py-2', disabled && 'opacity-50')}>
         {isDM && (
           <>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
-              disabled={disabled || uploading}
-            />
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={disabled || uploading} />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={disabled || uploading}
-              className={cn(
-                'flex shrink-0 items-center justify-center rounded-md p-1.5 transition-colors',
-                'text-gray-400 hover:bg-gray-700 hover:text-gray-200',
-                'disabled:cursor-not-allowed disabled:opacity-50'
-              )}
+              className="flex shrink-0 items-center justify-center rounded-full p-1 text-gray-400 hover:text-amber-500 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Attach image"
             >
-              {uploading ? (
-                <Loader2 className="h-4.5 w-4.5 animate-spin" />
-              ) : (
-                <ImagePlus className="h-4.5 w-4.5" />
-              )}
+              {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
             </button>
           </>
         )}
-
         <textarea
           ref={textareaRef}
           value={content}
@@ -157,41 +91,20 @@ const MessageInput = ({
           onKeyDown={handleKeyDown}
           disabled={disabled}
           rows={1}
-          placeholder={
-            disabled
-              ? 'Connecting...'
-              : isDM
-                ? 'Send a message...'
-                : `Message #${replyTo ? 'reply' : 'channel'}...`
-          }
-          className={cn(
-            'flex-1 resize-none bg-transparent text-sm text-gray-100 leading-5',
-            'placeholder:text-gray-500 focus:outline-none',
-            'disabled:cursor-not-allowed'
-          )}
+          placeholder={disabled ? 'Connecting...' : isDM ? 'Send a message...' : 'Type a message...'}
+          className="flex-1 resize-none bg-transparent text-sm text-gray-900 leading-5 placeholder:text-gray-400 focus:outline-none disabled:cursor-not-allowed"
         />
-
         <div className="flex shrink-0 items-center gap-2">
           {showCharCount && (
-            <span
-              className={cn(
-                'text-[10px] tabular-nums',
-                isOverLimit ? 'text-red-400' : 'text-gray-500'
-              )}
-            >
-              {charCount}/{MAX_CHARS}
-            </span>
+            <span className={cn('text-[10px] tabular-nums', isOverLimit ? 'text-red-500' : 'text-gray-400')}>{charCount}/{MAX_CHARS}</span>
           )}
-
           <button
             type="button"
             onClick={handleSend}
             disabled={!canSend}
             className={cn(
-              'flex items-center justify-center rounded-md p-1.5 transition-colors',
-              canSend
-                ? 'bg-indigo-600 text-white hover:bg-indigo-500'
-                : 'cursor-not-allowed bg-gray-700 text-gray-500'
+              'flex items-center justify-center rounded-full p-2 transition-all duration-150',
+              canSend ? 'bg-amber-400 text-white hover:bg-amber-500 active:scale-95' : 'text-gray-300 cursor-not-allowed'
             )}
             aria-label="Send message"
           >
