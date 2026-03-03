@@ -587,8 +587,6 @@ const AuthPage = () => {
   const initialMode = location.pathname === '/register' ? 'register' : 'login';
   const [mode, setMode] = useState(initialMode);
   const [flipped, setFlipped] = useState(initialMode === 'register');
-  // panelSide swaps mid-flip so the jump is invisible
-  const [panelSide, setPanelSide] = useState(initialMode === 'register' ? 'left' : 'right');
   const navigate = useNavigate();
 
   // Sync with route changes (browser back/forward)
@@ -597,17 +595,12 @@ const AuthPage = () => {
     if (newMode !== mode) {
       setMode(newMode);
       setFlipped(newMode === 'register');
-      setPanelSide(newMode === 'register' ? 'left' : 'right');
     }
   }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFlip = useCallback((newMode) => {
     setFlipped(newMode === 'register');
     setMode(newMode);
-    // Swap panel side at 350ms (mid-flip, panel edge-on so jump is invisible)
-    setTimeout(() => {
-      setPanelSide(newMode === 'register' ? 'left' : 'right');
-    }, 350);
     navigate(newMode === 'register' ? '/register' : '/login', { replace: true });
   }, [navigate]);
 
@@ -615,42 +608,26 @@ const AuthPage = () => {
     <section className="min-h-[calc(100vh-130px)] flex bg-white">
       <SEO title={mode === 'login' ? 'Login' : 'Create Account'} noindex />
 
-      {/* Form Panel — white background, swaps sides based on mode */}
+      {/* LEFT: Decorative Panel — bottom-to-top page flip between yellow & blue */}
       <div
-        className="w-full lg:w-[55%] flex items-center justify-center px-8 py-20 lg:px-16 xl:px-24"
-        style={{ order: panelSide === 'right' ? 1 : 2 }}
-      >
-        <div className="w-full max-w-[460px]">
-          {mode === 'login' ? (
-            <LoginForm onFlipToRegister={() => handleFlip('register')} />
-          ) : (
-            <RegisterForm onFlipToLogin={() => handleFlip('login')} />
-          )}
-        </div>
-      </div>
-
-      {/* Decorative Panel — flips between blue (login/right) and yellow (register/left) */}
-      <div
-        className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center"
+        className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center order-1"
         style={{
-          order: panelSide === 'right' ? 2 : 1,
-          clipPath: panelSide === 'right'
-            ? 'polygon(8% 0, 100% 0, 100% 100%, 0 100%)'
-            : 'polygon(0 0, 100% 0, 92% 100%, 0 100%)',
+          clipPath: 'polygon(0 0, 100% 0, 92% 100%, 0 100%)',
           perspective: '1200px',
         }}
       >
-        {/* Flipping panel container */}
+        {/* Flipping panel — rotateX for bottom-to-top page flip */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
             transformStyle: 'preserve-3d',
-            transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-            transition: 'transform 0.7s cubic-bezier(0.645, 0.045, 0.355, 1)',
+            transformOrigin: 'center bottom',
+            transform: flipped ? 'rotateX(-180deg)' : 'rotateX(0deg)',
+            transition: 'transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1)',
           }}
         >
-          {/* Front face — Navy/Blue (Login — panel on RIGHT) */}
+          {/* Front face — Navy/Blue (Login) */}
           <div
             className="absolute inset-0 flex items-center justify-center"
             style={{
@@ -681,13 +658,13 @@ const AuthPage = () => {
             </div>
           </div>
 
-          {/* Back face — Yellow (Register — panel on LEFT) */}
+          {/* Back face — Yellow (Register) — rotateX(180deg) so it appears right-way-up when flipped */}
           <div
             className="absolute inset-0 flex items-center justify-center"
             style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
-              transform: 'rotateY(180deg)',
+              transform: 'rotateX(180deg)',
               background: 'linear-gradient(135deg, #FFCB05 0%, #FFD700 50%, #FFB800 100%)',
             }}
           >
@@ -712,6 +689,19 @@ const AuthPage = () => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* RIGHT: Form Panel — always white */}
+      <div
+        className="w-full lg:w-[55%] flex items-center justify-center px-8 py-20 lg:px-16 xl:px-24 order-2"
+      >
+        <div className="w-full max-w-[460px]">
+          {mode === 'login' ? (
+            <LoginForm onFlipToRegister={() => handleFlip('register')} />
+          ) : (
+            <RegisterForm onFlipToLogin={() => handleFlip('login')} />
+          )}
         </div>
       </div>
 

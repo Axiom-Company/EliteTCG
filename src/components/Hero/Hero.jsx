@@ -270,7 +270,7 @@ const Hero = () => {
             className="flex items-end whitespace-nowrap select-none leading-none"
             style={{
               transformOrigin: 'center bottom',
-              transform: 'rotateX(19deg)',
+              transform: 'rotateX(13deg)',
               gap: '76px',
             }}
           >
@@ -326,7 +326,7 @@ const Hero = () => {
       {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
         className="relative w-full mt-9 z-10 flex justify-center"
-        style={{ height: '320px', transform: `translateY(${-19 - (isMobileRef.current ? 50 : 0)}px)` }}
+        style={{ height: '320px', transform: `translateY(${-10 - (isMobileRef.current ? 50 : 0)}px)` }}
       >
         <div
           className="hero-banner__cards"
@@ -386,7 +386,7 @@ const Hero = () => {
       </div>
 
       {/* ── Shop Now Button ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-15 - (isMobileRef.current ? 50 : 0)}px)` }}>
+      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-5 - (isMobileRef.current ? 50 : 0)}px)` }}>
         <a
           href="#products"
           className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"
