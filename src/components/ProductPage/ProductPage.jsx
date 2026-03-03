@@ -48,6 +48,10 @@ const ProductPage = () => {
   const [openAccordions, setOpenAccordions] = useState(new Set(['box', 'dims']));
   const [reviewFilter, setReviewFilter] = useState(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [reportingId, setReportingId] = useState(null);
+  const [reportedIds, setReportedIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('reported_reviews') || '[]'); } catch { return []; }
+  });
   const toggleAccordion = (key) => setOpenAccordions(p => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; });
   const [imgNaturalSize, setImgNaturalSize] = useState({ w: 1, h: 1 });
   const imgContainerRef = useRef(null);
@@ -169,6 +173,30 @@ const ProductPage = () => {
     } finally {
       setReviewsLoadingMore(false);
     }
+  };
+
+  const handleHelpful = async (reviewId) => {
+    const key = `helpful_${reviewId}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, '1');
+    setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, helpful_count: (r.helpful_count || 0) + 1 } : r));
+    try {
+      await fetch(`${ELITE_API_URL}/api/product-reviews/${reviewId}/helpful`, { method: 'POST' });
+    } catch { /* non-critical */ }
+  };
+
+  const submitReport = async (reviewId, reason) => {
+    setReportingId(null);
+    const updated = [...reportedIds, reviewId];
+    setReportedIds(updated);
+    localStorage.setItem('reported_reviews', JSON.stringify(updated));
+    try {
+      await fetch(`${ELITE_API_URL}/api/product-reviews/${reviewId}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+    } catch { /* non-critical */ }
   };
 
   const formatPrice = (price) => `R${Number(price).toLocaleString()}`;
@@ -593,37 +621,39 @@ const ProductPage = () => {
                 </button>
               </div>
 
-              {/* Two-column layout when reviews exist */}
               {totalCount > 0 ? (
-                <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 items-start">
-                  {/* Left — summary */}
-                  <div className="shrink-0 w-full sm:w-40 flex flex-col items-center gap-2">
-                    <span className="text-6xl font-medium text-gray-900 tracking-tight">{avg.toFixed(1)}</span>
-                    <StarRow rating={avg} size={20} />
-                    <span className="text-sm text-gray-400">{totalCount} review{totalCount !== 1 ? 's' : ''}</span>
+                <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
+
+                  {/* Summary column */}
+                  <div className="w-full lg:w-36 flex flex-row lg:flex-col items-center lg:items-center gap-6 lg:gap-3 pb-6 lg:pb-0 border-b lg:border-b-0 border-gray-100">
+                    <div className="flex flex-col items-center gap-1.5">
+                      <span className="text-5xl font-medium text-gray-900 tracking-tight leading-none">{avg.toFixed(1)}</span>
+                      <StarRow rating={avg} size={18} />
+                      <span className="text-sm text-gray-400 mt-0.5">{totalCount} review{totalCount !== 1 ? 's' : ''}</span>
+                    </div>
                     <div className="relative">
                       <button
                         onClick={() => setShowFilterMenu(p => !p)}
-                        className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600 transition-colors mt-1"
+                        className="flex items-center gap-1.5 text-sm text-gray-600 border border-gray-200 rounded-full px-4 py-1.5 hover:border-gray-400 hover:text-gray-900 transition-colors whitespace-nowrap"
                       >
-                        {filterRating ? `${filterRating} ★` : 'Filter'}
+                        {filterRating ? `${filterRating} ★` : 'All ratings'}
                         <svg className={`w-3 h-3 transition-transform duration-150 ${showFilterMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
                       {showFilterMenu && (
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-20 min-w-[160px]">
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 z-20 min-w-[150px]">
                           {[null, 5, 4, 3, 2, 1].map((s) => (
                             <button
                               key={s ?? 'all'}
                               onClick={() => { setReviewFilter(s); setShowFilterMenu(false); }}
-                              className={`w-full px-5 py-2.5 text-sm transition-colors hover:bg-gray-50 flex items-center justify-between gap-3 ${
+                              className={`w-full px-4 py-2.5 text-sm transition-colors hover:bg-gray-50 flex items-center justify-between gap-3 ${
                                 filterRating === s ? 'text-gray-900 font-medium' : 'text-gray-600'
                               }`}
                             >
-                              {s ? `${s} Star` : 'All reviews'}
+                              {s ? `${s} stars` : 'All reviews'}
                               {filterRating === s && (
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                   <polyline points="20 6 9 17 4 12"/>
                                 </svg>
                               )}
@@ -634,42 +664,102 @@ const ProductPage = () => {
                     </div>
                   </div>
 
-                  {/* Right — review list */}
+                  {/* Review list */}
                   <div className="flex-1 min-w-0">
                     {reviewsLoading ? (
                       <div className="flex justify-center py-10">
                         <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
                       </div>
                     ) : (
-                      <div className="space-y-6">
+                      <div className="divide-y divide-gray-100">
                         {filteredReviews.length === 0 && (
-                          <p className="text-sm text-gray-400">No {filterRating}-star reviews yet.</p>
+                          <p className="text-base text-gray-400 py-4">No {filterRating}-star reviews yet.</p>
                         )}
-                        {filteredReviews.map((review) => (
-                          <div key={review.id} className="py-5 border-b border-gray-100 last:border-0 last:mb-0">
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-4 mb-1.5">
-                                <div className="flex items-center gap-3">
-                                  <p className="text-base font-medium text-gray-900 leading-none">{review.name}</p>
-                                  <p className="text-xs text-gray-400">
-                                    {new Date(review.created_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                  </p>
-                                </div>
-                                <StarRow rating={review.rating} size={14} />
-                              </div>
-                              {(review.title || review.comment) && <div className="mt-3" />}
+                        {filteredReviews.map((review) => {
+                          const hasHelped = !!localStorage.getItem(`helpful_${review.id}`);
+                          const hasReported = reportedIds.includes(review.id);
+                          return (
+                            <div key={review.id} className="py-6">
+                              {/* Stars */}
+                              <StarRow rating={review.rating} size={16} />
+
+                              {/* Title */}
                               {review.title && (
-                                <p className="text-base font-medium text-gray-800 mb-0.5">{review.title}</p>
+                                <p className="text-base font-semibold text-gray-900 mt-2">{review.title}</p>
                               )}
+
+                              {/* Name · date */}
+                              <p className="text-sm text-gray-500 mt-1.5">
+                                <span className="font-medium text-gray-700">{review.name}</span>
+                                <span className="mx-2 text-gray-300">·</span>
+                                {new Date(review.created_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </p>
+
+                              {/* Comment */}
                               {review.comment && (
-                                <p className="text-base text-gray-500 leading-relaxed">{review.comment}</p>
+                                <p className="text-base text-gray-600 leading-relaxed mt-3">{review.comment}</p>
+                              )}
+
+                              {/* Actions */}
+                              <div className="flex flex-wrap items-center gap-3 mt-4">
+                                {(review.helpful_count || 0) > 0 && (
+                                  <span className="text-sm text-gray-400">
+                                    {review.helpful_count} {review.helpful_count === 1 ? 'person' : 'people'} found this helpful
+                                  </span>
+                                )}
+                                <button
+                                  onClick={() => handleHelpful(review.id)}
+                                  disabled={hasHelped}
+                                  className={`flex items-center gap-1.5 text-sm px-3 py-1 rounded-md border transition-colors ${
+                                    hasHelped
+                                      ? 'border-gray-300 text-gray-400 cursor-not-allowed bg-gray-50'
+                                      : 'border-gray-200 text-gray-600 hover:border-gray-400 hover:text-gray-900'
+                                  }`}
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill={hasHelped ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+                                    <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                                  </svg>
+                                  Helpful
+                                </button>
+
+                                {!hasReported ? (
+                                  <button
+                                    onClick={() => setReportingId(reportingId === review.id ? null : review.id)}
+                                    className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+                                  >
+                                    Report
+                                  </button>
+                                ) : (
+                                  <span className="text-sm text-gray-300">Reported</span>
+                                )}
+                              </div>
+
+                              {/* Report reason picker */}
+                              {reportingId === review.id && (
+                                <div className="mt-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                  <p className="text-sm font-medium text-gray-700 mb-3">Why are you reporting this review?</p>
+                                  <div className="flex flex-col gap-1">
+                                    {['Spam or advertising', 'Inappropriate content', 'Fake review', 'Other'].map(reason => (
+                                      <button
+                                        key={reason}
+                                        onClick={() => submitReport(review.id, reason)}
+                                        className="text-sm text-left text-gray-600 hover:text-gray-900 py-1.5 px-2 rounded hover:bg-gray-100 transition-colors"
+                                      >
+                                        {reason}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <button onClick={() => setReportingId(null)} className="text-xs text-gray-400 hover:text-gray-600 mt-2 transition-colors">
+                                    Cancel
+                                  </button>
+                                </div>
                               )}
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                         {!filterRating && reviewsHasMore && (
-                          <div className="flex justify-center mt-4">
+                          <div className="flex justify-center pt-6">
                             <button
                               onClick={loadMoreReviews}
                               disabled={reviewsLoadingMore}
@@ -684,17 +774,16 @@ const ProductPage = () => {
                   </div>
                 </div>
               ) : (
-                /* No reviews state */
                 reviewsLoading ? (
                   <div className="flex justify-center py-10">
                     <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
                   </div>
                 ) : (
                   <div className="py-8 text-center">
-                    <p className="text-sm text-gray-400 mb-4">No reviews yet — be the first to share your experience.</p>
+                    <p className="text-base text-gray-400 mb-4">No reviews yet — be the first to share your experience.</p>
                     <button
                       onClick={handleWriteReview}
-                      className="text-sm font-medium text-gray-900 underline underline-offset-4"
+                      className="text-base font-medium text-gray-900 underline underline-offset-4"
                     >
                       Write a Review
                     </button>
