@@ -560,12 +560,12 @@ const AuthPage = () => {
     <section className="min-h-[calc(100vh-130px)] flex bg-white">
       <SEO title={mode === 'login' ? 'Login' : 'Create Account'} noindex />
 
-      {/* Left: Gold Decorative Panel with Two Cards */}
+      {/* Left: Yellow Decorative Panel with Two Cards */}
       <div
-        className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center"
+        className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center order-1"
         style={{ clipPath: 'polygon(0% 0, 100% 0, 92% 100%, 0 100%)' }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1a2f55] via-[#1b3464] to-[#0f1f3a]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FFD54F] via-[#FFCB32] to-[#F9A825]" />
         {/* Dot pattern overlay */}
         <div
           className="absolute inset-0 opacity-[0.04]"
@@ -579,10 +579,10 @@ const AuthPage = () => {
         <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white/[0.08]" />
 
         <div className="relative z-10 text-center px-8">
-          <h2 className="text-[36px] font-bold text-white mb-4 leading-tight tracking-tight">
+          <h2 className="text-[36px] font-bold text-gray-900 mb-4 leading-tight tracking-tight">
             Start Collecting
           </h2>
-          <p className="text-white/60 text-[16px] leading-relaxed mb-10 max-w-[340px] mx-auto">
+          <p className="text-gray-800/60 text-[16px] leading-relaxed mb-10 max-w-[340px] mx-auto">
             {`Join thousands of collectors trading Pok\u00e9mon cards on EliteTCG`}
           </p>
 
@@ -590,14 +590,14 @@ const AuthPage = () => {
           <div className="flex items-center justify-center gap-6">
             <ShowcaseCard
               src={charizardImage}
-              alt="Charizard Base Set"
+              alt="Mew EX"
               animationName="cardShowcaseLeft"
               duration={10}
               delay="0s"
             />
             <ShowcaseCard
               src={marillImage}
-              alt="Marill Card"
+              alt="Auth Hero Card"
               animationName="cardShowcaseRight"
               duration={12}
               delay="-4s"
@@ -606,15 +606,14 @@ const AuthPage = () => {
         </div>
       </div>
 
-      {/* Right: Flipping Form Panel */}
+      {/* Right: Navy Flipping Form Panel */}
       <div
-        className="w-full lg:w-[55%] flex items-center justify-center px-8 py-20 lg:px-16 xl:px-24"
+        className="w-full lg:w-[55%] flex items-center justify-center px-8 py-20 lg:px-16 xl:px-24 order-2 bg-gradient-to-br from-[#1a2f55] via-[#1b3464] to-[#0f1f3a]"
         style={{ perspective: '1200px' }}
       >
         <div
+          className="bg-white rounded-3xl shadow-2xl px-10 py-12 w-full max-w-[460px]"
           style={{
-            width: '100%',
-            maxWidth: '420px',
             position: 'relative',
             transformStyle: 'preserve-3d',
             transformOrigin: 'left center',
