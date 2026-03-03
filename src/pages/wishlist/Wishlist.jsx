@@ -4,6 +4,7 @@ import { Heart } from 'lucide-react';
 import { useWishlist } from '../../contexts/WishlistContext';
 import { ELITE_API_URL } from '../../config/api';
 import ProductCard from '../../components/ProductCard/ProductCard';
+import SEO from '../../components/SEO/SEO';
 
 const Wishlist = () => {
   const { wishlist } = useWishlist();
@@ -34,6 +35,7 @@ const Wishlist = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO title="My Wishlist" noindex />
       <div className="max-w-7xl mx-auto px-6 py-10">
         <div className="mb-8">
           <h1 className="text-2xl font-medium text-gray-900">Wishlist</h1>

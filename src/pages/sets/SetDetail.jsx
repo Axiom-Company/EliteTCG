@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import { ChevronRight, Package, ArrowLeft } from 'lucide-react';
 import ProductCard from '../../components/ProductCard/ProductCard';
 import { ELITE_API_URL, getImageUrl } from '../../config/api';
+import SEO from '../../components/SEO/SEO';
+import { buildBreadcrumbJsonLd } from '../../config/seo';
 
 const sortOptions = [
   { value: 'newest', label: 'Newest First' },
@@ -115,6 +117,7 @@ const SetDetail = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      {set && <SEO title={set.name} description={`Browse products from the ${set.name} Pokemon TCG set at EliteTCG.`} path={`/sets/${id}`} image={set.logo_url ? getImageUrl(set.logo_url) : undefined} />}
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-6 pt-4 pb-0">
         <nav className="flex items-center gap-1.5 text-[13px] text-gray-400">

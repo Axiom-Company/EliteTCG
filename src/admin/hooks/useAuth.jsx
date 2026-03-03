@@ -1,66 +1,98 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { supabase } from '@/config/supabase';
 import { ELITE_API_URL } from '@/config/api';
 
 const API_BASE = `${ELITE_API_URL}/api`;
-
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    const savedUser = localStorage.getItem('adminUser');
-    if (token && savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch {
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
-      }
+  const fetchAdminProfile = useCallback(async (accessToken) => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.user;
+    } catch {
+      return null;
     }
-    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      if (currentSession?.access_token) {
+        const profile = await fetchAdminProfile(currentSession.access_token);
+        setUser(profile);
+      }
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        setSession(newSession);
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (newSession?.access_token) {
+            const profile = await fetchAdminProfile(newSession.access_token);
+            setUser(profile);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [fetchAdminProfile]);
 
   const login = useCallback(async (email, password) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      if (!supabase) throw new Error('Auth service not available');
+
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
+      if (authError) throw new Error(authError.message);
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Login failed');
+      setSession(data.session);
+      const profile = await fetchAdminProfile(data.session.access_token);
+      if (!profile) {
+        await supabase.auth.signOut();
+        throw new Error('Access denied: Admin privileges required');
       }
-
-      localStorage.setItem('adminToken', data.token);
-      localStorage.setItem('adminUser', JSON.stringify(data.user));
-      setUser(data.user);
-      return data.user;
+      setUser(profile);
+      return profile;
     } catch (err) {
       setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchAdminProfile]);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminUser');
+  const logout = useCallback(async () => {
+    if (supabase) await supabase.auth.signOut();
+    setSession(null);
     setUser(null);
   }, []);
 
   const getToken = useCallback(() => {
-    return localStorage.getItem('adminToken');
-  }, []);
+    return session?.access_token || null;
+  }, [session]);
 
   const value = {
     user,
@@ -69,7 +101,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     getToken,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!session,
   };
 
   return (

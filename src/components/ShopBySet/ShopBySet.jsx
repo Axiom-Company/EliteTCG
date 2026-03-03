@@ -58,7 +58,7 @@ const ShopBySet = () => {
   };
 
   return (
-    <section id="sets" className="pt-14 pb-16 bg-white md:pt-8 md:pb-10">
+    <section id="sets" className="-mt-[29px] pb-16 bg-white md:pt-8 md:pb-10">
       <div className="container">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-medium mb-2">Shop by Sets</h2>
