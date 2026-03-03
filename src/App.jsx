@@ -45,7 +45,10 @@ import SetDetail from './pages/sets/SetDetail';
 import CategoryDetail from './pages/categories/CategoryDetail';
 
 // Auth pages
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 import AuthPage from './pages/auth/AuthPage';
+import WriteReview from './pages/reviews/WriteReview';
 
 // Community pages
 import ChatPage from './pages/community/ChatPage';
@@ -74,20 +77,32 @@ const HomePage = () => {
       path="/"
     />
     <Hero onShopClick={() => navigate('/products')} />
+    <hr className="border-gray-100" />
     <ShopBySet />
+    <hr className="border-gray-100" />
     <ShopByCategory />
+    <hr className="border-gray-100" />
     <FeaturedProducts />
-    <MarketplaceCTA />
+    <hr className="border-gray-100" />
     <PreOrders />
+    <hr className="border-gray-100" />
     <TrustSection />
+    <hr className="border-gray-100" />
+    <MarketplaceCTA />
   </>
   );
 };
 
-const MainLayout = ({ children }) => (
-  <div className="flex flex-col min-h-screen">
+const StickyHeader = () => (
+  <div className="sticky top-0 z-40">
     <Navbar />
     <AnnouncementBar />
+  </div>
+);
+
+const MainLayout = ({ children }) => (
+  <div className="flex flex-col min-h-screen">
+    <StickyHeader />
     <main className="flex-1">
       {children}
     </main>
@@ -97,8 +112,7 @@ const MainLayout = ({ children }) => (
 
 const NavbarLayout = ({ children }) => (
   <div className="flex flex-col min-h-screen">
-    <Navbar />
-    <AnnouncementBar />
+    <StickyHeader />
     <main className="flex-1">
       {children}
     </main>
@@ -119,8 +133,9 @@ function App() {
           <Route path="/sets/:id" element={<MainLayout><SetDetail /></MainLayout>} />
           <Route path="/categories/:slug" element={<MainLayout><CategoryDetail /></MainLayout>} />
           <Route path="/product/:id" element={<MainLayout><ProductPage /></MainLayout>} />
-          <Route path="/login" element={<NavbarLayout><AuthPage /></NavbarLayout>} />
-          <Route path="/register" element={<NavbarLayout><AuthPage /></NavbarLayout>} />
+          <Route path="/product/:id/review" element={<NavbarLayout><WriteReview /></NavbarLayout>} />
+          <Route path="/login" element={<NavbarLayout><Login /></NavbarLayout>} />
+          <Route path="/register" element={<NavbarLayout><Register /></NavbarLayout>} />
           <Route path="/marketplace" element={<MainLayout><Products /></MainLayout>} />
           <Route path="/become-seller" element={<NavbarLayout><AuthPage /></NavbarLayout>} />
           <Route path="/chat" element={<ChatPage />} />

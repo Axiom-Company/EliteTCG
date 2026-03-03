@@ -1,44 +1,63 @@
 import { Link } from 'react-router-dom';
 
+const items = [
+  {
+    title: 'Sealed & Authentic',
+    body: 'Every Booster Box and Elite Trainer Box is 100% verified and sourced through trusted channels.',
+  },
+  {
+    title: 'Nationwide Shipping',
+    body: 'Fast, tracked delivery via The Courier Guy to all SA provinces — from Cape Town to JHB and beyond.',
+  },
+  {
+    title: 'Secure Payments',
+    body: (
+      <>
+        All transactions processed securely through PayFast. Your data is protected per our{' '}
+        <Link to="/privacy-policy" className="underline underline-offset-2 hover:text-gray-900 transition-colors">privacy policy</Link>.
+      </>
+    ),
+  },
+];
+
 const TrustSection = () => {
   return (
-    <section className="bg-white py-24 md:py-16">
-      <div className="container">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-medium mb-2">About Elite TCG</h2>
-          <p className="text-sm text-gray-500 max-w-2xl mx-auto">
-            Elite TCG is South Africa's online store for authentic Pokémon Trading Card Game products. Browse and buy sealed booster boxes, elite trainer boxes, single cards and accessories, or join our marketplace to buy and sell with other collectors.
+    <section className="bg-white py-20 md:py-24">
+      <div className="container max-w-5xl mx-auto px-6">
+
+        {/* Header */}
+        <div className="text-center mb-12">
+          <span className="inline-block text-[11px] font-medium tracking-[0.2em] uppercase text-primary mb-4">
+            Who we are
+          </span>
+          <h2 className="text-2xl md:text-3xl font-medium text-gray-900 mb-4">About Elite TCG</h2>
+          <p className="text-sm text-gray-500 max-w-lg mx-auto leading-relaxed">
+            South Africa's online store for authentic Pokémon TCG products. Shop sealed products, singles, and accessories — or join our marketplace to buy and sell with other collectors.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          <div className="flex flex-col items-center">
-            <h3 className="text-lg font-medium mb-2">Sealed & Authentic</h3>
-            <p className="text-sm text-gray-600">
-              Every Booster Box and Elite Trainer Box is 100% verified and sourced through trusted channels.
-            </p>
-          </div>
-          <div className="flex flex-col items-center">
-            <h3 className="text-lg font-medium mb-2">Nationwide Shipping</h3>
-            <p className="text-sm text-gray-600">
-              Fast, tracked delivery via The Courier Guy to all SA provinces — from Cape Town to JHB and beyond.
-            </p>
-          </div>
-          <div className="flex flex-col items-center">
-            <h3 className="text-lg font-medium mb-2">Secure Payments</h3>
-            <p className="text-sm text-gray-600">
-              All transactions are processed securely through PayFast. Your account and personal data are protected in line with our{' '}
-              <Link to="/privacy-policy" className="text-blue-600 hover:underline">privacy policy</Link>.
-            </p>
-          </div>
+
+        {/* Trust items */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {items.map(({ title, body }) => (
+            <div key={title} className="flex flex-col gap-2 p-6 rounded-2xl border border-gray-100 bg-gray-50">
+              <div className="flex flex-col gap-1">
+                <h3 className="text-sm font-medium text-gray-900">{title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{body}</p>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="flex justify-center mt-16">
+
+        {/* CTA */}
+        <div className="flex justify-center mt-10">
           <Link
             to="/products"
-            className="inline-flex items-center justify-center gap-2 py-3 px-8 text-lg font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"
+            className="inline-flex items-center justify-center gap-2 py-3 px-8 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-colors"
           >
             Shop Now
           </Link>
         </div>
+
       </div>
     </section>
   );

@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useCart } from '../../contexts/CartContext';
 import { useWishlist } from '../../contexts/WishlistContext';
+import { useCustomerAuth } from '../../contexts/AuthContext';
 import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 import SEO from '../SEO/SEO';
 import { buildProductJsonLd } from '../../config/seo';
@@ -40,10 +42,19 @@ const ProductPage = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsOffset, setReviewsOffset] = useState(0);
+  const [reviewsHasMore, setReviewsHasMore] = useState(false);
+  const [reviewsLoadingMore, setReviewsLoadingMore] = useState(false);
   const [magnifier, setMagnifier] = useState({ show: false, x: 0, y: 0, w: 1, h: 1 });
   const [openAccordions, setOpenAccordions] = useState(new Set(['box', 'dims']));
   const [reviewFilter, setReviewFilter] = useState(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [reviewSort, setReviewSort] = useState('recent'); // 'recent' | 'helpful' | 'stars_high' | 'stars_low'
+  const [reportingId, setReportingId] = useState(null);
+  const [reportReason, setReportReason] = useState(null);
+  const [reportedIds, setReportedIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('reported_reviews') || '[]'); } catch { return []; }
+  });
   const toggleAccordion = (key) => setOpenAccordions(p => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; });
   const [imgNaturalSize, setImgNaturalSize] = useState({ w: 1, h: 1 });
   const imgContainerRef = useRef(null);
@@ -132,15 +143,17 @@ const ProductPage = () => {
     fetchRelated();
   }, [product]);
 
-  // Fetch reviews
+  // Fetch reviews (first page)
   useEffect(() => {
     if (!product) return;
     const fetchReviews = async () => {
       setReviewsLoading(true);
       try {
-        const res = await fetch(`${ELITE_API_URL}/api/product-reviews/product/${product.id}`);
+        const res = await fetch(`${ELITE_API_URL}/api/product-reviews/product/${product.id}?limit=3&offset=0`);
         const data = await res.json();
         setReviews(data.reviews || []);
+        setReviewsHasMore(data.hasMore || false);
+        setReviewsOffset(3);
       } catch {
         // non-critical
       } finally {
@@ -149,6 +162,47 @@ const ProductPage = () => {
     };
     fetchReviews();
   }, [product]);
+
+  const loadMoreReviews = async () => {
+    setReviewsLoadingMore(true);
+    try {
+      const res = await fetch(`${ELITE_API_URL}/api/product-reviews/product/${product.id}?limit=3&offset=${reviewsOffset}`);
+      const data = await res.json();
+      setReviews(prev => [...prev, ...(data.reviews || [])]);
+      setReviewsHasMore(data.hasMore || false);
+      setReviewsOffset(prev => prev + 3);
+    } catch {
+      // non-critical
+    } finally {
+      setReviewsLoadingMore(false);
+    }
+  };
+
+  const handleHelpful = async (reviewId) => {
+    const key = `helpful_${reviewId}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, '1');
+    setReviews(prev => prev.map(r => r.id === reviewId ? { ...r, helpful_count: (r.helpful_count || 0) + 1 } : r));
+    try {
+      await fetch(`${ELITE_API_URL}/api/product-reviews/${reviewId}/helpful`, { method: 'POST' });
+    } catch { /* non-critical */ }
+  };
+
+  const submitReport = async (reviewId, reason) => {
+    setReportingId(null);
+    setReportReason(null);
+    const updated = [...reportedIds, reviewId];
+    setReportedIds(updated);
+    localStorage.setItem('reported_reviews', JSON.stringify(updated));
+    toast.success('Thank you — we\'ll look into it.');
+    try {
+      await fetch(`${ELITE_API_URL}/api/product-reviews/${reviewId}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason }),
+      });
+    } catch { /* non-critical */ }
+  };
 
   const formatPrice = (price) => `R${Number(price).toLocaleString()}`;
 
@@ -336,106 +390,112 @@ const ProductPage = () => {
           </div>
 
           {/* Details Section */}
-          <div className="flex flex-col">
-            {product.category && (
-              <span className="text-xs text-gray-400 uppercase tracking-wider mb-2">
-                {product.category.replace('_', ' ')}
-              </span>
-            )}
+          <div className="flex flex-col gap-6">
+            {/* Title group */}
+            <div>
+              {product.category && (
+                <span className="text-xs text-gray-400 uppercase tracking-wider">
+                  {product.category.replace('_', ' ')}
+                </span>
+              )}
+              <h1 className="text-xl md:text-3xl font-medium text-gray-900 mt-2 leading-snug">{product.name}</h1>
+              {(() => {
+                const count = product.review_count ?? 0;
+                const rating = count > 0 ? Math.round(product.rating || 0) : 0;
+                return (
+                  <div className="flex items-center gap-2 mt-3">
+                    <div className="flex items-center gap-0.5">
+                      {[1,2,3,4,5].map((s) => (
+                        <svg key={s} width="16" height="16" viewBox="0 0 24 24"
+                          fill="currentColor" stroke="none"
+                          className={s <= rating ? 'text-yellow-400' : 'text-gray-200'}
+                        >
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-sm text-gray-400">
+                      {count > 0 ? `${(product.rating || 0).toFixed(1)} (${count} review${count !== 1 ? 's' : ''})` : '(0)'}
+                    </span>
 
-            <h1 className="text-xl md:text-3xl font-medium text-gray-900 mb-3 md:mb-4 leading-snug">{product.name}</h1>
-
-            {(() => {
-              const count = product.review_count ?? 0;
-              const rating = count > 0 ? Math.round(product.rating || 0) : 0;
-              return (
-                <div className="flex items-center gap-2 mb-3 md:mb-4">
-                  <div className="flex items-center gap-0.5">
-                    {[1,2,3,4,5].map((s) => (
-                      <svg key={s} width="16" height="16" viewBox="0 0 24 24"
-                        fill="currentColor" stroke="none"
-                        className={s <= rating ? 'text-yellow-400' : 'text-gray-200'}
-                      >
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                      </svg>
-                    ))}
                   </div>
-                  <span className="text-sm text-gray-400">
-                    {count > 0 ? `${(product.rating || 0).toFixed(1)} (${count} review${count !== 1 ? 's' : ''})` : '(0)'}
-                  </span>
-                </div>
-              );
-            })()}
-
-            <div className="flex items-baseline gap-3 mb-5 md:mb-6">
-              <span className="text-2xl md:text-3xl font-medium text-gray-900">{formatPrice(product.price)}</span>
-              {product.compare_at_price && (
-                <span className="text-base md:text-xl text-gray-400 line-through">{formatPrice(product.compare_at_price)}</span>
-              )}
+                );
+              })()}
             </div>
 
-            <PayflexPriceSplitter price={product.price} />
-
-            <div className="flex items-center gap-4 mb-6">
-              <span className="text-sm font-medium text-gray-900">Quantity</span>
-              <div className="flex items-center border border-gray-200 rounded-lg">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  disabled={quantity <= 1}
-                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  −
-                </button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  disabled={quantity >= (product?.inventory?.quantity || 99)}
-                  className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  +
-                </button>
+            {/* Price block */}
+            <div className="border-t border-gray-100 pt-6">
+              <div className="flex items-baseline gap-3">
+                <span className="text-2xl md:text-3xl font-medium text-gray-900">{formatPrice(product.price)}</span>
+                {product.compare_at_price && (
+                  <span className="text-base md:text-xl text-gray-400 line-through">{formatPrice(product.compare_at_price)}</span>
+                )}
               </div>
+              <PayflexPriceSplitter price={product.price} />
               {stockStatus.text && (
-                <span className={`text-sm font-medium ${stockStatus.color}`}>{stockStatus.text}</span>
+                <span className={`text-sm font-medium mt-1 block ${stockStatus.color}`}>{stockStatus.text}</span>
               )}
             </div>
 
-            <div className="flex gap-3 mb-6 md:mb-8">
+            {/* Quantity + CTA */}
+            <div className="border-t border-gray-100 pt-6 flex flex-col gap-4">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-900">Quantity</span>
+                <div className="flex items-center border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={quantity <= 1}
+                    className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    −
+                  </button>
+                  <span className="w-12 text-center font-medium">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    disabled={quantity >= (product?.inventory?.quantity || 99)}
+                    className="w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
               <button
                 onClick={handleAddToCart}
                 disabled={stockStatus.text === 'Out of Stock'}
-                className="flex-1 md:flex-none py-3 px-8 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full py-3 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
               >
                 Add to Cart
               </button>
               <button
                 onClick={() => product && toggleWishlist(product.id)}
-                className={`w-12 h-12 flex items-center justify-center transition-colors cursor-pointer ${
-                  product && isWishlisted(product.id) ? 'text-primary' : 'text-gray-400 hover:text-gray-600'
+                className={`w-full py-3 border text-sm font-medium rounded-full transition-colors cursor-pointer ${
+                  product && isWishlisted(product.id)
+                    ? 'border-gray-900 text-gray-900 hover:bg-gray-50'
+                    : 'border-gray-300 text-gray-700 hover:border-gray-900 hover:text-gray-900'
                 }`}
-                aria-label={product && isWishlisted(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
               >
-                <HeartIcon filled={product && isWishlisted(product.id)} />
+                {product && isWishlisted(product.id) ? 'Wishlisted' : 'Add to Wishlist'}
               </button>
             </div>
 
-            <div className="border-t border-gray-100 pt-6 space-y-3">
+            {/* Meta */}
+            <div className="border-t border-gray-100 pt-6 space-y-2.5">
               {product.sku && (
                 <div className="flex items-center text-sm">
-                  <span className="text-gray-500 w-24">SKU:</span>
-                  <span className="text-gray-900">{product.sku}</span>
+                  <span className="text-gray-400 w-24">SKU</span>
+                  <span className="text-gray-700">{product.sku}</span>
                 </div>
               )}
               {product.category && (
                 <div className="flex items-center text-sm">
-                  <span className="text-gray-500 w-24">Category:</span>
-                  <span className="text-gray-900 capitalize">{product.category.replace('_', ' ')}</span>
+                  <span className="text-gray-400 w-24">Category</span>
+                  <span className="text-gray-700 capitalize">{product.category.replace('_', ' ')}</span>
                 </div>
               )}
               {product.sets && (
                 <div className="flex items-center text-sm">
-                  <span className="text-gray-500 w-24">Set:</span>
-                  <span className="text-gray-900">{product.sets.name}</span>
+                  <span className="text-gray-400 w-24">Set</span>
+                  <span className="text-gray-700">{product.sets.name}</span>
                 </div>
               )}
             </div>
@@ -521,9 +581,17 @@ const ProductPage = () => {
         {(() => {
           const avg = reviews.length
             ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
-            : 0;
+            : (product.rating || 0);
+          const totalCount = reviews.length || product.review_count || 0;
           const [filterRating, setFilterRating] = [reviewFilter, setReviewFilter];
-          const filteredReviews = filterRating ? reviews.filter(r => r.rating === filterRating) : reviews;
+          const filteredReviews = (filterRating ? reviews.filter(r => r.rating === filterRating) : reviews)
+            .slice()
+            .sort((a, b) => {
+              if (reviewSort === 'helpful') return (b.helpful_count || 0) - (a.helpful_count || 0);
+              if (reviewSort === 'stars_high') return b.rating - a.rating;
+              if (reviewSort === 'stars_low') return a.rating - b.rating;
+              return new Date(b.created_at) - new Date(a.created_at); // 'recent'
+            });
 
           const StarRow = ({ rating: r, size = 14 }) => (
             <div className="flex items-center gap-0.5">
@@ -553,8 +621,8 @@ const ProductPage = () => {
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-xl font-medium text-gray-900">
                   Customer Reviews
-                  {reviews.length > 0 && (
-                    <span className="text-gray-400 font-normal ml-2 text-base">({reviews.length})</span>
+                  {totalCount > 0 && (
+                    <span className="text-gray-400 font-normal ml-2 text-base">({totalCount})</span>
                   )}
                 </h2>
                 <button
@@ -565,97 +633,190 @@ const ProductPage = () => {
                 </button>
               </div>
 
-              {/* Two-column layout when reviews exist */}
-              {reviews.length > 0 ? (
-                <div className="flex flex-col sm:flex-row gap-8 sm:gap-12 items-start">
-                  {/* Left — summary */}
-                  <div className="shrink-0 w-full sm:w-40 flex flex-col items-center gap-2">
-                    <span className="text-6xl font-medium text-gray-900 tracking-tight">{avg.toFixed(1)}</span>
-                    <StarRow rating={avg} size={20} />
-                    <span className="text-sm text-gray-400">{reviews.length} review{reviews.length !== 1 ? 's' : ''}</span>
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowFilterMenu(p => !p)}
-                        className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600 transition-colors mt-1"
-                      >
-                        {filterRating ? `${filterRating} ★` : 'Filter'}
-                        <svg className={`w-3 h-3 transition-transform duration-150 ${showFilterMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      {showFilterMenu && (
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-20 min-w-[160px]">
-                          {[null, 5, 4, 3, 2, 1].map((s) => (
-                            <button
-                              key={s ?? 'all'}
-                              onClick={() => { setReviewFilter(s); setShowFilterMenu(false); }}
-                              className={`w-full px-5 py-2.5 text-sm transition-colors hover:bg-gray-50 flex items-center justify-between gap-3 ${
-                                filterRating === s ? 'text-gray-900 font-medium' : 'text-gray-600'
-                              }`}
-                            >
-                              {s ? `${s} Star` : 'All reviews'}
-                              {filterRating === s && (
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="20 6 9 17 4 12"/>
-                                </svg>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      )}
+              {totalCount > 0 ? (
+                <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+
+                  {/* Summary — compact row on mobile, column on desktop */}
+                  <div className="order-1 w-full lg:w-32 shrink-0 flex flex-row lg:flex-col items-center gap-4 lg:gap-3 pb-5 lg:pb-0 border-b lg:border-b-0 border-gray-100">
+                    <div className="flex items-baseline gap-2 lg:flex-col lg:items-center lg:gap-1.5">
+                      <span className="text-4xl lg:text-5xl font-medium text-gray-900 tracking-tight leading-none">{avg.toFixed(1)}</span>
+                      <div className="flex flex-col gap-1 lg:items-center">
+                        <StarRow rating={avg} size={20} />
+                        <span className="text-xs text-gray-400">{totalCount} review{totalCount !== 1 ? 's' : ''}</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Right — review list */}
-                  <div className="flex-1 min-w-0">
+                  {/* Filters — horizontal scrollable pills on mobile, sidebar on desktop */}
+                  <div className="order-2 lg:order-3 w-full lg:w-44 shrink-0">
+
+                    {/* Mobile: horizontal pills */}
+                    <div className="flex lg:hidden flex-wrap gap-2">
+                      {[
+                        { value: 'recent', label: 'Recent' },
+                        { value: 'helpful', label: 'Helpful' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setReviewSort(opt.value)}
+                          className={`shrink-0 text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                            reviewSort === opt.value
+                              ? 'bg-gray-900 border-gray-900 text-white font-medium'
+                              : 'border-gray-200 text-gray-500'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                      <div className="w-px bg-gray-200 self-stretch shrink-0 mx-1" />
+                      {[null, 5, 4, 3, 2, 1].map((s) => (
+                        <button
+                          key={s ?? 'all'}
+                          onClick={() => setReviewFilter(s)}
+                          className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors flex items-center gap-1 ${
+                            filterRating === s
+                              ? 'bg-gray-900 border-gray-900 text-white font-medium'
+                              : 'border-gray-200 text-gray-500'
+                          }`}
+                        >
+                          {s ? (
+                            <>{s}<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="text-yellow-400"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></>
+                          ) : 'All'}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Desktop: vertical sidebar */}
+                    <div className="hidden lg:flex flex-col gap-6 pt-1">
+                      <div>
+                        <p className="text-xs font-medium text-gray-400 mb-2">Sort by</p>
+                        <div className="flex flex-col gap-0.5">
+                          {[
+                            { value: 'recent', label: 'Most Recent' },
+                            { value: 'helpful', label: 'Most Helpful' },
+                          ].map((opt) => (
+                            <button
+                              key={opt.value}
+                              onClick={() => setReviewSort(opt.value)}
+                              className={`text-left text-sm px-3 py-2 rounded-lg transition-colors ${
+                                reviewSort === opt.value
+                                  ? 'bg-gray-100 text-gray-900 font-medium'
+                                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-400 mb-2">Stars</p>
+                        <div className="flex flex-col gap-0.5">
+                          {[null, 5, 4, 3, 2, 1].map((s) => (
+                            <button
+                              key={s ?? 'all'}
+                              onClick={() => setReviewFilter(s)}
+                              className={`text-left text-sm px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                                filterRating === s
+                                  ? 'bg-gray-100 text-gray-900 font-medium'
+                                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                              }`}
+                            >
+                              {s ? (
+                                <><span>{s}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="text-yellow-400 shrink-0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></>
+                              ) : 'All ratings'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Review list */}
+                  <div className="order-3 lg:order-2 flex-1 min-w-0">
                     {reviewsLoading ? (
                       <div className="flex justify-center py-10">
                         <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
                       </div>
                     ) : (
-                      <div className="space-y-6">
+                      <div className="divide-y divide-gray-100">
                         {filteredReviews.length === 0 && (
-                          <p className="text-sm text-gray-400">No {filterRating}-star reviews yet.</p>
+                          <p className="text-base text-gray-400 py-4">No {filterRating}-star reviews yet.</p>
                         )}
-                        {filteredReviews.map((review) => (
-                          <div key={review.id} className="py-5 border-b border-gray-100 last:border-0">
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-4 mb-1.5">
-                                <div>
-                                  <p className="text-base font-medium text-gray-900 leading-none">{review.name}</p>
-                                  <p className="text-xs text-gray-400 mt-0.5">
-                                    {new Date(review.created_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                  </p>
-                                </div>
-                                <StarRow rating={review.rating} size={14} />
-                              </div>
-                              {(review.title || review.comment) && <div className="mt-3" />}
+                        {filteredReviews.map((review) => {
+                          const hasHelped = !!localStorage.getItem(`helpful_${review.id}`);
+                          const hasReported = reportedIds.includes(review.id);
+                          return (
+                            <div key={review.id} className="py-6">
+                              <StarRow rating={review.rating} size={16} />
                               {review.title && (
-                                <p className="text-base font-medium text-gray-800 mb-0.5">{review.title}</p>
+                                <p className="text-base font-medium text-gray-900 mt-2">{review.title}</p>
                               )}
+                              <p className="text-sm text-gray-500 mt-1.5">
+                                <span className="font-medium text-gray-700">{review.name}</span>
+                                <span className="mx-2 text-gray-300">·</span>
+                                {new Date(review.created_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </p>
                               {review.comment && (
-                                <p className="text-base text-gray-500 leading-relaxed">{review.comment}</p>
+                                <p className="text-base text-gray-600 leading-relaxed mt-3">{review.comment}</p>
                               )}
+                              <div className="flex flex-wrap items-center gap-3 mt-4">
+                                <button
+                                  onClick={() => handleHelpful(review.id)}
+                                  disabled={hasHelped}
+                                  className={`flex items-center gap-1.5 text-sm px-3 py-1 rounded-md border transition-colors ${
+                                    hasHelped
+                                      ? 'border-gray-300 text-gray-400 cursor-not-allowed bg-gray-50'
+                                      : 'border-gray-200 text-gray-600 hover:border-gray-400 hover:text-gray-900'
+                                  }`}
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill={hasHelped ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+                                    <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                                  </svg>
+                                  Helpful{(review.helpful_count || 0) > 0 ? ` (${review.helpful_count})` : ''}
+                                </button>
+                                {!hasReported ? (
+                                  <button
+                                    onClick={() => setReportingId(review.id)}
+                                    className="text-sm text-blue-500 hover:text-blue-700 transition-colors"
+                                  >
+                                    Report
+                                  </button>
+                                ) : (
+                                  <span className="text-sm text-gray-300">Reported</span>
+                                )}
+                              </div>
                             </div>
+                          );
+                        })}
+                        {!filterRating && reviewsHasMore && (
+                          <div className="flex justify-center pt-6">
+                            <button
+                              onClick={loadMoreReviews}
+                              disabled={reviewsLoadingMore}
+                              className="px-6 py-2.5 border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              {reviewsLoadingMore ? 'Loading...' : 'Load more reviews'}
+                            </button>
                           </div>
-                        ))}
+                        )}
                       </div>
                     )}
                   </div>
+
                 </div>
               ) : (
-                /* No reviews state */
                 reviewsLoading ? (
                   <div className="flex justify-center py-10">
                     <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
                   </div>
                 ) : (
                   <div className="py-8 text-center">
-                    <p className="text-sm text-gray-400 mb-4">No reviews yet — be the first to share your experience.</p>
+                    <p className="text-base text-gray-400 mb-4">No reviews yet — be the first to share your experience.</p>
                     <button
                       onClick={handleWriteReview}
-                      className="text-sm font-medium text-gray-900 underline underline-offset-4"
+                      className="text-base font-medium text-gray-900 underline underline-offset-4"
                     >
                       Write a Review
                     </button>
@@ -665,6 +826,63 @@ const ProductPage = () => {
             </div>
           );
         })()}
+
+        {/* Report modal */}
+        {reportingId && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            onClick={() => { setReportingId(null); setReportReason(null); }}
+          >
+            <div
+              className="bg-white shadow-2xl w-full max-w-sm p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {!reportReason ? (
+                <>
+                  <h3 className="text-base font-medium text-gray-900 mb-1">Report review</h3>
+                  <p className="text-sm text-gray-500 mb-5">Why are you reporting this review?</p>
+                  <div className="flex flex-col gap-1">
+                    {['Spam or advertising', 'Inappropriate content', 'Fake review', 'Other'].map((reason) => (
+                      <button
+                        key={reason}
+                        onClick={() => setReportReason(reason)}
+                        className="text-sm text-left text-gray-700 hover:text-gray-900 py-2.5 px-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        {reason}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => { setReportingId(null); setReportReason(null); }}
+                    className="mt-4 w-full py-2.5 text-sm font-medium text-gray-500 hover:text-gray-900 border border-gray-200 rounded-full transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-base font-medium text-gray-900 mb-1">Confirm report</h3>
+                  <p className="text-sm text-gray-500 mb-1">You're reporting this review for:</p>
+                  <p className="text-sm font-medium text-gray-800 mb-5">"{reportReason}"</p>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => submitReport(reportingId, reportReason)}
+                      className="w-full py-2.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-full transition-colors"
+                    >
+                      Submit report
+                    </button>
+                    <button
+                      onClick={() => setReportReason(null)}
+                      className="w-full py-2.5 text-sm font-medium text-gray-500 hover:text-gray-900 border border-gray-200 rounded-full transition-colors"
+                    >
+                      Back
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* You might also like */}
         {relatedProducts.length > 0 && (

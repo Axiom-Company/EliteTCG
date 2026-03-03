@@ -1,15 +1,23 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import CartIcon from '../Cart/CartIcon';
 import { useCustomerAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 
 const Navbar = () => {
-  const { user, isAuthenticated, isSeller, loading, signOut } = useCustomerAuth();
+  const { user, session, isAuthenticated, isSeller, loading, signOut } = useCustomerAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
   const [isUserOpen, setIsUserOpen] = useState(false);
   const userRef = useRef(null);
+  const { itemCount, openCart } = useCart();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
@@ -68,13 +76,13 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-40 bg-white border-b border-gray-100">
+    <nav className="bg-white border-b border-gray-100">
       <div className="flex items-center justify-between max-w-7xl mx-auto px-6 h-16">
         {/* Logo */}
         <div className="flex items-center">
           <Link to="/" className="flex items-center gap-3">
             <span
-              className="text-xl font-semibold elite-tcg-text"
+              className="text-xl font-medium elite-tcg-text"
               style={{ paddingLeft: '7px' }}
             >
               Elite TCG
@@ -166,7 +174,7 @@ const Navbar = () => {
                 className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
               >
                 <div className="w-8 h-8 bg-[#FFCB32] rounded-full flex items-center justify-center text-gray-900 font-medium text-sm">
-                  {(user?.name || user?.email)?.charAt(0).toUpperCase()}
+                  {(user?.first_name || user?.name || session?.user?.email)?.charAt(0).toUpperCase()}
                 </div>
               </button>
 
@@ -174,10 +182,10 @@ const Navbar = () => {
                 <div className="absolute top-full right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-lg min-w-[200px] z-50">
                   <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-medium text-gray-900 truncate">
-                      {user?.name || 'User'}
+                      {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : session?.user?.email}
                     </p>
                     <p className="text-[11px] text-gray-400 truncate mt-0.5">
-                      {user?.email}
+                      {session?.user?.email || user?.email}
                     </p>
                   </div>
                   <div className="p-1.5">
@@ -205,7 +213,7 @@ const Navbar = () => {
                       </Link>
                     )}
                     <button
-                      onClick={() => { signOut(); setIsUserOpen(false); }}
+                      onClick={() => { handleSignOut(); setIsUserOpen(false); }}
                       className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
                     >
                       Sign Out
@@ -222,7 +230,9 @@ const Navbar = () => {
               Sign In
             </Link>
           )}
-          <CartIcon />
+          <div className="hidden md:block">
+            <CartIcon />
+          </div>
 
           {/* Mobile Menu Toggle */}
           <button
@@ -292,11 +302,23 @@ const Navbar = () => {
               Wishlist
             </Link>
 
+            <button
+              onClick={() => { setIsMenuOpen(false); openCart(); }}
+              className="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <span>Cart</span>
+              {itemCount > 0 && (
+                <span className="text-xs font-medium bg-gray-900 text-white rounded-full w-5 h-5 flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </button>
+
             <div className="border-t border-gray-100 mt-2 pt-2">
               {isAuthenticated ? (
                 <>
                   <div className="px-4 py-3 text-sm text-gray-500">
-                    {user?.name || user?.email}
+                    {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : session?.user?.email}
                   </div>
                   {isSeller && (
                     <Link
@@ -308,7 +330,7 @@ const Navbar = () => {
                     </Link>
                   )}
                   <button
-                    onClick={() => { signOut(); setIsMenuOpen(false); }}
+                    onClick={() => { handleSignOut(); setIsMenuOpen(false); }}
                     className="w-full text-left px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     Sign Out
