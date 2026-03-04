@@ -40,14 +40,11 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
   const discountPct = getDiscountPct(product);
   const wishlisted = isWishlisted(product.id);
   const isOutOfStock = product.inventory?.quantity === 0;
-  const isLowStock =
-    product.inventory?.quantity > 0 &&
-    product.inventory?.quantity <= (product.inventory?.low_stock_threshold ?? 5);
 
   return (
     <Link
       to={`/product/${product.slug || product.id}`}
-      className="group flex flex-col bg-white rounded-2xl overflow-hidden"
+      className="group flex flex-col bg-white rounded-2xl overflow-hidden md:border md:border-gray-200 md:shadow-sm"
     >
       {/* Image */}
       <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">
@@ -110,7 +107,7 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
       </div>
 
       {/* Info */}
-      <div className="p-4 flex flex-col gap-1">
+      <div className="p-2 md:p-5 flex flex-col gap-1">
         <h3 className="text-[16px] font-medium text-gray-900 line-clamp-2 leading-snug mt-0.5">
           {product.name}
         </h3>
@@ -140,12 +137,6 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
             <span className="text-sm text-gray-400 line-through">{comparePrice}</span>
           )}
         </div>
-        {isLowStock && (
-          <p className="flex items-center gap-1.5 text-xs font-medium text-amber-600 mt-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse inline-block" />
-            Only {product.inventory.quantity} left
-          </p>
-        )}
       </div>
     </Link>
   );

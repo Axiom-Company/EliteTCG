@@ -6,7 +6,7 @@ import SEO from '../../components/SEO/SEO';
 import { ELITE_API_URL } from '../../config/api';
 
 const categories = [
-  { value: '', label: 'All Products' },
+  { value: '', label: 'All' },
   { value: 'booster_box', label: 'Booster Boxes' },
   { value: 'etb', label: 'Elite Trainer Boxes' },
   { value: 'singles', label: 'Singles' },

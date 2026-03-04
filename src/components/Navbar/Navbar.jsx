@@ -49,7 +49,7 @@ const Navbar = () => {
     {
       title: 'Products',
       links: [
-        { name: 'All Products', href: '/products' },
+        { name: 'All', href: '/products' },
         { name: 'Singles', href: '/products?category=singles' },
         { name: 'Accessories', href: '/products?category=accessories' },
       ]
@@ -231,6 +231,7 @@ const Navbar = () => {
               <Link
                 to="/login"
                 className="inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-full hover:bg-gray-800 active:scale-[0.97] transition-all duration-200"
+                style={{ marginLeft: '-3px' }}
               >
                 Sign In
               </Link>

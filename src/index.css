@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 /* Override browser autofill background on dark inputs */
 .autofill-dark:-webkit-autofill,
 .autofill-dark:-webkit-autofill:hover,

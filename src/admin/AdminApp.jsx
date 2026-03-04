@@ -4,6 +4,7 @@ import AdminLayout from './components/AdminLayout';
 import AdminLogin from './components/AdminLogin';
 import { Dashboard, Settings, Products, Sets, Categories, Orders, Reviews, EmailManagement } from './pages';
 import SellerApplications from './pages/SellerApplications';
+import Banners from './pages/Banners';
 import WebhookSettings from './pages/WebhookSettings';
 import SEO from '../components/SEO/SEO';
 
@@ -47,6 +48,8 @@ const AdminContent = () => {
         return <Sets />;
       case 'categories':
         return <Categories />;
+      case 'banners':
+        return <Banners />;
       case 'preorders':
         return <PreordersPage />;
       case 'discounts':
