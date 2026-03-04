@@ -57,6 +57,10 @@ const Hero = () => {
   const sheenRefs = useRef([]);
   const sparkleRefs = useRef([]);
   const hoveredSlot = useRef(null);
+  // Overlay card holographic layer refs
+  const overlayHoloRef = useRef(null);
+  const overlaySheenRef = useRef(null);
+  const overlaySparkleRef = useRef(null);
   const isMobileRef = useRef(typeof window !== 'undefined' ? window.innerWidth < 640 : false);
   const spreadVwRef = useRef(
     (() => { const w = typeof window !== 'undefined' ? window.innerWidth : 1440; return w < 640 ? 85 : w < 1024 ? 50 : 48; })()
@@ -128,8 +132,49 @@ const Hero = () => {
     const { clientX, clientY } = e.touches ? e.touches[0] : e;
     const nx = (clientX / window.innerWidth) * 2 - 1;
     const ny = (clientY / window.innerHeight) * 2 - 1;
-    setTilt({ x: ny * -21, y: nx * 21 });
+    setTilt({ x: ny * -24, y: nx * 24 }); // 14% stronger than original 21
+
+    const cx = clientX / window.innerWidth;
+    const cy = clientY / window.innerHeight;
+
+    if (overlayHoloRef.current) {
+      const angle = Math.round(cx * 360);
+      overlayHoloRef.current.style.background = `linear-gradient(${angle}deg,rgba(255,50,50,0.15),rgba(255,180,50,0.15),rgba(255,255,80,0.15),rgba(50,255,100,0.15),rgba(50,150,255,0.15),rgba(180,50,255,0.15),rgba(255,50,150,0.15))`;
+      overlayHoloRef.current.style.opacity = '0.65';
+      overlayHoloRef.current.style.animation = 'none';
+    }
+    if (overlaySheenRef.current) {
+      const px = Math.round(cx * 100);
+      const py = Math.round(cy * 100);
+      overlaySheenRef.current.style.background = `radial-gradient(circle at ${px}% ${py}%,rgba(255,255,255,0.28) 0%,rgba(255,255,255,0.07) 30%,transparent 60%)`;
+      overlaySheenRef.current.style.opacity = '0.9';
+      overlaySheenRef.current.style.animation = 'none';
+    }
+    if (overlaySparkleRef.current) {
+      const ox = Math.round(cx * 20);
+      const oy = Math.round(cy * 20);
+      overlaySparkleRef.current.style.backgroundPosition = `${ox}px ${oy}px, ${ox + 5}px ${oy + 5}px`;
+      overlaySparkleRef.current.style.animation = 'none';
+    }
   }, [cardVisible]);
+
+  const handleOverlayLeave = useCallback(() => {
+    setTilt({ x: 0, y: 0 });
+    if (overlayHoloRef.current) {
+      overlayHoloRef.current.style.background = '';
+      overlayHoloRef.current.style.opacity = '';
+      overlayHoloRef.current.style.animation = '';
+    }
+    if (overlaySheenRef.current) {
+      overlaySheenRef.current.style.background = '';
+      overlaySheenRef.current.style.opacity = '';
+      overlaySheenRef.current.style.animation = '';
+    }
+    if (overlaySparkleRef.current) {
+      overlaySparkleRef.current.style.backgroundPosition = '';
+      overlaySparkleRef.current.style.animation = '';
+    }
+  }, []);
 
   /* ── 5-layer holographic hover effect ─────────────────────────────── */
   const applyHoloLayers = useCallback((slotIdx, clientX, clientY) => {
@@ -140,8 +185,8 @@ const Hero = () => {
     const cy = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
 
     // Layer 1: 3D tilt on card inner (20% more aggressive)
-    const rotY = (cx - 0.5) * 18.5;
-    const rotX = (cy - 0.5) * -13.2;
+    const rotY = (cx - 0.5) * 19.8;
+    const rotX = (cy - 0.5) * -14.1;
     const inner = innerRefs.current[slotIdx];
     if (inner) {
       inner.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg)`;
@@ -263,7 +308,7 @@ const Hero = () => {
         }}
       >
         <div
-          className="absolute left-0 right-0 top-[calc(41%-62px)] md:top-[calc(45%-62px)] flex justify-center -translate-y-1/2"
+          className="absolute left-0 right-0 top-[calc(41%-50px)] md:top-[calc(45%-50px)] flex justify-center -translate-y-1/2"
           style={{ perspective: '800px' }}
         >
           <div
@@ -326,7 +371,7 @@ const Hero = () => {
       {/* ── 14-Card Parabolic Arc ───────────────────────────────────── */}
       <div
         className="relative w-full mt-9 z-10 flex justify-center"
-        style={{ height: '320px', transform: `translateY(${-10 - (isMobileRef.current ? 50 : 0)}px)` }}
+        style={{ height: '320px', transform: `translateY(${-9 - (isMobileRef.current ? 50 : 0)}px)` }}
       >
         <div
           className="hero-banner__cards"
@@ -386,7 +431,7 @@ const Hero = () => {
       </div>
 
       {/* ── Shop Now Button ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-5 - (isMobileRef.current ? 50 : 0)}px)` }}>
+      <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${3 - (isMobileRef.current ? 50 : 0)}px)` }}>
         <a
           href="#products"
           className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"
@@ -407,17 +452,17 @@ const Hero = () => {
           onClick={closeCard}
           onMouseMove={handleOverlayPointerMove}
           onTouchMove={(e) => { e.preventDefault(); handleOverlayPointerMove(e); }}
-          onMouseLeave={() => setTilt({ x: 0, y: 0 })}
+          onMouseLeave={handleOverlayLeave}
         >
-          <img
-            src={CARD_DATA[selectedCard].src}
-            alt={CARD_DATA[selectedCard].name}
+          {/* Card wrapper with holographic layers */}
+          <div
             onClick={(e) => e.stopPropagation()}
             style={{
+              position: 'relative',
               width: '220px',
-              height: 'auto',
               borderRadius: '12px',
-              boxShadow: '0 30px 80px rgba(0,0,0,0.5)',
+              boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 8px 30px rgba(0,0,0,0.3)',
+              filter: cardVisible ? 'brightness(1.08)' : 'none',
               transform: cardVisible
                 ? `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1)`
                 : 'rotateY(-180deg) scale(0.4) translateY(40px)',
@@ -426,9 +471,67 @@ const Hero = () => {
                 ? 'transform 0.1s ease-out, opacity 0.3s ease'
                 : 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease',
             }}
-          />
+          >
+            <img
+              src={CARD_DATA[selectedCard].src}
+              alt={CARD_DATA[selectedCard].name}
+              draggable="false"
+              style={{ width: '100%', height: 'auto', display: 'block', borderRadius: '12px', userSelect: 'none' }}
+            />
+            {/* Always-on holographic rainbow gradient */}
+            <div
+              ref={overlayHoloRef}
+              style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: '12px',
+                opacity: 0.35, mixBlendMode: 'screen', zIndex: 3,
+                background: 'linear-gradient(90deg,rgba(255,50,50,0.15),rgba(255,180,50,0.15),rgba(255,255,80,0.15),rgba(50,255,100,0.15),rgba(50,150,255,0.15),rgba(180,50,255,0.15),rgba(255,50,150,0.15))',
+                backgroundSize: '200% 200%',
+                animation: 'overlayHoloShimmer 8s ease-in-out infinite',
+                transition: 'opacity 0.3s ease',
+              }}
+            />
+            {/* Always-on moving light sheen */}
+            <div
+              ref={overlaySheenRef}
+              style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: '12px',
+                zIndex: 4, overflow: 'hidden', opacity: 0.4,
+                animation: 'overlaySheenMove 8s ease-in-out infinite',
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.3) 50%, transparent 60%)',
+                transition: 'opacity 0.3s ease',
+              }}
+            />
+            {/* Always-on sparkle texture */}
+            <div
+              ref={overlaySparkleRef}
+              style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: '12px',
+                opacity: 0.3, mixBlendMode: 'overlay', zIndex: 5,
+                background: 'radial-gradient(circle at 25% 25%, rgba(255,255,255,0.7) 1px, transparent 1px), radial-gradient(circle at 75% 75%, rgba(255,255,255,0.5) 1px, transparent 1px)',
+                backgroundSize: '12px 12px, 17px 17px',
+                animation: 'overlaySparkleShift 10s linear infinite',
+                transition: 'opacity 0.3s ease',
+              }}
+            />
+          </div>
         </div>
       )}
+
+      <style>{`
+        @keyframes overlayHoloShimmer {
+          0%   { background-position: 0% 50%; opacity: 0.35; }
+          50%  { background-position: 100% 50%; opacity: 0.52; }
+          100% { background-position: 0% 50%; opacity: 0.35; }
+        }
+        @keyframes overlaySheenMove {
+          0%, 100% { transform: translateX(-100%); }
+          50%       { transform: translateX(100%); }
+        }
+        @keyframes overlaySparkleShift {
+          0%   { background-position: 0px 0px, 5px 5px; }
+          100% { background-position: 20px 20px, 25px 25px; }
+        }
+      `}</style>
     </section>
   );
 };

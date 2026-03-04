@@ -339,7 +339,7 @@ const LoginForm = ({ onFlipToRegister }) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 bg-gray-900 text-white text-[15px] font-medium rounded-full hover:bg-gray-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed mt-[15px]"
+          className="w-full py-3.5 bg-gray-900 text-white text-[15px] font-medium rounded-full hover:bg-gray-800 active:scale-[0.98] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed mt-[16px]"
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
@@ -587,33 +587,58 @@ const AuthPage = () => {
   const initialMode = location.pathname === '/register' ? 'register' : 'login';
   const [mode, setMode] = useState(initialMode);
   const [flipped, setFlipped] = useState(initialMode === 'register');
+  // orderSwapped: false = decorative panel on RIGHT (login), true = on LEFT (register)
+  const [orderSwapped, setOrderSwapped] = useState(initialMode === 'register');
+  // visibleMode: which form is actually rendered (swaps at flip midpoint)
+  const [visibleMode, setVisibleMode] = useState(initialMode);
   const navigate = useNavigate();
+  const isFlipping = useRef(false);
+  const flipTimer = useRef(null);
 
-  // Sync with route changes (browser back/forward)
+  // Sync with route changes (browser back/forward — snap instantly, no animation)
   useEffect(() => {
     const newMode = location.pathname === '/register' ? 'register' : 'login';
-    if (newMode !== mode) {
+    if (newMode !== mode && !isFlipping.current) {
       setMode(newMode);
       setFlipped(newMode === 'register');
+      setOrderSwapped(newMode === 'register');
+      setVisibleMode(newMode);
     }
   }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFlip = useCallback((newMode) => {
+    if (newMode === mode || isFlipping.current) return;
+    isFlipping.current = true;
+    if (flipTimer.current) clearTimeout(flipTimer.current);
+
     setFlipped(newMode === 'register');
     setMode(newMode);
     navigate(newMode === 'register' ? '/register' : '/login', { replace: true });
-  }, [navigate]);
+
+    // At the midpoint of the flip (panel is edge-on / invisible), snap the
+    // panel to its new side and switch the form content.
+    flipTimer.current = setTimeout(() => {
+      setOrderSwapped(newMode === 'register');
+      setVisibleMode(newMode);
+      isFlipping.current = false;
+    }, 400);
+  }, [mode, navigate]);
 
   return (
     <section className="min-h-[calc(100vh-130px)] flex bg-white">
       <SEO title={mode === 'login' ? 'Login' : 'Create Account'} noindex />
 
-      {/* LEFT: Decorative Panel — bottom-to-top page flip between yellow & blue */}
+      {/* Decorative Panel — right side (login/blue) or left side (register/yellow) */}
       <div
-        className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center order-1"
+        className="hidden lg:flex w-[45%] relative overflow-hidden items-center justify-center"
         style={{
-          clipPath: 'polygon(0 0, 100% 0, 92% 100%, 0 100%)',
+          // Login: panel on right, inner (left) edge slanted
+          // Register: panel on left, inner (right) edge slanted
+          clipPath: orderSwapped
+            ? 'polygon(0 0, 100% 0, 92% 100%, 0 100%)'
+            : 'polygon(0 0, 100% 0, 100% 100%, 8% 100%)',
           perspective: '1200px',
+          order: orderSwapped ? 1 : 2,
         }}
       >
         {/* Flipping panel — rotateX for bottom-to-top page flip */}
@@ -692,12 +717,13 @@ const AuthPage = () => {
         </div>
       </div>
 
-      {/* RIGHT: Form Panel — always white */}
+      {/* Form Panel — left (login) or right (register) */}
       <div
-        className="w-full lg:w-[55%] flex items-center justify-center px-8 py-20 lg:px-16 xl:px-24 order-2"
+        className="w-full lg:w-[55%] flex items-center justify-center px-8 py-20 lg:px-16 xl:px-24"
+        style={{ order: orderSwapped ? 2 : 1 }}
       >
         <div className="w-full max-w-[460px]">
-          {mode === 'login' ? (
+          {visibleMode === 'login' ? (
             <LoginForm onFlipToRegister={() => handleFlip('register')} />
           ) : (
             <RegisterForm onFlipToLogin={() => handleFlip('login')} />

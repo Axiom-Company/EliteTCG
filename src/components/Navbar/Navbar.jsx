@@ -5,7 +5,7 @@ import { useCustomerAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 
 const Navbar = () => {
-  const { user, session, isAuthenticated, isSeller, loading, signOut } = useCustomerAuth();
+  const { user, session, isAuthenticated, isSeller, isVerifiedSeller, isAdmin, loading, signOut } = useCustomerAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [mobileShopOpen, setMobileShopOpen] = useState(false);
@@ -159,6 +159,25 @@ const Navbar = () => {
           >
             Wishlist
           </Link>
+
+          {isAuthenticated && (
+            <>
+              <Link
+                to="/chat"
+                className="text-sm font-medium text-gray-900 hover:text-black transition-colors"
+                onClick={closeAll}
+              >
+                Community
+              </Link>
+              <Link
+                to="/portfolio"
+                className="text-sm font-medium text-gray-900 hover:text-black transition-colors"
+                onClick={closeAll}
+              >
+                Portfolio
+              </Link>
+            </>
+          )}
         </nav>
 
         {/* Right Side */}
@@ -183,14 +202,32 @@ const Navbar = () => {
               {isUserOpen && (
                 <div className="absolute top-full right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-lg min-w-[200px] z-50">
                   <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : session?.user?.email}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : session?.user?.email}
+                      </p>
+                      {isAdmin ? (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary text-white shrink-0">
+                          ⚡ Admin
+                        </span>
+                      ) : isVerifiedSeller ? (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#FFCB32] text-gray-900 shrink-0">
+                          ✓ Verified
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="text-[11px] text-gray-400 truncate mt-0.5">
                       {session?.user?.email || user?.email}
                     </p>
                   </div>
                   <div className="p-1.5">
+                    <Link
+                      to="/portfolio"
+                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsUserOpen(false)}
+                    >
+                      My Portfolio
+                    </Link>
                     <Link
                       to="/orders"
                       className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
@@ -205,13 +242,31 @@ const Navbar = () => {
                     >
                       Track Order
                     </Link>
-                    {isSeller && (
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className="block px-3 py-2 rounded-lg text-sm font-medium text-primary hover:text-red-700 hover:bg-red-50 transition-colors"
+                        onClick={() => setIsUserOpen(false)}
+                      >
+                        Admin Dashboard
+                      </Link>
+                    )}
+                    {isSeller && !isAdmin && (
                       <Link
                         to="/seller/dashboard"
                         className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
                         onClick={() => setIsUserOpen(false)}
                       >
                         Seller Dashboard
+                      </Link>
+                    )}
+                    {!isVerifiedSeller && (
+                      <Link
+                        to="/verify"
+                        className="block px-3 py-2 rounded-lg text-sm text-[#FFCB32] hover:text-amber-600 hover:bg-amber-50 transition-colors font-medium"
+                        onClick={() => setIsUserOpen(false)}
+                      >
+                        Get Verified
                       </Link>
                     )}
                     <button
@@ -231,6 +286,7 @@ const Navbar = () => {
               <Link
                 to="/login"
                 className="inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium text-white bg-gray-900 rounded-full hover:bg-gray-800 active:scale-[0.97] transition-all duration-200"
+                style={{ marginLeft: '-3px' }}
               >
                 Sign In
               </Link>
@@ -306,6 +362,25 @@ const Navbar = () => {
               Wishlist
             </Link>
 
+            {isAuthenticated && (
+              <>
+                <Link
+                  to="/chat"
+                  className="px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Community
+                </Link>
+                <Link
+                  to="/portfolio"
+                  className="px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Portfolio
+                </Link>
+              </>
+            )}
+
             <button
               onClick={() => { setIsMenuOpen(false); openCart(); }}
               className="flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
@@ -324,13 +399,31 @@ const Navbar = () => {
                   <div className="px-4 py-3 text-sm text-gray-500">
                     {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : session?.user?.email}
                   </div>
-                  {isSeller && (
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="block px-4 py-3 text-sm font-medium text-primary hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  {isSeller && !isAdmin && (
                     <Link
                       to="/seller/dashboard"
                       className="block px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Seller Dashboard
+                    </Link>
+                  )}
+                  {!isVerifiedSeller && (
+                    <Link
+                      to="/verify"
+                      className="block px-4 py-3 text-sm font-medium text-[#FFCB32] hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Get Verified
                     </Link>
                   )}
                   <button

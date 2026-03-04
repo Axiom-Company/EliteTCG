@@ -55,6 +55,10 @@ import TermsOfService from './pages/legal/TermsOfService';
 // Community pages
 import ChatPage from './pages/community/ChatPage';
 
+// Portfolio & Verification pages
+import PortfolioPage from './pages/portfolio/Portfolio';
+import VerifyPage from './pages/verify/Verify';
+
 // Cart Provider and Components
 import { CartProvider } from './contexts/CartContext';
 import CartDrawer from './components/Cart/CartDrawer';
@@ -143,6 +147,8 @@ function App() {
           <Route path="/terms-of-service" element={<MainLayout><TermsOfService /></MainLayout>} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/chat/:channelSlug" element={<ChatPage />} />
+          <Route path="/portfolio" element={<MainLayout><PortfolioPage /></MainLayout>} />
+          <Route path="/verify" element={<MainLayout><VerifyPage /></MainLayout>} />
           <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
         <CartDrawer />

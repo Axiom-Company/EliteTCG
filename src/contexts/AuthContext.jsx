@@ -4,6 +4,8 @@ import { ELITE_API_URL } from '@/config/api';
 
 const AuthContext = createContext(null);
 
+const SELLER_ROLES = ['seller', 'verified_seller', 'admin'];
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
@@ -103,7 +105,10 @@ export const AuthProvider = ({ children }) => {
     session,
     loading,
     isAuthenticated: !!user,
-    isSeller: !!user?.is_seller,
+    isAdmin: user?.role === 'admin',
+    isSeller: SELLER_ROLES.includes(user?.role) || !!user?.is_seller,
+    isVerifiedSeller: user?.role === 'verified_seller' || user?.role === 'admin',
+    canSell: SELLER_ROLES.includes(user?.role),
     signIn,
     signUp,
     signInWithGoogle,

@@ -1,8 +1,36 @@
 import { useState } from 'react';
-import { Reply, Smile, Pin, Pencil, Trash2 } from 'lucide-react';
+import { Reply, Smile, Pin, Pencil, Trash2, Loader2, Check, CheckCheck, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import MessageReactions from './MessageReactions';
 import EmojiPicker from './EmojiPicker';
+
+const DeliveryStatus = ({ status, onRetry }) => {
+  if (!status) return null;
+  if (status === 'sending') {
+    return <Loader2 className="h-3 w-3 text-gray-400 animate-spin shrink-0" aria-label="Sending" />;
+  }
+  if (status === 'sent') {
+    return <Check className="h-3 w-3 text-gray-400 shrink-0" aria-label="Sent" />;
+  }
+  if (status === 'delivered') {
+    return <CheckCheck className="h-3 w-3 shrink-0" style={{ color: '#FFCB32' }} aria-label="Delivered" />;
+  }
+  if (status === 'failed') {
+    return (
+      <button
+        type="button"
+        onClick={onRetry}
+        className="flex items-center gap-0.5 text-[10px] text-red-500 hover:text-red-600 transition-colors"
+        aria-label="Send failed – click to retry"
+        title="Failed to send. Click to retry."
+      >
+        <AlertCircle className="h-3 w-3 shrink-0" />
+        <span>Retry</span>
+      </button>
+    );
+  }
+  return null;
+};
 
 const ROLE_BADGE_STYLES = {
   admin: 'bg-red-50 text-red-600',
@@ -71,7 +99,7 @@ const HoverAction = ({ icon: Icon, label, onClick, variant }) => (
   </button>
 );
 
-const MessageItem = ({ message, currentUserId, onReply, onEdit, onDelete, onPin, onReact, isModOrAdmin }) => {
+const MessageItem = ({ message, currentUserId, onReply, onEdit, onDelete, onPin, onReact, isModOrAdmin, deliveryStatus, onRetry }) => {
   const [showActions, setShowActions] = useState(false);
   const isOwn = message.user_id === currentUserId;
 
@@ -157,7 +185,10 @@ const MessageItem = ({ message, currentUserId, onReply, onEdit, onDelete, onPin,
             )}
           </div>
           <MessageReactions reactions={message.reactions} currentUserId={currentUserId} onReact={(emoji) => onReact(message.id, emoji)} />
-          <span className="text-[11px] text-gray-400 mt-0.5 px-1">{formatTime(message.created_at)}</span>
+          <div className={cn('flex items-center gap-1 mt-0.5 px-1', isOwn ? 'flex-row-reverse' : '')}>
+            <span className="text-[11px] text-gray-400">{formatTime(message.created_at)}</span>
+            {isOwn && <DeliveryStatus status={deliveryStatus} onRetry={onRetry} />}
+          </div>
         </div>
       </div>
     </div>

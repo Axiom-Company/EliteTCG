@@ -6,7 +6,8 @@ const CartIcon = () => {
   return (
     <button
       onClick={openCart}
-      className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+      className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
+      style={{ cursor: 'pointer' }}
       aria-label="Open cart"
     >
       <svg
