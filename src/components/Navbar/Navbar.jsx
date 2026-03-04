@@ -49,7 +49,7 @@ const Navbar = () => {
     {
       title: 'Products',
       links: [
-        { name: 'All Products', href: '/products' },
+        { name: 'All', href: '/products' },
         { name: 'Singles', href: '/products?category=singles' },
         { name: 'Accessories', href: '/products?category=accessories' },
       ]

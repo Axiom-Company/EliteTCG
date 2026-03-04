@@ -46,7 +46,18 @@ const PreOrders = () => {
         </div>
 
         {loading ? (
-          <div className="text-center text-gray-400 py-8">Loading pre-orders...</div>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="animate-pulse rounded-xl border border-gray-100 overflow-hidden">
+                <div className="h-48 bg-gray-100" />
+                <div className="p-4 flex flex-col items-center gap-2">
+                  <div className="h-3 w-3/4 bg-gray-100 rounded-full" />
+                  <div className="h-2.5 w-1/2 bg-gray-100 rounded-full" />
+                  <div className="h-4 w-16 bg-gray-100 rounded-full mt-2" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {preorders.map((item) => (

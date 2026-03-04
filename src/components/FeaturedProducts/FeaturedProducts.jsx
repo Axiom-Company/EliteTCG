@@ -37,8 +37,14 @@ const FeaturedProducts = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="text-gray-400">Loading products...</div>
+          <div className="grid grid-cols-4 gap-4 lg:grid-cols-4 md:grid-cols-3 md:gap-4 max-[480px]:grid-cols-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="animate-pulse flex flex-col gap-2">
+                <div className="aspect-[3/4] bg-gray-100 rounded-xl" />
+                <div className="h-3 w-3/4 bg-gray-100 rounded-full" />
+                <div className="h-3 w-1/2 bg-gray-100 rounded-full" />
+              </div>
+            ))}
           </div>
         ) : products.length === 0 ? (
           <div className="flex justify-center py-12">
@@ -55,7 +61,7 @@ const FeaturedProducts = () => {
         <div className="flex justify-center mt-10" style={{ paddingBottom: '3px' }}>
           <Link
             to="/products"
-            className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-white text-gray-900 border border-gray-300 hover:border-primary hover:text-primary transition-all duration-250"
           >
             View All Products
           </Link>

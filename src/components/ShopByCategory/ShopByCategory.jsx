@@ -14,8 +14,6 @@ const DefaultIcon = () => (
 
 const BADGE_PRIORITY = ['hot', 'sale', 'limited', 'new', 'preorder'];
 
-const getBadgeStyle = () => 'bg-gray-900 text-white';
-
 const ShopByCategory = () => {
   const [categories, setCategories] = useState([]);
   const [categoryBadges, setCategoryBadges] = useState({});
@@ -62,8 +60,16 @@ const ShopByCategory = () => {
             <h2 className="text-3xl font-medium mb-2">Shop by Category</h2>
             <p className="text-sm text-gray-500">Find exactly what you're looking for</p>
           </div>
-          <div className="flex justify-center py-12">
-            <div className="text-gray-400">Loading categories...</div>
+          <div className="grid grid-cols-4 gap-4 lg:grid-cols-4 md:grid-cols-3 md:gap-4 max-[480px]:grid-cols-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="aspect-square bg-gray-100 rounded-xl" />
+                <div className="px-3 pt-1.5 pb-2 flex flex-col items-center gap-1.5">
+                  <div className="h-3 w-20 bg-gray-100 rounded-full" />
+                  <div className="h-2.5 w-16 bg-gray-100 rounded-full" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -90,7 +96,7 @@ const ShopByCategory = () => {
               ref={setRef(i)}
               data-anim-idx={i}
               style={{ transitionDelay: `${i * 70}ms` }}
-              className={`flex flex-col bg-white rounded-xl overflow-hidden transition-all duration-500 group cursor-pointer ${isVisible(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
+              className={`flex flex-col bg-white rounded-xl overflow-hidden md:border md:border-gray-200 md:shadow-sm transition-all duration-500 group cursor-pointer ${isVisible(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
             >
               <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
                 {getImageUrl(category.image) ? (
@@ -105,12 +111,12 @@ const ShopByCategory = () => {
                   </div>
                 )}
                 {categoryBadges[category.slug] && (
-                  <span className={`absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full capitalize tracking-wide ${getBadgeStyle(categoryBadges[category.slug])}`}>
+                  <span className="absolute top-2.5 left-2.5 inline-flex items-center px-3 py-1 text-xs font-medium uppercase tracking-wider rounded-full bg-primary text-white">
                     {categoryBadges[category.slug]}
                   </span>
                 )}
               </div>
-              <div className="px-3 pt-1.5 pb-2 text-center">
+              <div className="px-1 pt-1 pb-1 md:px-4 md:pt-2 md:pb-4 text-center">
                 <h3 className="text-base font-medium text-gray-900 mb-1">{category.name}</h3>
                 <p className="text-xs text-gray-500">{category.description}</p>
               </div>

@@ -65,6 +65,17 @@ export const setsApi = {
   reorder: (orders) => apiFetch('/sets/reorder', { method: 'POST', body: JSON.stringify({ orders }) }),
 };
 
+// Banners API
+export const bannersApi = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/banners${query ? `?${query}` : ''}`);
+  },
+  create: (data) => apiFetch('/banners', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/banners/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  remove: (id) => apiFetch(`/banners/${id}`, { method: 'DELETE' }),
+};
+
 // Categories API
 export const categoriesApi = {
   getAll: (params = {}) => {

@@ -92,7 +92,7 @@ const Sets = () => {
         imageUrl = uploadResult.url;
         setUploading(false);
       }
-      const setData = { ...formData, image: imageUrl };
+      const setData = { ...formData, logo_url: imageUrl };
       if (editingSet) {
         await setsApi.update(editingSet.id, setData);
         setMessage({ type: 'success', text: 'Set updated' });

@@ -28,10 +28,11 @@ const Login = () => {
   };
 
   return (
-    <section className="min-h-[calc(100vh-130px)] flex items-start lg:items-center justify-center bg-white px-6 lg:px-4 pt-[25px] lg:pt-0">
+    <section className="min-h-screen flex items-center justify-center bg-white md:bg-gray-50 px-6 lg:px-4 py-12">
       <SEO title="Login" noindex />
 
-      <div className="w-full max-w-[360px] flex flex-col gap-8">
+      <div className="w-full max-w-[380px]">
+        <div className="bg-white rounded-2xl md:shadow-[0_2px_24px_rgba(0,0,0,0.08)] md:border md:border-gray-100 px-8 py-9 flex flex-col gap-7">
 
         {/* Header */}
         <div className="flex flex-col gap-2 text-center">
@@ -91,7 +92,7 @@ const Login = () => {
               <span className="w-full border-t border-gray-200" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-400 tracking-wider">Or continue with</span>
+              <span className="bg-white px-2 text-gray-400 tracking-wider" style={{ backgroundColor: 'white' }}>Or continue with</span>
             </div>
           </div>
 
@@ -117,6 +118,12 @@ const Login = () => {
           <Link to="/register" className="underline underline-offset-4 text-gray-900 font-medium hover:text-gray-700 transition-colors">
             Sign up
           </Link>
+        </p>
+
+        </div>
+
+        <p className="text-center text-xs text-gray-400 mt-5">
+          <Link to="/" className="hover:text-gray-600 transition-colors">← Back to home</Link>
         </p>
       </div>
     </section>

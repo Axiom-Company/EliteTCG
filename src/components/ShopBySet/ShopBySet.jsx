@@ -58,7 +58,7 @@ const ShopBySet = () => {
   };
 
   return (
-    <section id="sets" className="-mt-[21px] pb-16 bg-white md:pt-8 md:pb-10" style={{ paddingTop: '3px' }}>
+    <section id="sets" className="pt-10 pb-16 bg-white md:pt-12 md:pb-10">
       <div className="container">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-medium mb-2" style={{ transform: 'translateY(1px)' }}>Shop by Sets</h2>
@@ -66,8 +66,15 @@ const ShopBySet = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="text-gray-400">Loading sets...</div>
+          <div className="flex gap-4 overflow-hidden py-2 px-1">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex-none w-60 md:w-[200px] animate-pulse">
+                <div className="h-[220px] md:h-[180px] bg-gray-100 rounded-lg" />
+                <div className="px-2 py-2 flex justify-center">
+                  <div className="h-3 w-24 bg-gray-100 rounded-full" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : sets.length === 0 ? (
           <div className="flex justify-center py-12">
@@ -97,7 +104,7 @@ const ShopBySet = () => {
                   ref={setRef(i)}
                   data-anim-idx={i}
                   style={{ transitionDelay: `${i * 60}ms` }}
-                  className={`flex-none w-60 scroll-snap-start bg-white rounded-lg overflow-hidden transition-all duration-500 hover:opacity-80 md:w-[200px] ${isVisible(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
+                  className={`flex-none w-60 scroll-snap-start bg-white rounded-lg overflow-hidden md:border md:border-gray-200 md:shadow-sm transition-all duration-500 hover:opacity-80 md:w-[200px] ${isVisible(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
                 >
                   <div className="relative h-[220px] bg-white flex items-center justify-center overflow-hidden md:h-[180px]">
                     <img
@@ -112,7 +119,7 @@ const ShopBySet = () => {
                       </span>
                     )}
                   </div>
-                  <div className="px-2 pb-2 text-center">
+                  <div className="px-1 pt-1 pb-1 md:px-4 md:pt-2 md:pb-4 text-center">
                     <h3 className="text-sm font-normal text-gray-900">{set.name}</h3>
                   </div>
                 </Link>
