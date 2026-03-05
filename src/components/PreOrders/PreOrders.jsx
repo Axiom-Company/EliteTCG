@@ -70,6 +70,8 @@ const PreOrders = () => {
                   <img
                     src={getImageUrl(item.images?.[0])}
                     alt={item.name}
+                    loading="lazy"
+                    decoding="async"
                     className="max-w-full max-h-full object-contain"
                     onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
                   />

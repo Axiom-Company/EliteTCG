@@ -103,6 +103,8 @@ const ShopByCategory = () => {
                   <img
                     src={getImageUrl(category.image)}
                     alt={category.name}
+                    loading="lazy"
+                    decoding="async"
                     className="max-w-[70%] max-h-[70%] object-contain"
                   />
                 ) : (

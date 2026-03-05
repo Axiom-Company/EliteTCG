@@ -53,6 +53,8 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
             <img
               src={getImageUrl(product.images[0])}
               alt={product.name}
+              loading="lazy"
+              decoding="async"
               style={{ width: imageSize, height: imageSize }}
               className={`object-contain transition-opacity duration-300 ${hasMultiple ? (showSecond ? 'opacity-0' : 'group-hover:opacity-0') : ''}`}
             />
@@ -60,6 +62,8 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
               <img
                 src={getImageUrl(product.images[1])}
                 alt={product.name}
+                loading="lazy"
+                decoding="async"
                 style={{ width: imageSize, height: imageSize }}
                 className={`object-contain absolute transition-opacity duration-300 ${showSecond ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
               />

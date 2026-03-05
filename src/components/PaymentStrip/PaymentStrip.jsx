@@ -69,14 +69,15 @@ const MobileMarquee = () => {
         {[...methods, ...methods].map(({ src, alt, scale }, i) => (
           <div
             key={i}
-            className="flex items-center justify-center shrink-0"
-            style={{ width: ITEM_W, height: 48 }}
+            className="flex flex-col items-center justify-center shrink-0"
+            style={{ width: ITEM_W, height: 68 }}
           >
             <img
               src={src} alt={alt} draggable={false}
               className="object-contain"
-              style={{ maxHeight: 48, maxWidth: ITEM_W - 40, transform: `scale(${scale})` }}
+              style={{ maxHeight: 40, maxWidth: ITEM_W - 40, transform: `scale(${scale})` }}
             />
+            <span className="text-sm font-medium text-gray-400 mt-3">{alt}</span>
           </div>
         ))}
       </div>
@@ -92,12 +93,13 @@ const PaymentStrip = () => (
     {/* Desktop: spread across full width */}
     <div className="hidden md:flex container items-center justify-between px-24 gap-6">
       {methods.map(({ src, alt, scale }) => (
-        <div key={alt} className="flex items-center justify-center" style={{ width: 130, height: 52 }}>
+        <div key={alt} className="flex flex-col items-center justify-center" style={{ width: 130, height: 68 }}>
           <img
             src={src} alt={alt} draggable={false}
             className="object-contain"
-            style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', transform: `scale(${scale})` }}
+            style={{ maxWidth: '100%', maxHeight: 40, width: 'auto', height: 'auto', transform: `scale(${scale})` }}
           />
+          <span className="text-sm font-medium text-gray-400 mt-3">{alt}</span>
         </div>
       ))}
     </div>

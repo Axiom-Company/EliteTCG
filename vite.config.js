@@ -14,7 +14,7 @@ export default defineConfig({
         name: 'EliteTCG - Premium Pokemon Cards',
         short_name: 'EliteTCG',
         description: "South Africa's premier Pokemon TCG marketplace.",
-        theme_color: '#E3350D',
+        theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
@@ -38,12 +38,24 @@ export default defineConfig({
               networkTimeoutSeconds: 5,
             },
           },
+          // Supabase storage images — serve from cache, revalidate in background
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
+            urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/.*$/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'supabase-images',
+              expiration: { maxEntries: 300, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          // All other images (local or external)
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)(?:\?.*)?$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'image-cache',
               expiration: { maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
           {

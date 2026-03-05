@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { productsApi, uploadApi, setsApi } from '../hooks/useApi';
+import { productsApi, uploadApi, setsApi, categoriesApi } from '../hooks/useApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,16 +33,6 @@ import { ELITE_API_URL } from '@/config/api';
 
 const API_BASE = ELITE_API_URL;
 
-const CATEGORIES = [
-  { value: 'all', label: 'All' },
-  { value: 'booster_box', label: 'Booster Boxes' },
-  { value: 'etb', label: 'ETBs' },
-  { value: 'singles', label: 'Singles' },
-  { value: 'collection', label: 'Collections' },
-  { value: 'accessories', label: 'Accessories' },
-];
-
-
 
 const SkeletonCard = () => (
   <div className="bg-[#111111] border border-[#282828] rounded-2xl overflow-hidden animate-pulse">
@@ -58,6 +48,7 @@ const SkeletonCard = () => (
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [sets, setSets] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -71,7 +62,7 @@ const Products = () => {
     description: '',
     price: '',
     compare_at_price: '',
-    category: 'booster_box',
+    category: '',
     badge: 'none',
     sku: '',
     set_id: '',
@@ -113,9 +104,20 @@ const Products = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const data = await categoriesApi.getAll();
+      const cats = data.categories || data || [];
+      setCategories(cats.filter(c => c.is_active));
+    } catch (error) {
+      console.error('Fetch categories error:', error);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
     fetchSets();
+    fetchCategories();
   }, [filter]);
 
   const filteredProducts = products.filter(p =>
@@ -129,7 +131,7 @@ const Products = () => {
   const resetForm = () => {
     setFormData({
       name: '', description: '', price: '', compare_at_price: '',
-      category: 'booster_box', badge: 'none', sku: '',
+      category: '', badge: 'none', sku: '',
       set_id: '', initial_quantity: '0', low_stock_threshold: '5',
       is_active: true, is_featured: false, images: [],
       dimensions: { weight: '', length: '', width: '', height: '' },
@@ -283,17 +285,27 @@ const Products = () => {
 
         {/* Category pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-          {CATEGORIES.map(cat => (
+          <button
+            onClick={() => setFilter('all')}
+            className={`px-3 py-1.5 text-xs rounded-lg border transition-colors whitespace-nowrap ${
+              filter === 'all'
+                ? 'bg-[#1e1e1e] text-[#f1f1f1] border-[#3a3a3a]'
+                : 'bg-transparent text-[#6b6b6b] border-[#282828] hover:border-[#333] hover:text-[#c4c4c4]'
+            }`}
+          >
+            All
+          </button>
+          {categories.map(cat => (
             <button
-              key={cat.value}
-              onClick={() => setFilter(cat.value)}
+              key={cat.id}
+              onClick={() => setFilter(cat.slug)}
               className={`px-3 py-1.5 text-xs rounded-lg border transition-colors whitespace-nowrap ${
-                filter === cat.value
+                filter === cat.slug
                   ? 'bg-[#1e1e1e] text-[#f1f1f1] border-[#3a3a3a]'
                   : 'bg-transparent text-[#6b6b6b] border-[#282828] hover:border-[#333] hover:text-[#c4c4c4]'
               }`}
             >
-              {cat.label}
+              {cat.name}
             </button>
           ))}
         </div>
@@ -367,13 +379,11 @@ const Products = () => {
               <div className="space-y-2">
                 <Label>Category</Label>
                 <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                  <SelectTrigger className="cursor-pointer"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="cursor-pointer"><SelectValue placeholder="Select category..." /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="booster_box">Booster Box</SelectItem>
-                    <SelectItem value="etb">Elite Trainer Box</SelectItem>
-                    <SelectItem value="singles">Singles</SelectItem>
-                    <SelectItem value="collection">Collection</SelectItem>
-                    <SelectItem value="accessories">Accessories</SelectItem>
+                    {categories.map(cat => (
+                      <SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

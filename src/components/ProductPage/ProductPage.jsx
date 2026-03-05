@@ -46,6 +46,7 @@ const ProductPage = () => {
   const [reviewsHasMore, setReviewsHasMore] = useState(false);
   const [reviewsLoadingMore, setReviewsLoadingMore] = useState(false);
   const [magnifier, setMagnifier] = useState({ show: false, x: 0, y: 0, w: 1, h: 1 });
+  const [lightbox, setLightbox] = useState({ open: false, index: 0 });
   const [openAccordions, setOpenAccordions] = useState(new Set(['box', 'dims']));
   const [reviewFilter, setReviewFilter] = useState(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -59,7 +60,11 @@ const ProductPage = () => {
   const [imgNaturalSize, setImgNaturalSize] = useState({ w: 1, h: 1 });
   const imgContainerRef = useRef(null);
 
-  // Touch magnifier support
+  // Touch: long-press for magnifier, tap for fullscreen lightbox
+  const longPressTimer = useRef(null);
+  const touchMoved = useRef(false);
+  const magnifierActive = useRef(false);
+
   useEffect(() => {
     const el = imgContainerRef.current;
     if (!el) return;
@@ -70,22 +75,57 @@ const ProductPage = () => {
       return { show: true, x: touch.clientX - rect.left, y: touch.clientY - rect.top, w: rect.width, h: rect.height };
     };
 
-    const onTouchStart = (e) => setMagnifier(getPos(e));
-    const onTouchMove = (e) => { e.preventDefault(); setMagnifier(getPos(e)); };
-    const onTouchEnd = () => setMagnifier(m => ({ ...m, show: false }));
+    const isOnImage = (e) => {
+      const tag = e.target.tagName.toLowerCase();
+      return tag === 'img' && !e.target.closest('button');
+    };
+
+    const onTouchStart = (e) => {
+      touchMoved.current = false;
+      magnifierActive.current = false;
+      if (!isOnImage(e)) return;
+      longPressTimer.current = setTimeout(() => {
+        magnifierActive.current = true;
+        setMagnifier(getPos(e));
+      }, 300);
+    };
+
+    const onTouchMove = (e) => {
+      touchMoved.current = true;
+      if (magnifierActive.current) {
+        e.preventDefault();
+        setMagnifier(getPos(e));
+      } else {
+        clearTimeout(longPressTimer.current);
+      }
+    };
+
+    const onTouchEnd = (e) => {
+      clearTimeout(longPressTimer.current);
+      if (magnifierActive.current) {
+        setMagnifier(m => ({ ...m, show: false }));
+        magnifierActive.current = false;
+      } else if (!touchMoved.current && isOnImage(e)) {
+        setLightbox({ open: true, index: selectedImage });
+      }
+    };
 
     el.addEventListener('touchstart', onTouchStart, { passive: true });
     el.addEventListener('touchmove', onTouchMove, { passive: false });
     el.addEventListener('touchend', onTouchEnd, { passive: true });
-    el.addEventListener('touchcancel', onTouchEnd, { passive: true });
+    el.addEventListener('touchcancel', () => {
+      clearTimeout(longPressTimer.current);
+      setMagnifier(m => ({ ...m, show: false }));
+      magnifierActive.current = false;
+    }, { passive: true });
 
     return () => {
+      clearTimeout(longPressTimer.current);
       el.removeEventListener('touchstart', onTouchStart);
       el.removeEventListener('touchmove', onTouchMove);
       el.removeEventListener('touchend', onTouchEnd);
-      el.removeEventListener('touchcancel', onTouchEnd);
     };
-  }, [product]);
+  }, [product, selectedImage]);
 
   const handleAddToCart = () => {
     if (product && product.inventory?.quantity > 0) {
@@ -281,9 +321,10 @@ const ProductPage = () => {
               <img
                 src={getImageUrl(images[selectedImage])}
                 alt={product.name}
-                className="w-[75%] h-[75%] md:w-[55%] md:h-[55%] object-contain cursor-crosshair"
+                className="w-[75%] h-[75%] md:w-[55%] md:h-[55%] object-contain cursor-zoom-in"
                 onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
                 onLoad={(e) => setImgNaturalSize({ w: e.target.naturalWidth, h: e.target.naturalHeight })}
+                onClick={() => setLightbox({ open: true, index: selectedImage })}
                 onMouseMove={(e) => {
                   const rect = imgContainerRef.current.getBoundingClientRect();
                   setMagnifier({
@@ -590,7 +631,7 @@ const ProductPage = () => {
               if (reviewSort === 'helpful') return (b.helpful_count || 0) - (a.helpful_count || 0);
               if (reviewSort === 'stars_high') return b.rating - a.rating;
               if (reviewSort === 'stars_low') return a.rating - b.rating;
-              return new Date(b.created_at) - new Date(a.created_at); // 'recent'
+              return new Date(b.created_at) - new Date(a.created_at);
             });
 
           const StarRow = ({ rating: r, size = 14 }) => (
@@ -606,223 +647,231 @@ const ProductPage = () => {
             </div>
           );
 
+          // Rating distribution bars
+          const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+          reviews.forEach(r => { if (ratingCounts[r.rating] !== undefined) ratingCounts[r.rating]++; });
+          const maxCount = Math.max(...Object.values(ratingCounts), 1);
+
           const handleWriteReview = () => {
-            if (isAuthenticated) {
-              navigate(`/product/${id}/review`);
-            } else {
-              navigate('/login', { state: { from: { pathname: `/product/${id}/review` } } });
-            }
+            navigate(`/product/${id}/review`);
+          };
+
+          const timeAgo = (dateStr) => {
+            const diff = Date.now() - new Date(dateStr).getTime();
+            const mins = Math.floor(diff / 60000);
+            if (mins < 1) return 'Just now';
+            if (mins < 60) return `${mins}m ago`;
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24) return `${hrs}h ago`;
+            const days = Math.floor(hrs / 24);
+            if (days < 7) return `${days}d ago`;
+            if (days < 30) return `${Math.floor(days / 7)}w ago`;
+            return new Date(dateStr).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
           };
 
           return (
-            <div className="mt-20 pt-12 border-t border-gray-100 max-w-5xl mx-auto">
+            <div className="mt-16 md:mt-20 max-w-5xl mx-auto">
 
-              {/* Header */}
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-xl font-medium text-gray-900">
-                  Customer Reviews
-                  {totalCount > 0 && (
-                    <span className="text-gray-400 font-normal ml-2 text-base">({totalCount})</span>
-                  )}
-                </h2>
-                <button
-                  onClick={handleWriteReview}
-                  className="text-sm font-medium text-gray-900 border border-gray-200 rounded-full px-5 py-2 hover:bg-gray-50 transition-colors"
-                >
-                  Write a Review
-                </button>
-              </div>
+              <div>
 
-              {totalCount > 0 ? (
-                <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
-
-                  {/* Summary — compact row on mobile, column on desktop */}
-                  <div className="order-1 w-full lg:w-32 shrink-0 flex flex-row lg:flex-col items-center gap-4 lg:gap-3 pb-5 lg:pb-0 border-b lg:border-b-0 border-gray-100">
-                    <div className="flex items-baseline gap-2 lg:flex-col lg:items-center lg:gap-1.5">
-                      <span className="text-4xl lg:text-5xl font-medium text-gray-900 tracking-tight leading-none">{avg.toFixed(1)}</span>
-                      <div className="flex flex-col gap-1 lg:items-center">
-                        <StarRow rating={avg} size={20} />
-                        <span className="text-xs text-gray-400">{totalCount} review{totalCount !== 1 ? 's' : ''}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Filters — horizontal scrollable pills on mobile, sidebar on desktop */}
-                  <div className="order-2 lg:order-3 w-full lg:w-44 shrink-0">
-
-                    {/* Mobile: horizontal pills */}
-                    <div className="flex lg:hidden flex-wrap gap-2">
-                      {[
-                        { value: 'recent', label: 'Recent' },
-                        { value: 'helpful', label: 'Helpful' },
-                      ].map((opt) => (
-                        <button
-                          key={opt.value}
-                          onClick={() => setReviewSort(opt.value)}
-                          className={`shrink-0 text-sm px-3 py-1.5 rounded-full border transition-colors ${
-                            reviewSort === opt.value
-                              ? 'bg-gray-900 border-gray-900 text-white font-medium'
-                              : 'border-gray-200 text-gray-500'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                      <div className="w-px bg-gray-200 self-stretch shrink-0 mx-1" />
-                      {[null, 5, 4, 3, 2, 1].map((s) => (
-                        <button
-                          key={s ?? 'all'}
-                          onClick={() => setReviewFilter(s)}
-                          className={`shrink-0 text-xs px-3 py-1.5 rounded-full border transition-colors flex items-center gap-1 ${
-                            filterRating === s
-                              ? 'bg-gray-900 border-gray-900 text-white font-medium'
-                              : 'border-gray-200 text-gray-500'
-                          }`}
-                        >
-                          {s ? (
-                            <>{s}<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="text-yellow-400"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></>
-                          ) : 'All'}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Desktop: vertical sidebar */}
-                    <div className="hidden lg:flex flex-col gap-6 pt-1">
-                      <div>
-                        <p className="text-xs font-medium text-gray-400 mb-2">Sort by</p>
-                        <div className="flex flex-col gap-0.5">
-                          {[
-                            { value: 'recent', label: 'Most Recent' },
-                            { value: 'helpful', label: 'Most Helpful' },
-                          ].map((opt) => (
-                            <button
-                              key={opt.value}
-                              onClick={() => setReviewSort(opt.value)}
-                              className={`text-left text-sm px-3 py-2 rounded-lg transition-colors ${
-                                reviewSort === opt.value
-                                  ? 'bg-gray-100 text-gray-900 font-medium'
-                                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-gray-400 mb-2">Stars</p>
-                        <div className="flex flex-col gap-0.5">
-                          {[null, 5, 4, 3, 2, 1].map((s) => (
-                            <button
-                              key={s ?? 'all'}
-                              onClick={() => setReviewFilter(s)}
-                              className={`text-left text-sm px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-                                filterRating === s
-                                  ? 'bg-gray-100 text-gray-900 font-medium'
-                                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-                              }`}
-                            >
-                              {s ? (
-                                <><span>{s}</span><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="text-yellow-400 shrink-0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></>
-                              ) : 'All ratings'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Review list */}
-                  <div className="order-3 lg:order-2 flex-1 min-w-0">
-                    {reviewsLoading ? (
-                      <div className="flex justify-center py-10">
-                        <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-gray-100">
-                        {filteredReviews.length === 0 && (
-                          <p className="text-base text-gray-400 py-4">No {filterRating}-star reviews yet.</p>
-                        )}
-                        {filteredReviews.map((review) => {
-                          const hasHelped = !!localStorage.getItem(`helpful_${review.id}`);
-                          const hasReported = reportedIds.includes(review.id);
-                          return (
-                            <div key={review.id} className="py-6">
-                              <StarRow rating={review.rating} size={16} />
-                              {review.title && (
-                                <p className="text-base font-medium text-gray-900 mt-2">{review.title}</p>
-                              )}
-                              <p className="text-sm text-gray-500 mt-1.5">
-                                <span className="font-medium text-gray-700">{review.name}</span>
-                                <span className="mx-2 text-gray-300">·</span>
-                                {new Date(review.created_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
-                              </p>
-                              {review.comment && (
-                                <p className="text-base text-gray-600 leading-relaxed mt-3">{review.comment}</p>
-                              )}
-                              <div className="flex flex-wrap items-center gap-3 mt-4">
-                                <button
-                                  onClick={() => handleHelpful(review.id)}
-                                  disabled={hasHelped}
-                                  className={`flex items-center gap-1.5 text-sm px-3 py-1 rounded-md border transition-colors ${
-                                    hasHelped
-                                      ? 'border-gray-300 text-gray-400 cursor-not-allowed bg-gray-50'
-                                      : 'border-gray-200 text-gray-600 hover:border-gray-400 hover:text-gray-900'
-                                  }`}
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill={hasHelped ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
-                                    <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
-                                  </svg>
-                                  Helpful{(review.helpful_count || 0) > 0 ? ` (${review.helpful_count})` : ''}
-                                </button>
-                                {!hasReported ? (
-                                  <button
-                                    onClick={() => setReportingId(review.id)}
-                                    className="text-sm text-blue-500 hover:text-blue-700 transition-colors"
-                                  >
-                                    Report
-                                  </button>
-                                ) : (
-                                  <span className="text-sm text-gray-300">Reported</span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                        {!filterRating && reviewsHasMore && (
-                          <div className="flex justify-center pt-6">
-                            <button
-                              onClick={loadMoreReviews}
-                              disabled={reviewsLoadingMore}
-                              className="px-6 py-2.5 border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                              {reviewsLoadingMore ? 'Loading...' : 'Load more reviews'}
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                </div>
-              ) : (
-                reviewsLoading ? (
-                  <div className="flex justify-center py-10">
-                    <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
-                  </div>
-                ) : (
-                  <div className="py-8 text-center">
-                    <p className="text-base text-gray-400 mb-4">No reviews yet — be the first to share your experience.</p>
+                {/* Header bar */}
+                <div className="pb-0">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg md:text-xl font-medium text-gray-900">Reviews</h2>
                     <button
                       onClick={handleWriteReview}
-                      className="text-base font-medium text-gray-900 underline underline-offset-4"
+                      className="flex items-center gap-1.5 text-sm font-medium text-white bg-gray-900 rounded-full px-5 py-2.5 hover:bg-gray-800 active:scale-[0.97] transition-all"
                     >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 5v14"/><path d="M5 12h14"/>
+                      </svg>
                       Write a Review
                     </button>
                   </div>
-                )
-              )}
+                </div>
+
+                {totalCount > 0 ? (
+                  <>
+                    {/* Summary + distribution */}
+                    <div className="py-6 md:py-8">
+                      <div className="flex flex-col sm:flex-row gap-6 sm:gap-10 items-start">
+
+                        {/* Big number + stars */}
+                        <div className="flex items-center gap-4 sm:flex-col sm:items-center sm:gap-2 shrink-0">
+                          <span className="text-5xl md:text-6xl font-medium text-gray-900 tracking-tight leading-none">{avg.toFixed(1)}</span>
+                          <div className="flex flex-col gap-1.5 sm:items-center">
+                            <StarRow rating={avg} size={22} />
+                            <span className="text-sm text-gray-400">{totalCount} review{totalCount !== 1 ? 's' : ''}</span>
+                          </div>
+                        </div>
+
+                        {/* Distribution bars */}
+                        <div className="flex-1 w-full flex flex-col gap-2">
+                          {[5, 4, 3, 2, 1].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() => setReviewFilter(filterRating === star ? null : star)}
+                              className="flex items-center gap-3 group"
+                            >
+                              <span className="text-sm text-gray-500 w-4 text-right shrink-0">{star}</span>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="text-yellow-400 shrink-0">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                              </svg>
+                              <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all ${filterRating === star ? 'bg-gray-900' : 'bg-yellow-400 group-hover:bg-yellow-500'}`}
+                                  style={{ width: `${(ratingCounts[star] / maxCount) * 100}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-gray-400 w-6 text-right shrink-0">{ratingCounts[star]}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Filter / sort pills */}
+                    <div className="pb-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {[
+                          { value: 'recent', label: 'Recent' },
+                          { value: 'helpful', label: 'Most Helpful' },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={() => setReviewSort(opt.value)}
+                            className={`text-sm px-4 py-1.5 rounded-full border transition-all ${
+                              reviewSort === opt.value
+                                ? 'bg-gray-900 border-gray-900 text-white font-medium'
+                                : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                        {filterRating && (
+                          <button
+                            onClick={() => setReviewFilter(null)}
+                            className="flex items-center gap-1 text-sm px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                          >
+                            {filterRating}
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="text-yellow-400">
+                              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-0.5 text-gray-400">
+                              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Review list */}
+                    <div className="pb-6 md:pb-8">
+                      {reviewsLoading ? (
+                        <div className="flex justify-center py-12">
+                          <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
+                        </div>
+                      ) : (
+                        <div className="flex flex-col mt-2">
+                          {filteredReviews.length === 0 && (
+                            <p className="text-sm text-gray-400 py-6 text-center">No {filterRating ? `${filterRating}-star ` : ''}reviews yet.</p>
+                          )}
+                          {filteredReviews.map((review, idx) => {
+                            const hasHelped = !!localStorage.getItem(`helpful_${review.id}`);
+                            const hasReported = reportedIds.includes(review.id);
+                            return (
+                              <div key={review.id} className={`py-5 ${idx > 0 ? 'border-t border-gray-100' : ''}`}>
+                                <div className="flex items-center justify-between mb-2">
+                                  <StarRow rating={review.rating} size={14} />
+                                  <span className="text-xs text-gray-400">{timeAgo(review.created_at)}</span>
+                                </div>
+
+                                {review.title && (
+                                  <p className="text-sm font-medium text-gray-900 mb-1">{review.title}</p>
+                                )}
+                                {review.comment && (
+                                  <p className="text-sm text-gray-600 leading-relaxed">{review.comment}</p>
+                                )}
+
+                                <div className="flex items-center gap-3 mt-3">
+                                  <span className="text-xs text-gray-500">{review.name}</span>
+                                  <span className="text-gray-200">·</span>
+                                  <button
+                                    onClick={() => handleHelpful(review.id)}
+                                    disabled={hasHelped}
+                                    className={`flex items-center gap-1 text-xs transition-colors ${
+                                      hasHelped
+                                        ? 'text-gray-400 cursor-not-allowed'
+                                        : 'text-gray-500 hover:text-gray-900'
+                                    }`}
+                                  >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill={hasHelped ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+                                      <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                                    </svg>
+                                    Helpful{(review.helpful_count || 0) > 0 ? ` (${review.helpful_count})` : ''}
+                                  </button>
+                                  <span className="text-gray-200">·</span>
+                                  {!hasReported ? (
+                                    <button
+                                      onClick={() => setReportingId(review.id)}
+                                      className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                                    >
+                                      Report
+                                    </button>
+                                  ) : (
+                                    <span className="text-xs text-gray-300">Reported</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {!filterRating && reviewsHasMore && (
+                            <div className="flex justify-center pt-2">
+                              <button
+                                onClick={loadMoreReviews}
+                                disabled={reviewsLoadingMore}
+                                className="px-6 py-2.5 border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:border-gray-400 hover:text-gray-900 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                {reviewsLoadingMore ? (
+                                  <span className="flex items-center gap-2">
+                                    <span className="w-3.5 h-3.5 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin" />
+                                    Loading...
+                                  </span>
+                                ) : 'Show more reviews'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  reviewsLoading ? (
+                    <div className="flex justify-center py-12">
+                      <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="py-12 text-center">
+                      <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                      </div>
+                      <p className="text-sm text-gray-500 mb-1">No reviews yet</p>
+                      <p className="text-xs text-gray-400 mb-5">Be the first to share your experience</p>
+                      <button
+                        onClick={handleWriteReview}
+                        className="text-sm font-medium text-white bg-gray-900 rounded-full px-6 py-2.5 hover:bg-gray-800 active:scale-[0.97] transition-all"
+                      >
+                        Write a Review
+                      </button>
+                    </div>
+                  )
+                )}
+              </div>
             </div>
           );
         })()}
@@ -834,7 +883,7 @@ const ProductPage = () => {
             onClick={() => { setReportingId(null); setReportReason(null); }}
           >
             <div
-              className="bg-white shadow-2xl w-full max-w-sm p-6"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6"
               onClick={(e) => e.stopPropagation()}
             >
               {!reportReason ? (
@@ -896,6 +945,69 @@ const ProductPage = () => {
           </div>
         )}
       </div>
+
+      {/* Fullscreen image lightbox */}
+      {lightbox.open && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center"
+          onClick={() => setLightbox({ open: false, index: 0 })}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center text-white/70 hover:text-white z-10"
+            onClick={() => setLightbox({ open: false, index: 0 })}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </button>
+
+          {/* Main image */}
+          <div className="flex-1 flex items-center justify-center w-full px-4" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={getImageUrl(images[lightbox.index])}
+              alt={product.name}
+              className="max-w-full max-h-[80vh] object-contain select-none"
+              draggable={false}
+            />
+          </div>
+
+          {/* Nav arrows */}
+          {images.length > 1 && (
+            <>
+              <button
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+                onClick={(e) => { e.stopPropagation(); setLightbox(lb => ({ ...lb, index: (lb.index - 1 + images.length) % images.length })); }}
+              >
+                <ChevronLeft />
+              </button>
+              <button
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+                onClick={(e) => { e.stopPropagation(); setLightbox(lb => ({ ...lb, index: (lb.index + 1) % images.length })); }}
+              >
+                <ChevronRight />
+              </button>
+            </>
+          )}
+
+          {/* Thumbnail dots */}
+          {images.length > 1 && (
+            <div className="flex gap-2 py-4" onClick={(e) => e.stopPropagation()}>
+              {images.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setLightbox(lb => ({ ...lb, index: i }))}
+                  className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors ${
+                    lightbox.index === i ? 'border-white' : 'border-white/20 hover:border-white/50'
+                  }`}
+                >
+                  <img src={getImageUrl(img)} alt="" className="w-full h-full object-contain bg-white" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

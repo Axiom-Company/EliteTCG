@@ -110,6 +110,8 @@ const ShopBySet = () => {
                     <img
                       src={getImageUrl(set.logo_url)}
                       alt={set.name}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-contain p-2"
                       onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
                     />

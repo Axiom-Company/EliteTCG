@@ -105,6 +105,8 @@ const OnSale = () => {
                     <img
                       src={getImageUrl(product.images?.[0]) || PLACEHOLDER_IMAGE}
                       alt={product.name}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-contain transition-transform duration-400 ease-out group-hover:scale-[1.05]"
                       onError={e => { e.target.src = PLACEHOLDER_IMAGE; }}
                     />
