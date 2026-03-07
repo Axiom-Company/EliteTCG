@@ -1,9 +1,46 @@
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Toaster } from 'sonner';
+
+const ResponsiveToaster = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  return (
+    <Toaster
+      position={isMobile ? 'top-center' : 'bottom-right'}
+      toastOptions={{
+        style: {
+          background: '#1a1a1a',
+          color: '#fff',
+          border: '1px solid rgba(255,255,255,0.1)',
+        },
+      }}
+      icons={{ success: null, error: null, info: null, warning: null, loading: null }}
+    />
+  );
+};
 
 const ScrollToTop = () => {
   const { pathname, hash } = useLocation();
+  const navigate = useNavigate();
   useEffect(() => {
+    // Catch Supabase auth callbacks (email confirm, password reset, etc.)
+    if (hash && hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.replace('#', ''));
+      const type = params.get('type');
+      if (type === 'signup' || type === 'email') {
+        navigate('/login', { replace: true, state: { emailConfirmed: true } });
+      } else {
+        navigate('/', { replace: true });
+      }
+      return;
+    }
+
     if (hash) {
       setTimeout(() => {
         const el = document.getElementById(hash.slice(1));
@@ -12,7 +49,7 @@ const ScrollToTop = () => {
     } else {
       window.scrollTo(0, 0);
     }
-  }, [pathname, hash]);
+  }, [pathname, hash, navigate]);
   return null;
 };
 
@@ -53,6 +90,21 @@ import AuthPage from './pages/auth/AuthPage';
 import WriteReview from './pages/reviews/WriteReview';
 import SearchResults from './pages/search/SearchResults';
 
+// Checkout
+import Checkout from './pages/checkout/Checkout';
+import PaymentSuccess from './pages/checkout/PaymentSuccess';
+import PaymentCancel from './pages/checkout/PaymentCancel';
+
+// Orders
+import TrackOrder from './pages/orders/TrackOrder';
+import MyOrders from './pages/orders/MyOrders';
+import OrderDetail from './pages/orders/OrderDetail';
+
+// Legal pages
+import TermsOfService from './pages/legal/TermsOfService';
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import RefundPolicy from './pages/legal/RefundPolicy';
+
 // Community pages
 import ChatPage from './pages/community/ChatPage';
 
@@ -69,6 +121,7 @@ import { AuthProvider } from './contexts/AuthContext';
 // SEO
 import SEO from './components/SEO/SEO';
 import AnnouncementBar from './components/AnnouncementBar/AnnouncementBar';
+import CookieConsent from './components/CookieConsent/CookieConsent';
 
 const HomePage = () => {
   return (
@@ -80,11 +133,8 @@ const HomePage = () => {
     />
     <ShopHero />
     <ShopBySet />
-    <hr className="border-gray-100" />
     <ShopByCategory />
-    <hr className="border-gray-100" />
     <FeaturedProducts />
-    <hr className="border-gray-100" />
     <PreOrders />
     <PaymentStrip />
     <StatsSection />
@@ -142,13 +192,24 @@ function App() {
           <Route path="/product/:id/review" element={<NavbarLayout><WriteReview /></NavbarLayout>} />
           <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
           <Route path="/register" element={<AuthLayout><Register /></AuthLayout>} />
+          <Route path="/checkout" element={<NavbarLayout><Checkout /></NavbarLayout>} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/cancel" element={<MainLayout><PaymentCancel /></MainLayout>} />
+          <Route path="/orders" element={<MainLayout><MyOrders /></MainLayout>} />
+          <Route path="/orders/:orderId" element={<MainLayout><OrderDetail /></MainLayout>} />
+          <Route path="/track" element={<MainLayout><TrackOrder /></MainLayout>} />
           <Route path="/marketplace" element={<MainLayout><Products /></MainLayout>} />
           <Route path="/become-seller" element={<NavbarLayout><AuthPage /></NavbarLayout>} />
+          <Route path="/terms-of-service" element={<MainLayout><TermsOfService /></MainLayout>} />
+          <Route path="/privacy-policy" element={<MainLayout><PrivacyPolicy /></MainLayout>} />
+          <Route path="/refund-policy" element={<MainLayout><RefundPolicy /></MainLayout>} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/chat/:channelSlug" element={<ChatPage />} />
           <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
         <CartDrawer />
+        <CookieConsent />
+        <ResponsiveToaster />
       </CartProvider>
     </WishlistProvider>
     </AuthProvider>

@@ -83,7 +83,7 @@ const ShopBySet = () => {
         ) : (
           <div className="relative">
             <button
-              className={`absolute top-1/2 -left-5 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-gray-300 flex items-center justify-center text-gray-600 z-10 transition-all duration-150 hover:border-gray-400 hover:text-gray-900 ${!canScrollLeft ? 'opacity-40 cursor-not-allowed' : ''}`}
+              className={`absolute top-1/2 -left-5 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 z-10 transition-all duration-150 hover:border-gray-300 hover:text-gray-900 ${!canScrollLeft ? 'opacity-40 cursor-not-allowed' : ''}`}
               onClick={() => scroll('left')}
               disabled={!canScrollLeft}
               aria-label="Scroll left"
@@ -104,7 +104,7 @@ const ShopBySet = () => {
                   ref={setRef(i)}
                   data-anim-idx={i}
                   style={{ transitionDelay: `${i * 60}ms` }}
-                  className={`flex-none w-60 scroll-snap-start bg-white rounded-lg overflow-hidden md:border md:border-gray-200 md:shadow-sm transition-all duration-500 hover:opacity-80 md:w-[200px] ${isVisible(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
+                  className={`flex-none w-60 scroll-snap-start bg-white overflow-hidden transition-all duration-500 hover:opacity-80 md:w-[200px] ${isVisible(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
                 >
                   <div className="relative h-[220px] bg-white flex items-center justify-center overflow-hidden md:h-[180px]">
                     <img
@@ -129,7 +129,7 @@ const ShopBySet = () => {
             </div>
 
             <button
-              className={`absolute top-1/2 -right-5 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-gray-300 flex items-center justify-center text-gray-600 z-10 transition-all duration-150 hover:border-gray-400 hover:text-gray-900 ${!canScrollRight ? 'opacity-40 cursor-not-allowed' : ''}`}
+              className={`absolute top-1/2 -right-5 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 z-10 transition-all duration-150 hover:border-gray-300 hover:text-gray-900 ${!canScrollRight ? 'opacity-40 cursor-not-allowed' : ''}`}
               onClick={() => scroll('right')}
               disabled={!canScrollRight}
               aria-label="Scroll right"

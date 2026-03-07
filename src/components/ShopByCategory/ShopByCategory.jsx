@@ -96,7 +96,7 @@ const ShopByCategory = () => {
               ref={setRef(i)}
               data-anim-idx={i}
               style={{ transitionDelay: `${i * 70}ms` }}
-              className={`flex flex-col bg-white rounded-xl overflow-hidden md:border md:border-gray-200 md:shadow-sm transition-all duration-500 group cursor-pointer ${isVisible(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
+              className={`flex flex-col bg-white overflow-hidden transition-all duration-500 group cursor-pointer ${isVisible(i) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
             >
               <div className="relative aspect-square bg-white flex items-center justify-center overflow-hidden">
                 {getImageUrl(category.image) ? (
@@ -114,7 +114,7 @@ const ShopByCategory = () => {
                 )}
                 {categoryBadges[category.slug] && (
                   <span className="absolute top-2.5 left-2.5 inline-flex items-center px-3 py-1 text-xs font-medium uppercase tracking-wider rounded-full bg-primary text-white">
-                    {categoryBadges[category.slug]}
+                    {categoryBadges[category.slug] === 'preorder' ? 'Coming Soon' : categoryBadges[category.slug]}
                   </span>
                 )}
               </div>

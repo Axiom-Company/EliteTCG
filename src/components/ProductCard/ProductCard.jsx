@@ -23,7 +23,7 @@ const getDiscountPct = (product) => {
 };
 
 // showWishlist — show the heart toggle (wishlist page)
-const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
+const ProductCard = ({ product, showWishlist = false, imageSize = '60%' }) => {
   const { toggleWishlist, isWishlisted } = useWishlist();
   const [showSecond, setShowSecond] = useState(false);
 
@@ -39,12 +39,13 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
   const comparePrice = formatComparePrice(product);
   const discountPct = getDiscountPct(product);
   const wishlisted = isWishlisted(product.id);
-  const isOutOfStock = product.inventory?.quantity === 0;
+  const isComingSoon = product.badge === 'preorder' || product.badge?.toLowerCase() === 'coming soon';
+  const isOutOfStock = product.inventory?.quantity === 0 && !isComingSoon;
 
   return (
     <Link
       to={`/product/${product.slug || product.id}`}
-      className="group flex flex-col bg-white rounded-2xl overflow-hidden md:border md:border-gray-200 md:shadow-sm"
+      className="group flex flex-col bg-white overflow-hidden"
     >
       {/* Image */}
       <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">
@@ -78,8 +79,15 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
           />
         )}
 
+        {/* Coming soon badge */}
+        {isComingSoon && (
+          <span className="absolute top-2.5 left-2.5 text-xs font-medium text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-200">
+            Coming Soon
+          </span>
+        )}
+
         {/* Badge — discount % takes priority */}
-        {!isOutOfStock && (discountPct ? (
+        {!isOutOfStock && !isComingSoon && (discountPct ? (
           <span className="absolute top-2.5 left-2.5 inline-flex items-center px-3 py-1 text-xs font-medium uppercase tracking-wider rounded-full bg-primary text-white">
             -{discountPct}%
           </span>
@@ -112,7 +120,7 @@ const ProductCard = ({ product, showWishlist = false, imageSize = '75%' }) => {
 
       {/* Info */}
       <div className="p-2 md:p-5 flex flex-col gap-1">
-        <h3 className="text-[16px] font-medium text-gray-900 line-clamp-2 leading-snug mt-0.5">
+        <h3 className="text-sm text-gray-900 line-clamp-2 leading-snug mt-0.5">
           {product.name}
         </h3>
 
