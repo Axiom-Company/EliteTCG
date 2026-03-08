@@ -389,7 +389,7 @@ const Hero = () => {
       <div className="relative z-10 flex justify-center mt-0 mb-8" style={{ transform: `translateY(${-38 - (isMobileRef.current ? 50 : 0)}px)` }}>
         <a
           href="#products"
-          className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-800 transition-all duration-250"
+          className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-primary text-white hover:bg-primary-dark transition-all duration-250"
         >
           Shop Now
         </a>

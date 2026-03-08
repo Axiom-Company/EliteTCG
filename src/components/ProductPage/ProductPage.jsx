@@ -258,6 +258,8 @@ const ProductPage = () => {
 
   const getStockStatus = () => {
     const qty = product?.inventory?.quantity ?? 0;
+    const isComingSoon = product?.badge === 'preorder' || product?.badge?.toLowerCase() === 'coming soon';
+    if (qty === 0 && isComingSoon) return { text: 'Coming Soon', color: 'text-blue-500' };
     if (qty === 0) return { text: 'Out of Stock', color: 'text-red-500' };
     if (qty <= (product?.inventory?.low_stock_threshold || 5)) return { text: `Only ${qty} left`, color: 'text-orange-500' };
     return { text: '', color: '' };
@@ -321,7 +323,7 @@ const ProductPage = () => {
               <img
                 src={getImageUrl(images[selectedImage])}
                 alt={product.name}
-                className="w-[75%] h-[75%] md:w-[55%] md:h-[55%] object-contain cursor-zoom-in"
+                className="w-[85%] h-[85%] md:w-[75%] md:h-[75%] object-contain cursor-zoom-in"
                 onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
                 onLoad={(e) => setImgNaturalSize({ w: e.target.naturalWidth, h: e.target.naturalHeight })}
                 onClick={() => setLightbox({ open: true, index: selectedImage })}
@@ -344,7 +346,7 @@ const ProductPage = () => {
                 const LENS = 160;
                 const { x, y, w, h } = magnifier;
                 // Image is 75% of container on mobile, 55% on desktop
-                const pct = window.innerWidth < 768 ? 0.75 : 0.55;
+                const pct = window.innerWidth < 768 ? 0.85 : 0.75;
                 const boxSize = w * pct;
                 // Compute actual rendered dimensions inside object-contain
                 const ar = imgNaturalSize.w / imgNaturalSize.h;
@@ -462,6 +464,10 @@ const ProductPage = () => {
                   </div>
                 );
               })()}
+
+              {product.description && (
+                <p className="text-sm text-gray-500 leading-relaxed mt-3">{product.description}</p>
+              )}
             </div>
 
             {/* Price block */}
@@ -502,10 +508,10 @@ const ProductPage = () => {
               </div>
               <button
                 onClick={handleAddToCart}
-                disabled={stockStatus.text === 'Out of Stock'}
+                disabled={stockStatus.text === 'Out of Stock' || stockStatus.text === 'Coming Soon'}
                 className="w-full py-3 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
               >
-                Add to Cart
+                {stockStatus.text === 'Coming Soon' ? 'Coming Soon' : 'Add to Cart'}
               </button>
               <button
                 onClick={() => product && toggleWishlist(product.id)}
@@ -540,16 +546,9 @@ const ProductPage = () => {
                 </div>
               )}
             </div>
+
           </div>
         </div>
-
-        {/* Description */}
-        {product.description && (
-          <div className="max-w-5xl mx-auto mt-10 pt-12 border-t border-gray-100">
-            <h2 className="text-xl font-medium text-gray-900 mb-4">Description</h2>
-            <p className="text-gray-600 leading-relaxed">{product.description}</p>
-          </div>
-        )}
 
         {/* What's in the Box + Dimensions accordions */}
         {(product.box_contents || (product.dimensions && Object.values(product.dimensions).some(v => v))) && (

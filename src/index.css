@@ -1,7 +1,12 @@
 @import "tailwindcss";
 
-html, body {
-  overflow-x: hidden;
+html {
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+body {
+  overflow-x: clip;
   max-width: 100%;
 }
 

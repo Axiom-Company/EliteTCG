@@ -7,20 +7,15 @@ const STORAGE_KEY = 'eliteTCG_cart';
 const CartContext = createContext(null);
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-
-  // Load cart from localStorage on mount
-  useEffect(() => {
-    const savedCart = localStorage.getItem(STORAGE_KEY);
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      }
+  const [cart, setCart] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
     }
-  }, []);
+  });
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Save cart to localStorage on change
   useEffect(() => {

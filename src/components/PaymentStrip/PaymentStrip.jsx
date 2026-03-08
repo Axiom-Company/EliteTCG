@@ -77,7 +77,6 @@ const MobileMarquee = () => {
               className="object-contain"
               style={{ maxHeight: 40, maxWidth: ITEM_W - 40, transform: `scale(${scale})` }}
             />
-            <span className="text-sm font-medium text-gray-400 mt-3">{alt}</span>
           </div>
         ))}
       </div>
@@ -86,7 +85,7 @@ const MobileMarquee = () => {
 };
 
 const PaymentStrip = () => (
-  <div className="border-t border-gray-100 bg-white pt-8 pb-0">
+  <div className="bg-white pt-8 pb-0 border-t border-b border-gray-100">
 
     <MobileMarquee />
 
@@ -99,12 +98,11 @@ const PaymentStrip = () => (
             className="object-contain"
             style={{ maxWidth: '100%', maxHeight: 40, width: 'auto', height: 'auto', transform: `scale(${scale})` }}
           />
-          <span className="text-sm font-medium text-gray-400 mt-3">{alt}</span>
         </div>
       ))}
     </div>
 
-    <div className="mt-8 border-t border-gray-100" />
+    <div className="mt-8" />
   </div>
 );
 

@@ -1,0 +1,429 @@
+import { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useCart } from '../../contexts/CartContext';
+import { useCustomerAuth } from '../../contexts/AuthContext';
+import { getImageUrl, PLACEHOLDER_IMAGE, PAYMENTS_API_URL } from '../../config/api';
+import { createDirectOrder } from '../../services/orderApi';
+import { hasCookieConsent } from '../../components/CookieConsent/CookieConsent';
+import SEO from '../../components/SEO/SEO';
+
+const CHECKOUT_DETAILS_KEY = 'eliteTCG_checkoutDetails';
+
+const inputClass = "h-10 w-full rounded-md border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-xs placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 transition-colors";
+const labelClass = "text-sm font-medium text-gray-900 leading-none";
+
+const Field = ({ label, optional, ...props }) => (
+  <div className="flex flex-col gap-2">
+    <label className={labelClass}>
+      {label}{optional && <span className="ml-1 font-normal text-gray-400">(optional)</span>}
+    </label>
+    <input {...props} className={inputClass} />
+  </div>
+);
+
+const Checkout = () => {
+  const navigate = useNavigate();
+  const { cart, subtotal, shipping, total, freeShippingThreshold, clearCart } = useCart();
+  const { user, session } = useCustomerAuth();
+
+  const [loading, setLoading] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
+  const [saveDetails, setSaveDetails] = useState(false);
+
+  const [form, setForm] = useState(() => {
+    const defaults = {
+      email: user?.email || session?.user?.email || '',
+      first_name: user?.first_name || '',
+      last_name: user?.last_name || '',
+      phone: user?.phone || '',
+      address_line1: '',
+      address_line2: '',
+      city: '',
+      province: '',
+      postal_code: '',
+      country: 'South Africa',
+    };
+
+    try {
+      const saved = localStorage.getItem(CHECKOUT_DETAILS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...defaults, ...parsed };
+      }
+    } catch {}
+
+    return defaults;
+  });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(CHECKOUT_DETAILS_KEY);
+      setSaveDetails(!!saved);
+    } catch {}
+  }, []);
+
+  const [shippingQuote, setShippingQuote] = useState(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+
+  const set = (name, value) => setForm(p => ({ ...p, [name]: value }));
+  const handleChange = (e) => set(e.target.name, e.target.value);
+
+  // Fetch shipping quote when address fields are complete
+  const fetchShippingQuote = useCallback(async (address) => {
+    if (!address.address_line1 || !address.city || !address.province || !address.postal_code) return;
+    setQuoteLoading(true);
+    try {
+      const res = await fetch(`${PAYMENTS_API_URL}/shipping/quote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address_line1: address.address_line1,
+          city: address.city,
+          province: address.province,
+          postal_code: address.postal_code,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setShippingQuote(data);
+      }
+    } catch {
+      // Fall back to flat rate
+    } finally {
+      setQuoteLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const { address_line1, city, province, postal_code } = form;
+    if (address_line1 && city && province && postal_code) {
+      const timer = setTimeout(() => fetchShippingQuote(form), 600);
+      return () => clearTimeout(timer);
+    } else {
+      setShippingQuote(null);
+    }
+  }, [form.address_line1, form.city, form.province, form.postal_code, fetchShippingQuote]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (cart.length === 0) return;
+
+    // Save or clear checkout details
+    if (saveDetails && hasCookieConsent()) {
+      localStorage.setItem(CHECKOUT_DETAILS_KEY, JSON.stringify({
+        email: form.email,
+        first_name: form.first_name,
+        last_name: form.last_name,
+        phone: form.phone,
+        address_line1: form.address_line1,
+        address_line2: form.address_line2,
+        city: form.city,
+        province: form.province,
+        postal_code: form.postal_code,
+      }));
+    } else {
+      localStorage.removeItem(CHECKOUT_DETAILS_KEY);
+    }
+
+    setLoading(true);
+    try {
+      const result = await createDirectOrder({
+        items: cart.map(item => ({
+          product_id: item.id,
+          name: item.name,
+          unit_price_zar: item.price,
+          quantity: item.quantity,
+          image_url: item.image || null,
+        })),
+        customer: {
+          email: form.email,
+          full_name: `${form.first_name} ${form.last_name}`.trim(),
+          phone: form.phone || undefined,
+        },
+        shipping: {
+          address_line1: form.address_line1,
+          address_line2: form.address_line2 || undefined,
+          city: form.city,
+          province: form.province,
+          postal_code: form.postal_code,
+          country: form.country,
+          cost_zar: shippingQuote ? shippingQuote.customer_cost_zar : shipping,
+          estimated_days: shippingQuote?.estimated_days || null,
+          service_name: shippingQuote?.service_name || null,
+        },
+      });
+
+      if (result.payment_data && result.payfast_url) {
+        // Save order ID so the success page can confirm payment
+        if (result.order?.id) {
+          sessionStorage.setItem('eliteTCG_pendingOrderId', result.order.id);
+        }
+
+        // Show processing screen while PayFast loads
+        setRedirecting(true);
+
+        // Submit as a hidden form POST (PayFast requires POST, not GET redirect)
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = result.payfast_url;
+
+        Object.entries(result.payment_data).forEach(([key, value]) => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = String(value);
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        return;
+      }
+
+      toast.error('Payment gateway unavailable — please try again');
+    } catch (err) {
+      toast.error(err.message || 'Failed to place order');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (redirecting) {
+    return (
+      <section className="min-h-[60vh] flex items-center justify-center px-6">
+        <SEO title="Processing" noindex />
+        <div className="text-center">
+          <div className="w-12 h-12 border-[3px] border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto mb-5" />
+          <h1 className="text-xl font-medium text-gray-900 mb-1">Processing your order</h1>
+          <p className="text-sm text-gray-500">Redirecting to PayFast for secure payment...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (cart.length === 0) {
+    return (
+      <section className="min-h-[60vh] flex items-center justify-center px-6">
+        <SEO title="Checkout" noindex />
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-medium text-gray-900 mb-1">Your cart is empty</h1>
+          <p className="text-sm text-gray-500 mb-6">Add some products before checking out</p>
+          <Link to="/products" className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors">
+            Browse Products
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
+  const dynamicShipping = shippingQuote ? shippingQuote.customer_cost_zar : shipping;
+  const dynamicTotal = subtotal + dynamicShipping;
+
+  return (
+    <section className="bg-white min-h-screen">
+      <SEO title="Checkout" noindex />
+
+      <div className="container max-w-5xl mx-auto px-6 py-10 md:py-14">
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-10">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-medium text-gray-900">Checkout</h1>
+            <p className="text-sm text-gray-400 mt-1">{cart.length} {cart.length === 1 ? 'item' : 'items'}</p>
+          </div>
+          <Link to="/products" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+            Continue shopping
+          </Link>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16">
+
+            {/* Left — Form */}
+            <div className="lg:col-span-7 space-y-10">
+
+              {/* Contact */}
+              <div>
+                <h2 className="text-[11px] font-medium text-gray-400 uppercase tracking-widest mb-5">Contact</h2>
+                <div className="space-y-4">
+                  <Field label="Email" name="email" type="email" value={form.email} onChange={handleChange} required placeholder="you@example.com" autoComplete="email" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="First name" name="first_name" value={form.first_name} onChange={handleChange} required placeholder="John" autoComplete="given-name" />
+                    <Field label="Last name" name="last_name" value={form.last_name} onChange={handleChange} required placeholder="Doe" autoComplete="family-name" />
+                  </div>
+                  <Field label="Phone" name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="+27 12 345 6789" autoComplete="tel" optional />
+                </div>
+              </div>
+
+              <div className="border-t border-gray-100" />
+
+              {/* Shipping */}
+              <div>
+                <h2 className="text-[11px] font-medium text-gray-400 uppercase tracking-widest mb-5">Shipping address</h2>
+                <div className="space-y-4">
+                  <Field label="Address" name="address_line1" value={form.address_line1} onChange={handleChange} required placeholder="Street address" autoComplete="address-line1" />
+                  <Field label="Apartment, suite, etc." name="address_line2" value={form.address_line2} onChange={handleChange} placeholder="Apt 4B" autoComplete="address-line2" optional />
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="City" name="city" value={form.city} onChange={handleChange} required placeholder="Cape Town" autoComplete="address-level2" />
+                    <div className="flex flex-col gap-2">
+                      <label className={labelClass}>Province</label>
+                      <select name="province" value={form.province} onChange={handleChange} required className={inputClass}>
+                        <option value="">Select</option>
+                        <option value="Eastern Cape">Eastern Cape</option>
+                        <option value="Free State">Free State</option>
+                        <option value="Gauteng">Gauteng</option>
+                        <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                        <option value="Limpopo">Limpopo</option>
+                        <option value="Mpumalanga">Mpumalanga</option>
+                        <option value="North West">North West</option>
+                        <option value="Northern Cape">Northern Cape</option>
+                        <option value="Western Cape">Western Cape</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Postal code" name="postal_code" value={form.postal_code} onChange={handleChange} required placeholder="8001" autoComplete="postal-code" />
+                    <div className="flex flex-col gap-2">
+                      <label className={labelClass}>Country</label>
+                      <input type="text" value="South Africa" disabled className={`${inputClass} bg-gray-50 text-gray-500`} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Save details */}
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={saveDetails}
+                  onChange={(e) => setSaveDetails(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 cursor-pointer"
+                />
+                <span className="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">
+                  Save my details for next time
+                </span>
+              </label>
+
+              {/* Submit — mobile */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="lg:hidden w-full py-3.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Processing...' : `Pay R${dynamicTotal.toLocaleString()}`}
+              </button>
+            </div>
+
+            {/* Right — Receipt-style Order summary */}
+            <div className="lg:col-span-5">
+              <div className="lg:sticky lg:top-24">
+                <div className="bg-white rounded-t-xl px-7 py-8 min-h-[420px]" style={{ fontFamily: "'Courier New', Courier, monospace" }}>
+                  {/* Receipt header */}
+                  <div className="text-center mb-6">
+                    <p className="text-base font-medium tracking-widest uppercase text-gray-800">Elite TCG Store</p>
+                    <p className="text-xs text-gray-400 mt-1.5 tracking-wide">ORDER SUMMARY</p>
+                    <p className="text-[10px] text-gray-300 mt-1 tracking-wider">- - - - - - - - - - - - - - - - - - - -</p>
+                  </div>
+
+                  {/* Items */}
+                  <div className="space-y-4">
+                    {cart.map(item => (
+                      <div key={item.id} className="flex gap-3 items-start">
+                        <div className="w-14 h-14 bg-white rounded flex-shrink-0 overflow-hidden">
+                          <img
+                            src={getImageUrl(item.image)}
+                            alt={item.name}
+                            className="w-full h-full object-contain p-0.5"
+                            onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-700 leading-tight truncate">{item.name}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{item.quantity} x R{item.price.toLocaleString()}</p>
+                        </div>
+                        <p className="text-sm text-gray-800 whitespace-nowrap pt-0.5">
+                          R{(item.price * item.quantity).toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-sm text-gray-300 mt-5 mb-5 tracking-wider text-center">- - - - - - - - - - - - - - - - - - - - - - - -</p>
+
+                  {/* Totals */}
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">SUBTOTAL</span>
+                      <span className="text-gray-700">R{subtotal.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">SHIPPING</span>
+                      {quoteLoading ? (
+                        <span className="text-gray-400">...</span>
+                      ) : dynamicShipping === 0 ? (
+                        <span className="text-green-600">FREE</span>
+                      ) : (
+                        <span className="text-gray-700">R{dynamicShipping.toLocaleString()}</span>
+                      )}
+                    </div>
+
+                    {shippingQuote && (
+                      <p className="text-xs text-gray-400 text-right">
+                        {shippingQuote.service_name} — Est. {shippingQuote.estimated_days} day{shippingQuote.estimated_days !== 1 ? 's' : ''}
+                      </p>
+                    )}
+
+                    {!shippingQuote && !quoteLoading && dynamicShipping > 0 && (
+                      <p className="text-xs text-gray-400 text-right">
+                        Enter address for exact cost
+                      </p>
+                    )}
+                  </div>
+
+                  <p className="text-sm text-gray-300 mt-5 mb-5 tracking-wider text-center">- - - - - - - - - - - - - - - - - - - - - - - -</p>
+
+                  {/* Total */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-base font-medium text-gray-900 tracking-wide">TOTAL</span>
+                    <span className="text-lg font-medium text-gray-900">R{dynamicTotal.toLocaleString()}</span>
+                  </div>
+
+                </div>
+
+                {/* Semicircle tear bottom */}
+                <div className="relative h-[10px] bg-white" style={{
+                  maskImage: 'radial-gradient(circle 8px at 16px 10px, transparent 7.5px, black 8px)',
+                  WebkitMaskImage: 'radial-gradient(circle 8px at 16px 10px, transparent 7.5px, black 8px)',
+                  maskSize: '32px 10px',
+                  WebkitMaskSize: '32px 10px',
+                  maskPosition: '0 0',
+                  WebkitMaskPosition: '0 0',
+                  maskRepeat: 'repeat-x',
+                  WebkitMaskRepeat: 'repeat-x',
+                }} />
+
+                {/* Submit — desktop */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="hidden lg:block w-full py-3.5 mt-6 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Processing...' : `Pay R${dynamicTotal.toLocaleString()}`}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </form>
+      </div>
+    </section>
+  );
+};
+
+export default Checkout;

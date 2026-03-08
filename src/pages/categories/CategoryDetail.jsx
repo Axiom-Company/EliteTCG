@@ -201,7 +201,8 @@ const CategoryDetail = () => {
               const comparePrice = formatComparePrice(product);
               const discountPct = getDiscountPct(product);
               const wishlisted = isWishlisted(product.id);
-              const isOutOfStock = product.inventory?.quantity === 0;
+              const isComingSoon = product.badge === 'preorder';
+              const isOutOfStock = product.inventory?.quantity === 0 && !isComingSoon;
               const isLowStock =
                 product.inventory?.quantity > 0 &&
                 product.inventory?.quantity <= (product.inventory?.low_stock_threshold ?? 5);
@@ -210,7 +211,7 @@ const CategoryDetail = () => {
                 <Link
                   key={product.id}
                   to={`/product/${product.slug || product.id}`}
-                  className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-gray-200 transition-all duration-200"
+                  className="group flex flex-col bg-white overflow-hidden border border-gray-200 transition-all duration-200"
                 >
                   <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">
                     {product.images?.[0] ? (
@@ -223,13 +224,13 @@ const CategoryDetail = () => {
                       <Package className="w-12 h-12 text-gray-200" />
                     )}
 
-                    {product.badge && product.badge !== 'none' && (
+                    {!isComingSoon && product.badge && product.badge !== 'none' && (
                       <span className={`absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full capitalize tracking-wide ${getBadgeStyle(product.badge)}`}>
                         {product.badge}
                       </span>
                     )}
 
-                    {discountPct && !isOutOfStock && (
+                    {discountPct && !isOutOfStock && !isComingSoon && (
                       <span className="absolute top-2.5 left-2.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-[#E3350D] text-white">
                         -{discountPct}%
                       </span>

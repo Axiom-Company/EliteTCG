@@ -49,7 +49,7 @@ const Navbar = () => {
     {
       title: 'Products',
       links: [
-        { name: 'All', href: '/products' },
+        { name: 'All Products', href: '/products' },
         { name: 'Singles', href: '/products?category=singles' },
         { name: 'Accessories', href: '/products?category=accessories' },
       ]
@@ -69,7 +69,7 @@ const Navbar = () => {
       title: 'Browse',
       links: [
         { name: 'All Sets', href: '/sets' },
-        { name: 'Pre-Orders', href: '/#preorders' },
+        { name: 'Coming Soon', href: '/#preorders' },
         { name: 'Wishlist', href: '/wishlist' },
       ]
     }
@@ -82,7 +82,7 @@ const Navbar = () => {
         <div className="flex items-center">
           <Link to="/" className="flex items-center gap-3">
             <span
-              className="text-2xl font-bold elite-tcg-text tracking-tight cursor-pointer"
+              className="text-2xl font-medium elite-tcg-text tracking-tight cursor-pointer"
               style={{ paddingLeft: '7px' }}
             >
               Elite TCG
@@ -113,22 +113,22 @@ const Navbar = () => {
               {/* Full-width mega menu */}
               {isShopOpen && (
                 <div
-                  className="fixed top-16 left-0 right-0 bg-gray-50 border-t border-b border-gray-100 z-50"
+                  className="fixed top-16 left-0 right-0 bg-white border-b border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.06)] z-50"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="max-w-7xl mx-auto px-6 py-8">
-                    <div className="flex gap-20 justify-center">
+                  <div className="max-w-5xl mx-auto px-6 py-8">
+                    <div className="grid grid-cols-3 divide-x divide-gray-100">
                       {shopCategories.map(({ title, links }) => (
-                        <div key={title} className="text-left">
-                          <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest mb-4">
+                        <div key={title} className="text-left px-8 first:pl-0 last:pr-0">
+                          <p className="text-[11px] font-medium text-gray-400 uppercase tracking-widest mb-3">
                             {title}
                           </p>
-                          <div className="space-y-2">
+                          <div className="space-y-0">
                             {links.map(link => (
                               <Link
                                 key={link.name}
                                 to={link.href}
-                                className="block text-sm text-gray-700 hover:text-gray-900 transition-colors"
+                                className="block py-1.5 text-sm text-gray-500 hover:text-primary transition-colors duration-150"
                                 onClick={() => setIsShopOpen(false)}
                               >
                                 {link.name}
@@ -149,7 +149,7 @@ const Navbar = () => {
             className="text-sm font-medium text-gray-900 hover:text-black transition-colors"
             onClick={closeAll}
           >
-            Pre-Orders
+            Coming Soon
           </Link>
 
           <Link

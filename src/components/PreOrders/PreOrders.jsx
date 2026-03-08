@@ -41,7 +41,7 @@ const PreOrders = () => {
     <section id="preorders" className="py-16 bg-white md:py-10">
       <div className="container">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-medium mb-2">Pre-Orders</h2>
+          <h2 className="text-3xl font-medium mb-2">Coming Soon</h2>
           <p className="text-sm text-gray-500">Reserve upcoming sets before they sell out</p>
         </div>
 
@@ -64,7 +64,7 @@ const PreOrders = () => {
               <Link
                 key={item.id}
                 to={`/product/${item.slug || item.id}`}
-                className="flex flex-col bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-250 hover:border-gray-300 group cursor-pointer"
+                className="flex flex-col bg-white border border-gray-200 overflow-hidden transition-all duration-250 hover:border-gray-300 group cursor-pointer"
               >
                 <div className="relative h-48 bg-white flex items-center justify-center overflow-hidden p-3">
                   <img
@@ -75,7 +75,7 @@ const PreOrders = () => {
                     className="max-w-full max-h-full object-contain"
                     onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
                   />
-                  <span className="absolute top-3 right-3 inline-flex items-center px-2 py-1 text-[10px] font-medium uppercase tracking-wider rounded-full bg-primary text-white">
+                  <span className="absolute top-3 left-3 inline-flex items-center px-2 py-1 text-[10px] font-medium uppercase tracking-wider rounded-full bg-primary text-white">
                     Coming Soon
                   </span>
                 </div>

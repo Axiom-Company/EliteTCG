@@ -30,7 +30,7 @@ import {
 
 const ORDER_STATUSES = [
   { value: 'all', label: 'All' },
-  { value: 'pending_payment', label: 'Pending' },
+  { value: 'pending', label: 'Pending' },
   { value: 'paid', label: 'Paid' },
   { value: 'confirmed', label: 'Confirmed' },
   { value: 'shipped', label: 'Shipped' },
@@ -41,6 +41,7 @@ const ORDER_STATUSES = [
 ];
 
 const STATUS_COLORS = {
+  pending: 'bg-amber-900/30 text-amber-400 border-amber-800/40',
   pending_payment: 'bg-amber-900/30 text-amber-400 border-amber-800/40',
   paid: 'bg-emerald-900/30 text-emerald-400 border-emerald-800/40',
   confirmed: 'bg-blue-900/30 text-blue-400 border-blue-800/40',
@@ -55,6 +56,7 @@ const STATUS_COLORS = {
 const PAYMENT_COLORS = {
   pending: 'bg-amber-900/30 text-amber-400 border-amber-800/40',
   complete: 'bg-emerald-900/30 text-emerald-400 border-emerald-800/40',
+  completed: 'bg-emerald-900/30 text-emerald-400 border-emerald-800/40',
   failed: 'bg-red-900/30 text-red-400 border-red-800/40',
   cancelled: 'bg-red-900/30 text-red-400 border-red-800/40',
 };

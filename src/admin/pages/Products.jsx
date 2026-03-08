@@ -184,6 +184,10 @@ const Products = () => {
       };
       if (editingProduct) {
         await productsApi.update(editingProduct.id, productData);
+        await productsApi.updateInventory(editingProduct.id, {
+          quantity: parseInt(formData.initial_quantity) || 0,
+          low_stock_threshold: parseInt(formData.low_stock_threshold) || 5,
+        });
         setMessage({ type: 'success', text: 'Product updated' });
       } else {
         await productsApi.create(productData);

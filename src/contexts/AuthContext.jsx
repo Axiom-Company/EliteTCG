@@ -67,9 +67,12 @@ export const AuthProvider = ({ children }) => {
     const result = await res.json();
     if (!res.ok) throw new Error(result.error || 'Registration failed');
 
-    // Then sign in
+    // Try to sign in — if email confirmation is required, return a flag
     if (supabase) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error && error.message?.toLowerCase().includes('email not confirmed')) {
+        return { needsConfirmation: true, email };
+      }
       if (error) throw error;
       return data;
     }

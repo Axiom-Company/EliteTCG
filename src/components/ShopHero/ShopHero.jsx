@@ -75,7 +75,7 @@ const ShopHero = () => {
               />
               <button
                 type="submit"
-                className="absolute right-1.5 px-5 py-2 text-sm font-medium rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-colors"
+                className="absolute right-1.5 px-5 py-2 text-sm font-medium rounded-full bg-primary text-white hover:bg-primary-dark transition-colors"
               >
                 Search
               </button>
@@ -89,7 +89,7 @@ const ShopHero = () => {
             <button
               key={chip.value}
               onClick={() => handleChip(chip.value)}
-              className="px-4 py-1.5 text-sm rounded-full border border-gray-200 text-gray-600 hover:border-gray-800 hover:text-gray-900 transition-all duration-150"
+              className="px-4 py-1.5 text-sm rounded-full border border-gray-200 text-gray-600 hover:border-primary hover:text-primary transition-all duration-150"
             >
               {chip.label}
             </button>

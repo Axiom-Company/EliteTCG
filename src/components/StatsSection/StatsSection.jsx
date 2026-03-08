@@ -5,7 +5,7 @@ const stats = [
 ];
 
 const StatsSection = () => (
-  <section className="bg-white border-t border-b border-gray-100 py-14 md:py-16">
+  <section className="bg-white py-14 md:py-16">
     <div className="container max-w-4xl mx-auto px-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-0 md:divide-x md:divide-gray-200">
         {stats.map(({ value, label }) => (

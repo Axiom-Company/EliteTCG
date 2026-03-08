@@ -46,17 +46,23 @@ const Register = () => {
     setStep(s => s + 1);
   };
 
+  const [confirmationEmail, setConfirmationEmail] = useState(null);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await signUp(formData.email, formData.password, {
+      const result = await signUp(formData.email, formData.password, {
         first_name: formData.first_name,
         last_name: formData.last_name,
         phone: formData.phone || undefined,
         accepts_marketing: formData.accepts_marketing,
       });
-      navigate('/');
+      if (result?.needsConfirmation) {
+        setConfirmationEmail(result.email);
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       toast.error(err.message || 'Failed to create account');
     } finally {
@@ -69,6 +75,35 @@ const Register = () => {
       <SEO title="Create Account" noindex />
 
       <div className="w-full max-w-[380px]">
+
+      {/* Email confirmation screen */}
+      {confirmationEmail ? (
+        <div className="bg-white rounded-2xl md:shadow-[0_2px_24px_rgba(0,0,0,0.08)] md:border md:border-gray-100 px-8 py-12 flex flex-col items-center gap-5 text-center">
+          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+          </div>
+          <div className="flex flex-col gap-2">
+            <h1 className="text-2xl font-medium tracking-tight">Check your email</h1>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              We've sent a confirmation link to<br />
+              <span className="font-medium text-gray-900">{confirmationEmail}</span>
+            </p>
+          </div>
+          <p className="text-xs text-gray-400 leading-relaxed max-w-[260px]">
+            Click the link in the email to verify your account, then come back and sign in.
+          </p>
+          <Link
+            to="/login"
+            className="mt-2 h-10 w-full inline-flex items-center justify-center rounded-md bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 active:scale-[0.99] transition-all shadow-xs"
+          >
+            Go to Sign In
+          </Link>
+        </div>
+      ) : (
+
       <div className="bg-white rounded-2xl md:shadow-[0_2px_24px_rgba(0,0,0,0.08)] md:border md:border-gray-100 px-8 py-9 flex flex-col gap-7">
 
         {/* Header */}
@@ -211,6 +246,8 @@ const Register = () => {
         </p>
 
         </div>
+
+        )}
 
         <p className="text-center text-xs text-gray-400 mt-5">
           <Link to="/" className="hover:text-gray-600 transition-colors">← Back to home</Link>

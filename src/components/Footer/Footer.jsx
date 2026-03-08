@@ -30,13 +30,14 @@ const socialLinks = [
 const shopLinks = [
   { name: 'All Products', to: '/products' },
   { name: 'Sets', to: '/sets' },
-  { name: 'Pre-Orders', to: '/products' },
+  { name: 'Coming Soon', to: '/products' },
   { name: 'Marketplace', to: '/marketplace' },
 ];
 
 const infoLinks = [
   { name: 'Privacy Policy', to: '/privacy-policy' },
   { name: 'Terms of Service', to: '/terms-of-service' },
+  { name: 'Refund Policy', to: '/refund-policy' },
   { name: 'Contact Us', to: '#' },
 ];
 
