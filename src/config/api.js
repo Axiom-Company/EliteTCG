@@ -9,8 +9,13 @@ export const PAYMENTS_API_URL = import.meta.env.VITE_PAYMENTS_API_URL || 'http:/
 export const PLACEHOLDER_IMAGE = `${ELITE_API_URL}/uploads/item_not_found.webp`;
 
 // Helper for Elite TCG backend image URLs
+// Routes Supabase images through our domain so Cloudflare can cache them
 export const getImageUrl = (url) => {
   if (!url) return PLACEHOLDER_IMAGE;
+  if (url.includes('supabase.co/storage/v1/object/public/')) {
+    const path = url.split('/storage/v1/object/public/')[1];
+    return `${ELITE_API_URL}/api/img/${path}`;
+  }
   if (url.startsWith('http')) return url;
   return `${ELITE_API_URL}${url}`;
 };
