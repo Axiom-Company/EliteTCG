@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { PAYMENTS_API_URL } from '../../config/api';
+import SEO from '../../components/SEO/SEO';
 
 const PaymentSuccess = () => {
   const { clearCart } = useCart();
@@ -56,6 +57,7 @@ const PaymentSuccess = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-100">
+      <SEO title="Order Confirmed" noindex />
       <div className="w-full max-w-sm relative">
         {/* Side notches */}
         <div className="absolute left-[-10px] top-[65px] w-[20px] h-[20px] rounded-full bg-gray-100 z-10" />

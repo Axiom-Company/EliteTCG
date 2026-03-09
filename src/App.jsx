@@ -120,6 +120,7 @@ import { AuthProvider } from './contexts/AuthContext';
 
 // SEO
 import SEO from './components/SEO/SEO';
+import { organizationJsonLd, websiteJsonLd } from './config/seo';
 import AnnouncementBar from './components/AnnouncementBar/AnnouncementBar';
 import CookieConsent from './components/CookieConsent/CookieConsent';
 
@@ -130,6 +131,7 @@ const HomePage = () => {
       title={null}
       description="South Africa's premier destination for authentic Pokemon TCG products. Shop booster boxes, ETBs, singles, and more."
       path="/"
+      jsonLd={[organizationJsonLd, websiteJsonLd]}
     />
     <ShopHero />
     <ShopBySet />

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 import ProductCard from '../../components/ProductCard/ProductCard';
+import SEO from '../../components/SEO/SEO';
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -33,6 +34,7 @@ const SearchResults = () => {
 
   return (
     <div className="bg-white min-h-screen">
+      <SEO title={query ? `Results for "${query}"` : 'Search'} description={query ? `Search results for "${query}" at EliteTCG` : 'Search for Pokemon TCG products'} noindex />
       <div className="container py-10 md:py-14">
 
         {/* Header */}

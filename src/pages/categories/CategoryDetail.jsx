@@ -4,6 +4,7 @@ import { ChevronRight, Package, ArrowLeft, Heart } from 'lucide-react';
 import { useWishlist } from '../../contexts/WishlistContext';
 import { ELITE_API_URL, getImageUrl, PLACEHOLDER_IMAGE } from '../../config/api';
 import SEO from '../../components/SEO/SEO';
+import { buildBreadcrumbJsonLd } from '../../config/seo';
 
 const sortOptions = [
   { value: 'newest', label: 'Newest First' },
@@ -139,7 +140,7 @@ const CategoryDetail = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {category && <SEO title={category.name} description={category.description || `Shop ${category.name} Pokemon TCG products at EliteTCG.`} path={`/categories/${slug}`} />}
+      {category && <SEO title={category.name} description={category.description || `Shop ${category.name} Pokemon TCG products at EliteTCG.`} path={`/categories/${slug}`} jsonLd={buildBreadcrumbJsonLd([{ name: 'Home', url: '/' }, { name: 'Categories', url: '/products' }, { name: category.name }])} />}
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-6 pt-4 pb-0">
         <nav className="flex items-center gap-1.5 text-xs text-gray-400">

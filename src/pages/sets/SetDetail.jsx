@@ -117,7 +117,7 @@ const SetDetail = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {set && <SEO title={set.name} description={`Browse products from the ${set.name} Pokemon TCG set at EliteTCG.`} path={`/sets/${id}`} image={set.logo_url ? getImageUrl(set.logo_url) : undefined} />}
+      {set && <SEO title={set.name} description={`Browse products from the ${set.name} Pokemon TCG set at EliteTCG.`} path={`/sets/${id}`} image={set.logo_url ? getImageUrl(set.logo_url) : undefined} jsonLd={buildBreadcrumbJsonLd([{ name: 'Home', url: '/' }, { name: 'Sets', url: '/sets' }, { name: set.name }])} />}
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-6 pt-4 pb-0">
         <nav className="flex items-center gap-1.5 text-[13px] text-gray-400">
