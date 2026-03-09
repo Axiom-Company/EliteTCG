@@ -64,7 +64,7 @@ const PreOrders = () => {
               <Link
                 key={item.id}
                 to={`/product/${item.slug || item.id}`}
-                className="flex flex-col bg-white border border-gray-200 overflow-hidden transition-all duration-250 hover:border-gray-300 group cursor-pointer"
+                className="flex flex-col bg-white overflow-hidden transition-all duration-250 group cursor-pointer"
               >
                 <div className="relative h-48 bg-white flex items-center justify-center overflow-hidden p-3">
                   <img

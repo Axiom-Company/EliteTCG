@@ -3,11 +3,11 @@ import { PAYMENTS_API_URL } from '../config/api';
 /**
  * Create an order via the payments microservice (direct checkout — no auth required).
  */
-export async function createDirectOrder({ items, customer, shipping, payment_provider = 'payfast' }) {
+export async function createDirectOrder({ items, customer, shipping, payment_provider = 'payfast', turnstile_token }) {
   const res = await fetch(`${PAYMENTS_API_URL}/checkout/direct`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items, customer, shipping, payment_provider }),
+    body: JSON.stringify({ items, customer, shipping, payment_provider, turnstile_token }),
   });
 
   if (!res.ok) {

@@ -211,7 +211,7 @@ const CategoryDetail = () => {
                 <Link
                   key={product.id}
                   to={`/product/${product.slug || product.id}`}
-                  className="group flex flex-col bg-white overflow-hidden border border-gray-200 transition-all duration-200"
+                  className="group flex flex-col bg-white overflow-hidden transition-all duration-200"
                 >
                   <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">
                     {product.images?.[0] ? (

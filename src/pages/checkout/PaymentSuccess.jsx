@@ -95,7 +95,7 @@ const PaymentSuccess = () => {
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-400">PAYMENT</span>
-                  <span className="text-gray-700">PayFast</span>
+                  <span className="text-gray-700">{new URLSearchParams(window.location.search).get('provider') === 'payflex' ? 'Payflex (Pay in 4)' : 'PayFast'}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-400">DELIVERY</span>

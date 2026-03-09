@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useCart } from '../../contexts/CartContext';
@@ -30,6 +30,27 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [saveDetails, setSaveDetails] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('payfast');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef(null);
+  const turnstileWidgetId = useRef(null);
+
+  // Render Turnstile widget
+  useEffect(() => {
+    if (!turnstileRef.current) return;
+    const interval = setInterval(() => {
+      if (window.turnstile && turnstileRef.current && turnstileWidgetId.current === null) {
+        turnstileWidgetId.current = window.turnstile.render(turnstileRef.current, {
+          sitekey: '0x4AAAAAACoC2G7ZIJO4InnC',
+          callback: (token) => setTurnstileToken(token),
+          'expired-callback': () => setTurnstileToken(''),
+          theme: 'light',
+        });
+        clearInterval(interval);
+      }
+    }, 200);
+    return () => clearInterval(interval);
+  }, []);
 
   const [form, setForm] = useState(() => {
     const defaults = {
@@ -126,6 +147,11 @@ const Checkout = () => {
       localStorage.removeItem(CHECKOUT_DETAILS_KEY);
     }
 
+    if (!turnstileToken) {
+      toast.error('Please complete the security check');
+      return;
+    }
+
     setLoading(true);
     try {
       const result = await createDirectOrder({
@@ -152,32 +178,40 @@ const Checkout = () => {
           estimated_days: shippingQuote?.estimated_days || null,
           service_name: shippingQuote?.service_name || null,
         },
+        payment_provider: paymentMethod,
+        turnstile_token: turnstileToken,
       });
 
-      if (result.payment_data && result.payfast_url) {
-        // Save order ID so the success page can confirm payment
-        if (result.order?.id) {
-          sessionStorage.setItem('eliteTCG_pendingOrderId', result.order.id);
-        }
+      // Save order ID so the success page can confirm payment
+      if (result.order?.id) {
+        sessionStorage.setItem('eliteTCG_pendingOrderId', result.order.id);
+      }
 
-        // Show processing screen while PayFast loads
+      // Payflex — simple redirect to hosted checkout
+      if (result.payflex_redirect_url) {
+        setRedirecting(true);
+        window.location.href = result.payflex_redirect_url;
+        return;
+      }
+
+      // PayFast — form POST submission
+      if (result.payment_data && result.payfast_url) {
         setRedirecting(true);
 
-        // Submit as a hidden form POST (PayFast requires POST, not GET redirect)
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = result.payfast_url;
+        const hiddenForm = document.createElement('form');
+        hiddenForm.method = 'POST';
+        hiddenForm.action = result.payfast_url;
 
         Object.entries(result.payment_data).forEach(([key, value]) => {
           const input = document.createElement('input');
           input.type = 'hidden';
           input.name = key;
           input.value = String(value);
-          form.appendChild(input);
+          hiddenForm.appendChild(input);
         });
 
-        document.body.appendChild(form);
-        form.submit();
+        document.body.appendChild(hiddenForm);
+        hiddenForm.submit();
         return;
       }
 
@@ -196,7 +230,7 @@ const Checkout = () => {
         <div className="text-center">
           <div className="w-12 h-12 border-[3px] border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto mb-5" />
           <h1 className="text-xl font-medium text-gray-900 mb-1">Processing your order</h1>
-          <p className="text-sm text-gray-500">Redirecting to PayFast for secure payment...</p>
+          <p className="text-sm text-gray-500">Redirecting to {paymentMethod === 'payflex' ? 'Payflex' : 'PayFast'} for secure payment...</p>
         </div>
       </section>
     );
@@ -310,13 +344,48 @@ const Checkout = () => {
                 </span>
               </label>
 
+              <div className="border-t border-gray-100" />
+
+              {/* Payment method */}
+              <div>
+                <h2 className="text-[11px] font-medium text-gray-400 uppercase tracking-widest mb-5">Payment method</h2>
+                <div className="space-y-2.5">
+                  <label
+                    className={`flex items-center gap-3.5 px-4 py-3.5 rounded-lg border cursor-pointer transition-all ${paymentMethod === 'payfast' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}
+                    onClick={() => setPaymentMethod('payfast')}
+                  >
+                    <input type="radio" name="payment" checked={paymentMethod === 'payfast'} onChange={() => setPaymentMethod('payfast')} className="w-4 h-4 text-gray-900 focus:ring-gray-900" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">PayFast</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Card, EFT, SnapScan, Mobicred</p>
+                    </div>
+                  </label>
+                  <label
+                    className={`flex items-center gap-3.5 px-4 py-3.5 rounded-lg border cursor-pointer transition-all ${paymentMethod === 'payflex' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}
+                    onClick={() => setPaymentMethod('payflex')}
+                  >
+                    <input type="radio" name="payment" checked={paymentMethod === 'payflex'} onChange={() => setPaymentMethod('payflex')} className="w-4 h-4 text-gray-900 focus:ring-gray-900" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Payflex</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Pay in 4 interest-free instalments</p>
+                    </div>
+                    {dynamicTotal > 0 && (
+                      <p className="text-xs text-gray-500 whitespace-nowrap">4 x R{Math.ceil(dynamicTotal / 4).toLocaleString()}</p>
+                    )}
+                  </label>
+                </div>
+              </div>
+
+              {/* Turnstile */}
+              <div ref={turnstileRef} className="flex justify-start" />
+
               {/* Submit — mobile */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !turnstileToken}
                 className="lg:hidden w-full py-3.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Processing...' : `Pay R${dynamicTotal.toLocaleString()}`}
+                {loading ? 'Processing...' : paymentMethod === 'payflex' ? `Pay in 4 x R${Math.ceil(dynamicTotal / 4).toLocaleString()}` : `Pay R${dynamicTotal.toLocaleString()}`}
               </button>
             </div>
 
@@ -411,10 +480,10 @@ const Checkout = () => {
                 {/* Submit — desktop */}
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !turnstileToken}
                   className="hidden lg:block w-full py-3.5 mt-6 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Processing...' : `Pay R${dynamicTotal.toLocaleString()}`}
+                  {loading ? 'Processing...' : paymentMethod === 'payflex' ? `Pay in 4 x R${Math.ceil(dynamicTotal / 4).toLocaleString()}` : `Pay R${dynamicTotal.toLocaleString()}`}
                 </button>
               </div>
             </div>
