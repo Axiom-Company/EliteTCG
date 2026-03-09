@@ -5,7 +5,7 @@ import SEO from '../../components/SEO/SEO';
 import { ELITE_API_URL } from '../../config/api';
 import { useTheme } from '../../contexts/ThemeContext';
 import './PackOpening.css';
-import codeCardImg from '../../assets/images/code_card.png';
+import codeCardImg from '../../assets/images/code_card.jpg';
 
 /* ─── Pack art images ─── */
 import sv9Pack from '../../assets/packs/Journey-Together-Pack.png';
