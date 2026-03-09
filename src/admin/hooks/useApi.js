@@ -266,6 +266,13 @@ export const webhookApi = {
   test: (id) => fastApiFetch(`/admin/webhooks/${id}/test`, { method: 'POST' }),
 };
 
+// Page Access API
+export const pageAccessApi = {
+  getAll: () => apiFetch('/page-access'),
+  create: (data) => apiFetch('/page-access', { method: 'POST', body: JSON.stringify(data) }),
+  remove: (id) => apiFetch(`/page-access/${id}`, { method: 'DELETE' }),
+};
+
 // Custom hook for API calls with loading/error state
 export const useApiCall = () => {
   const [loading, setLoading] = useState(false);

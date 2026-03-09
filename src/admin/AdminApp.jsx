@@ -6,6 +6,7 @@ import { Dashboard, Settings, Products, Sets, Categories, Orders, Reviews, Email
 import SellerApplications from './pages/SellerApplications';
 import Banners from './pages/Banners';
 import WebhookSettings from './pages/WebhookSettings';
+import PageAccess from './pages/PageAccess';
 import SEO from '../components/SEO/SEO';
 
 // Placeholder pages for now
@@ -62,6 +63,8 @@ const AdminContent = () => {
         return <EmailManagement />;
       case 'webhooks':
         return <WebhookSettings />;
+      case 'page-access':
+        return <PageAccess />;
       case 'settings':
         return <Settings />;
       default:

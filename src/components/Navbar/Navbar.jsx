@@ -145,6 +145,14 @@ const Navbar = () => {
           </div>
 
           <Link
+            to="/elite-rips"
+            className="text-sm font-medium text-primary hover:text-primary-dark transition-colors"
+            onClick={closeAll}
+          >
+            Elite Rips
+          </Link>
+
+          <Link
             to="/#preorders"
             className="text-sm font-medium text-gray-900 hover:text-black transition-colors"
             onClick={closeAll}
@@ -298,6 +306,14 @@ const Navbar = () => {
                 </div>
               )}
             </div>
+
+            <Link
+              to="/elite-rips"
+              className="px-4 py-3 text-sm font-medium text-primary hover:text-primary-dark hover:bg-red-50 rounded-lg transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Elite Rips
+            </Link>
 
             <Link
               to="/wishlist"

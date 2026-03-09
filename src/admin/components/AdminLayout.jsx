@@ -65,6 +65,7 @@ const AdminLayout = ({ children, currentPage, onNavigate }) => {
         { id: 'seller-applications', label: 'Sellers' },
         { id: 'email', label: 'Email' },
         { id: 'webhooks', label: 'Webhooks' },
+        { id: 'page-access', label: 'Page Access' },
         { id: 'settings', label: 'Settings' },
       ],
     },

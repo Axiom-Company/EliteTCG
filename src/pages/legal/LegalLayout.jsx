@@ -16,6 +16,10 @@ const pages = [
     label: 'Refund Policy',
     to: '/refund-policy',
   },
+  {
+    label: 'Elite Rips Policy',
+    to: '/elite-rips-policy',
+  },
 ];
 
 const LegalLayout = ({ title, lastUpdated, seo, sections, children }) => {

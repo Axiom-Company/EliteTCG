@@ -104,9 +104,15 @@ import OrderDetail from './pages/orders/OrderDetail';
 import TermsOfService from './pages/legal/TermsOfService';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
 import RefundPolicy from './pages/legal/RefundPolicy';
+import EliteRipsPolicy from './pages/legal/EliteRipsPolicy';
 
 // Community pages
 import ChatPage from './pages/community/ChatPage';
+
+// Pack Opening
+import EliteRips from './pages/packs/EliteRips';
+import PackOpening from './pages/packs/PackOpening';
+import ProtectedPage from './components/ProtectedPage/ProtectedPage';
 
 // Cart Provider and Components
 import { CartProvider } from './contexts/CartContext';
@@ -117,6 +123,9 @@ import { WishlistProvider } from './contexts/WishlistContext';
 
 // Auth Provider
 import { AuthProvider } from './contexts/AuthContext';
+
+// Theme Provider
+import { ThemeProvider } from './contexts/ThemeContext';
 
 // SEO
 import SEO from './components/SEO/SEO';
@@ -178,6 +187,7 @@ const AuthLayout = ({ children }) => (
 
 function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
     <WishlistProvider>
       <CartProvider>
@@ -205,6 +215,9 @@ function App() {
           <Route path="/terms-of-service" element={<MainLayout><TermsOfService /></MainLayout>} />
           <Route path="/privacy-policy" element={<MainLayout><PrivacyPolicy /></MainLayout>} />
           <Route path="/refund-policy" element={<MainLayout><RefundPolicy /></MainLayout>} />
+          <Route path="/elite-rips-policy" element={<MainLayout><EliteRipsPolicy /></MainLayout>} />
+          <Route path="/elite-rips" element={<MainLayout><ProtectedPage pagePath="/elite-rips"><EliteRips /></ProtectedPage></MainLayout>} />
+          <Route path="/elite-rips/:setId" element={<MainLayout><ProtectedPage pagePath="/elite-rips"><PackOpening /></ProtectedPage></MainLayout>} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/chat/:channelSlug" element={<ChatPage />} />
           <Route path="/admin/*" element={<AdminApp />} />
@@ -215,6 +228,7 @@ function App() {
       </CartProvider>
     </WishlistProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 
