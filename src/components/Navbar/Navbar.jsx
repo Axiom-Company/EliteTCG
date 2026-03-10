@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import CartIcon from '../Cart/CartIcon';
 import { useCustomerAuth } from '../../contexts/AuthContext';
@@ -265,9 +266,9 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-white border-t border-gray-100 z-50 overflow-y-auto">
+      {/* Mobile Menu — portaled to body to escape stacking context */}
+      {isMenuOpen && createPortal(
+        <div className="md:hidden fixed top-16 left-0 right-0 bottom-0 bg-white border-t border-gray-100 z-[9999] overflow-y-auto">
           <nav className="flex flex-col p-4">
             <Link
               to="/"
@@ -368,7 +369,8 @@ const Navbar = () => {
               )}
             </div>
           </nav>
-        </div>
+        </div>,
+        document.body
       )}
     </nav>
   );
