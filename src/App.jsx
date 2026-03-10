@@ -112,6 +112,7 @@ import ChatPage from './pages/community/ChatPage';
 // Pack Opening
 import EliteRips from './pages/packs/EliteRips';
 import PackOpening from './pages/packs/PackOpening';
+import PackCheckout from './pages/packs/PackCheckout';
 import ProtectedPage from './components/ProtectedPage/ProtectedPage';
 
 // Cart Provider and Components
@@ -217,6 +218,7 @@ function App() {
           <Route path="/refund-policy" element={<MainLayout><RefundPolicy /></MainLayout>} />
           <Route path="/elite-rips-policy" element={<MainLayout><EliteRipsPolicy /></MainLayout>} />
           <Route path="/elite-rips" element={<MainLayout><ProtectedPage pagePath="/elite-rips"><EliteRips /></ProtectedPage></MainLayout>} />
+          <Route path="/elite-rips/checkout" element={<NavbarLayout><ProtectedPage pagePath="/elite-rips"><PackCheckout /></ProtectedPage></NavbarLayout>} />
           <Route path="/elite-rips/:setId" element={<MainLayout><ProtectedPage pagePath="/elite-rips"><PackOpening /></ProtectedPage></MainLayout>} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/chat/:channelSlug" element={<ChatPage />} />

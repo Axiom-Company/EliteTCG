@@ -8,6 +8,111 @@ import { useAuth } from '../../contexts/AuthContext';
 import './PackOpening.css';
 import codeCardImg from '../../assets/images/code_card.jpg';
 
+const formatPrice = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/* ─── Counting price display ─── */
+const CountingPrice = ({ value, duration = 600 }) => {
+  const [display, setDisplay] = useState(0);
+  const frameRef = useRef(null);
+
+  useEffect(() => {
+    if (value == null) return;
+    const start = performance.now();
+    const from = 0;
+    const to = value;
+    const tick = (now) => {
+      const t = Math.min((now - start) / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(from + (to - from) * eased);
+      if (t < 1) frameRef.current = requestAnimationFrame(tick);
+    };
+    frameRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [value, duration]);
+
+  return <>R{formatPrice(display)}</>;
+};
+
+/* ─── Extract two contrasting colors from card image via hue wheel ─── */
+const getCardColors = (imgSrc) => new Promise((resolve) => {
+  const fallback = { color1: { r: 120, g: 80, b: 200 }, color2: { r: 200, g: 160, b: 60 } };
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 80; canvas.height = 80;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, 80, 80);
+    const data = ctx.getImageData(0, 0, 80, 80).data;
+
+    // 12 hue buckets (30° each) on the color wheel
+    const hueSlots = Array.from({ length: 12 }, () => ({ count: 0, rS: 0, gS: 0, bS: 0 }));
+
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+      const sat = mx === 0 ? 0 : d / mx;
+      if (sat < 0.15 || mx < 25 || mx > 240) continue; // skip grays/black/white
+
+      let h = 0;
+      if (d !== 0) {
+        if (mx === r) h = 60 * (((g - b) / d) % 6);
+        else if (mx === g) h = 60 * ((b - r) / d + 2);
+        else h = 60 * ((r - g) / d + 4);
+      }
+      h = (h + 360) % 360;
+      const slot = Math.floor(h / 30) % 12;
+      hueSlots[slot].count++;
+      hueSlots[slot].rS += r;
+      hueSlots[slot].gS += g;
+      hueSlots[slot].bS += b;
+    }
+
+    // Rank slots by pixel count, get average color per slot
+    const ranked = hueSlots
+      .map((s, i) => s.count < 3 ? null : ({
+        i, count: s.count,
+        r: Math.round(s.rS / s.count),
+        g: Math.round(s.gS / s.count),
+        b: Math.round(s.bS / s.count),
+      }))
+      .filter(Boolean)
+      .sort((a, b) => b.count - a.count);
+
+    if (ranked.length === 0) { resolve(fallback); return; }
+
+    // Color1 = most common hue = the card's base color
+    const c1 = ranked[0];
+
+    // Color2 = most common hue that's far away on the wheel
+    let c2 = null, bestScore = 0;
+    for (let k = 1; k < ranked.length; k++) {
+      const dist = Math.min(Math.abs(ranked[k].i - c1.i), 12 - Math.abs(ranked[k].i - c1.i));
+      if (dist < 2) continue; // at least 60° apart
+      const score = dist * Math.sqrt(ranked[k].count);
+      if (score > bestScore) { bestScore = score; c2 = ranked[k]; }
+    }
+
+    // No contrasting hue found → invert
+    if (!c2) c2 = { r: 255 - c1.r, g: 255 - c1.g, b: 255 - c1.b };
+
+    // Boost dark colors
+    const boost = (c) => {
+      const br = (c.r + c.g + c.b) / 3;
+      if (br < 90) {
+        const f = 130 / Math.max(br, 1);
+        return { r: Math.min(255, Math.round(c.r * f)), g: Math.min(255, Math.round(c.g * f)), b: Math.min(255, Math.round(c.b * f)) };
+      }
+      return { r: c.r, g: c.g, b: c.b };
+    };
+
+    resolve({ color1: boost(c1), color2: boost(c2) });
+  };
+  img.onerror = () => resolve(fallback);
+  img.src = imgSrc;
+});
+
 /* ─── Pack art images ─── */
 import sv9Pack from '../../assets/packs/Journey-Together-Pack.png';
 import sv8pt5Pack from '../../assets/packs/prismatic-evolution.png';
@@ -124,6 +229,7 @@ const PackOpening = () => {
   };
 
   const [phase, setPhase] = useState('confirm');
+  const [bestColors, setBestColors] = useState(null); // { color1, color2 }
   const [selectedImage, setSelectedImage] = useState(0);
   const [packCards, setPackCards] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -134,6 +240,10 @@ const PackOpening = () => {
   const [sparkles, setSparkles] = useState([]);
   const [isOpening, setIsOpening] = useState(false);
   const [shaking, setShaking] = useState(false);
+  const [zoomPunch, setZoomPunch] = useState(false);
+  const [borderGlow, setBorderGlow] = useState(null); // color string
+  const [runningTotal, setRunningTotal] = useState(0);
+  const [cardValuePopup, setCardValuePopup] = useState(null); // { value, key }
   const { dark } = useTheme();
 
   // Theme helpers — d = dark value, l = light value
@@ -148,6 +258,7 @@ const PackOpening = () => {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [flippedCards, setFlippedCards] = useState([]);
+  const [showDoneModal, setShowDoneModal] = useState(false);
 
   const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -168,6 +279,16 @@ const PackOpening = () => {
     api('/seed').then(setFairness).catch(() => {});
     preloadImages([CARD_BACK]);
   }, [selectedSet]);
+
+  // Extract dominant color from best pull when done
+  useEffect(() => {
+    if (phase !== 'done') { setBestColors(null); return; }
+    const realCards = packCards.filter(c => !c.isCodeCard);
+    if (realCards.length === 0) return;
+    const bestIdx = realCards.reduce((best, card, i) => (card.priceZar || 0) > (realCards[best].priceZar || 0) ? i : best, 0);
+    const best = realCards[bestIdx];
+    getCardColors(best.imageLarge || best.image).then(setBestColors);
+  }, [phase, packCards]);
 
   // Staggered card flip on done phase
   useEffect(() => {
@@ -232,6 +353,8 @@ const PackOpening = () => {
       setCardState('idle');
       setRevealedCards([]);
       setSparkles([]);
+      setRunningTotal(0);
+      setCardValuePopup(null);
 
       setPhase('cards');
       setPacksOpened(p => p + 1);
@@ -249,16 +372,39 @@ const PackOpening = () => {
     setCardState('flipped');
 
     const card = packCards[currentIdx];
+    // Add card value to running total and show popup
+    if (card.priceZar != null) {
+      setCardValuePopup({ value: card.priceZar, key: `${card.id}-${Date.now()}` });
+      setRunningTotal(prev => prev + card.priceZar);
+    }
+
     if (card.rarity === 'ultra_rare') {
       setFlash('gold'); setSparkles(makeSparkles('#D4AF37', 20));
       setTimeout(() => setFlash(null), 450);
+      // Screen shake
+      setShaking(true);
+      setTimeout(() => setShaking(false), 400);
+      // Zoom punch
+      setZoomPunch(true);
+      setTimeout(() => setZoomPunch(false), 500);
+      // Rarity banner
+      // Border glow
+      setBorderGlow('#D4AF37');
     } else if (card.rarity === 'rare') {
       setFlash('blue'); setSparkles(makeSparkles('#2563EB', 12));
       setTimeout(() => setFlash(null), 300);
+      // Zoom punch (subtle)
+      setZoomPunch(true);
+      setTimeout(() => setZoomPunch(false), 500);
+      // Rarity banner
+      // Border glow
+      setBorderGlow('#2563EB');
     } else if (card.rarity === 'uncommon') {
       setSparkles(makeSparkles('#16A34A', 8));
+      setBorderGlow(null);
     } else {
       setSparkles([]);
+      setBorderGlow(null);
     }
     setTimeout(() => { busyRef.current = false; }, 600);
   }, [cardState, phase, packCards, currentIdx]);
@@ -268,15 +414,15 @@ const PackOpening = () => {
     busyRef.current = true;
     setCardState('swiping');
     setSparkles([]);
+    setBorderGlow(null);
+    setZoomPunch(false);
 
     setTimeout(() => {
       setRevealedCards(prev => [...prev, packCards[currentIdx]]);
       if (currentIdx < packCards.length - 1) {
         setCurrentIdx(prev => prev + 1);
         setCardState('idle');
-        setTimeout(() => {
-          busyRef.current = false;
-        }, 350);
+        setTimeout(() => { busyRef.current = false; }, 350);
       } else {
         setPhase('done');
         busyRef.current = false;
@@ -296,6 +442,7 @@ const PackOpening = () => {
     setCardState('idle');
     setRevealedCards([]);
     setSparkles([]);
+    setShowDoneModal(false);
   }, []);
 
   const remaining = packCards.length - currentIdx;
@@ -304,7 +451,7 @@ const PackOpening = () => {
   // Redirect if invalid set ID
   if (!selectedSet) {
     return (
-      <div className="fixed inset-0 z-30 flex flex-col items-center justify-center" style={{ background: '#111111' }}>
+      <div className="fixed inset-0 z-30 flex flex-col items-center justify-center bg-black">
         <p className="text-white/60 text-sm mb-4">Pack not found</p>
         <Link to="/elite-rips" className="text-white/40 text-sm hover:text-white/60 transition-colors">← Back to Elite Rips</Link>
       </div>
@@ -314,22 +461,40 @@ const PackOpening = () => {
   const isImmersive = phase === 'loading' || phase === 'cards' || phase === 'done';
 
   return (
-    <div className={`${isImmersive ? 'fixed inset-0 z-30' : 'min-h-screen'} overflow-y-auto transition-colors duration-300 ${t('bg-black', 'bg-white')}`}>
+    <div className={`${isImmersive ? 'fixed inset-0 z-30' : 'min-h-screen'} overflow-y-auto transition-colors duration-300 ${isImmersive ? 'bg-black' : 'bg-white'}`}>
       <SEO title={`${selectedSet.name} – Elite Rips`} description={`Open a ${selectedSet.name} pack and discover rare cards.`} path={`/elite-rips/${setId}`} noindex />
 
       {flash && (
         <div className="fixed inset-0 z-[60] pointer-events-none flash-overlay" style={{
-          backgroundColor: flash === 'gold' ? 'rgba(212,175,55,0.25)' : flash === 'blue' ? 'rgba(37,99,235,0.15)' : t('rgba(255,255,255,0.5)', 'rgba(0,0,0,0.08)'),
+          backgroundColor: flash === 'gold' ? 'rgba(212,175,55,0.25)' : flash === 'blue' ? 'rgba(37,99,235,0.15)' : 'rgba(255,255,255,0.5)',
         }} />
+      )}
+
+      {/* Shared ash particles — persists across loading/cards/done */}
+      {isImmersive && (
+        <div className="fixed inset-0 z-[35] pointer-events-none overflow-hidden">
+          {[...Array(50)].map((_, i) => (
+            <div key={i} className="ash-particle" style={{
+              left: `${(i * 17 + 3) % 100}%`,
+              '--ash-size': `${1 + (i * 7 % 3)}px`,
+              '--ash-opacity': 0.4 + (i * 13 % 50) / 100,
+              '--ash-duration': `${6 + (i % 8)}s`,
+              '--ash-delay': `${(i * 1.3) % 10}s`,
+              '--ash-sway-duration': `${2 + (i % 3)}s`,
+              '--ash-drift': `${(i % 2 === 0 ? 1 : -1) * (15 + (i % 6) * 8)}px`,
+              '--ash-spin': `${(i % 2 === 0 ? 1 : -1) * (90 + (i % 4) * 60)}deg`,
+            }} />
+          ))}
+        </div>
       )}
 
       {/* ═══ CONFIRM ═══ */}
       {phase === 'confirm' && selectedSet && (
-        <div className={`min-h-screen ${t('bg-black', 'bg-white')}`}>
+        <div className="min-h-screen bg-white">
           <div className="container py-6 md:py-12 lg:py-16 px-2 md:px-0">
             {/* Breadcrumb */}
-            <nav className={`flex items-center gap-2 text-sm mb-5 md:mb-10 ${t('text-white/30', 'text-gray-500')}`}>
-              <Link to="/elite-rips" className={`flex items-center gap-1 transition-colors ${t('hover:text-white/60', 'hover:text-gray-900')}`}>
+            <nav className="flex items-center gap-2 text-sm text-gray-500 mb-5 md:mb-10">
+              <Link to="/elite-rips" className="flex items-center gap-1 transition-colors hover:text-gray-900">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                 Back to Packs
               </Link>
@@ -339,7 +504,7 @@ const PackOpening = () => {
               {/* Image Section */}
               <div className="space-y-3">
                 {/* Main image */}
-                <div className={`relative aspect-square rounded-2xl flex items-center justify-center overflow-hidden max-w-full md:max-w-[85%] md:mx-auto border ${t('bg-white/[0.03] border-white/[0.06]', 'bg-white border-gray-200')}`}>
+                <div className="relative aspect-square rounded-2xl flex items-center justify-center overflow-hidden max-w-full md:max-w-[85%] md:mx-auto bg-white">
                   <img
                     src={selectedImage === 0 ? selectedSet.img : selectedSet.logo}
                     alt={selectedSet.name}
@@ -347,24 +512,35 @@ const PackOpening = () => {
                   />
                 </div>
 
+                {/* Dots */}
+                <div className="flex justify-center gap-1.5 pt-1 max-w-full md:max-w-[85%] md:mx-auto">
+                  {[0, 1].map((i) => (
+                    <button
+                      key={i}
+                      onClick={() => setSelectedImage(i)}
+                      className={`rounded-full transition-all ${
+                        i === selectedImage
+                          ? 'w-4 h-1.5 bg-gray-900'
+                          : 'w-1.5 h-1.5 bg-gray-300 hover:bg-gray-400'
+                      }`}
+                    />
+                  ))}
+                </div>
+
                 {/* Thumbnails */}
                 <div className="flex gap-2 max-w-full md:max-w-[85%] md:mx-auto">
                   <button
                     onClick={() => setSelectedImage(0)}
-                    className={`w-16 h-16 rounded-xl overflow-hidden border flex items-center justify-center transition-colors ${
-                      selectedImage === 0
-                        ? t('border-white/20 bg-white/[0.04]', 'border-gray-300 bg-white')
-                        : t('border-white/[0.06] bg-white/[0.02] hover:border-white/10', 'border-gray-200 bg-white hover:border-gray-300')
+                    className={`w-16 h-16 rounded-xl overflow-hidden border flex items-center justify-center transition-colors bg-white ${
+                      selectedImage === 0 ? 'border-gray-300' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <img src={selectedSet.img} alt="Pack" className="w-[70%] h-[70%] object-contain" />
                   </button>
                   <button
                     onClick={() => setSelectedImage(1)}
-                    className={`w-16 h-16 rounded-xl overflow-hidden border flex items-center justify-center transition-colors ${
-                      selectedImage === 1
-                        ? t('border-white/20 bg-white/[0.04]', 'border-gray-300 bg-white')
-                        : t('border-white/[0.06] bg-white/[0.02] hover:border-white/10', 'border-gray-200 bg-white hover:border-gray-300')
+                    className={`w-16 h-16 rounded-xl overflow-hidden border flex items-center justify-center transition-colors bg-white ${
+                      selectedImage === 1 ? 'border-gray-300' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <img src={selectedSet.logo} alt="Set logo" className="w-[80%] object-contain" />
@@ -374,18 +550,18 @@ const PackOpening = () => {
                 {/* Provably fair under image */}
                 {fairness && (
                   <div className="max-w-full md:max-w-[85%] md:mx-auto space-y-1.5">
-                    <p className={`text-[11px] mb-2 ${t('text-white/25', 'text-gray-400')}`}>Provably Fair</p>
+                    <p className="text-[11px] mb-2 text-gray-400">Provably Fair</p>
                     <div className="flex items-start text-[11px]">
-                      <span className={`w-14 shrink-0 ${t('text-white/20', 'text-gray-400')}`}>Hash</span>
-                      <span className={`font-mono break-all leading-relaxed ${t('text-white/35', 'text-gray-500')}`}>{fairness.serverSeedHash}</span>
+                      <span className="w-14 shrink-0 text-gray-400">Hash</span>
+                      <span className="font-mono break-all leading-relaxed text-gray-500">{fairness.serverSeedHash}</span>
                     </div>
                     <div className="flex items-center text-[11px]">
-                      <span className={`w-14 shrink-0 ${t('text-white/20', 'text-gray-400')}`}>Client</span>
-                      <span className={`font-mono ${t('text-white/35', 'text-gray-500')}`}>{fairness.clientSeed}</span>
+                      <span className="w-14 shrink-0 text-gray-400">Client</span>
+                      <span className="font-mono text-gray-500">{fairness.clientSeed}</span>
                     </div>
                     <div className="flex items-center text-[11px]">
-                      <span className={`w-14 shrink-0 ${t('text-white/20', 'text-gray-400')}`}>Nonce</span>
-                      <span className={`font-mono ${t('text-white/35', 'text-gray-500')}`}>{fairness.nonce}</span>
+                      <span className="w-14 shrink-0 text-gray-400">Nonce</span>
+                      <span className="font-mono text-gray-500">{fairness.nonce}</span>
                     </div>
                   </div>
                 )}
@@ -395,50 +571,50 @@ const PackOpening = () => {
               <div className="flex flex-col gap-6">
                 {/* Title group */}
                 <div>
-                  <span className={`text-xs uppercase tracking-wider ${t('text-white/30', 'text-gray-400')}`}>
+                  <span className="text-xs uppercase tracking-wider text-gray-400">
                     {selectedSet.series}
                   </span>
-                  <h1 className={`text-xl md:text-3xl font-medium mt-2 leading-snug ${t('text-white', 'text-gray-900')}`}>{selectedSet.name}</h1>
-                  <p className={`text-sm leading-relaxed mt-3 ${t('text-white/40', 'text-gray-500')}`}>
+                  <h1 className="text-xl md:text-3xl font-medium mt-2 leading-snug text-gray-900">{selectedSet.name}</h1>
+                  <p className="text-sm leading-relaxed mt-3 text-gray-500">
                     Open a digital {selectedSet.name} booster pack and reveal {CARDS_PER_PACK} randomly selected cards from a pool of {selectedSet.total}. Every outcome is cryptographically verifiable.
                   </p>
                 </div>
 
                 {/* Price block */}
-                <div className={`border-t pt-6 ${t('border-white/[0.06]', 'border-gray-100')}`}>
-                  <span className={`text-2xl md:text-3xl font-medium ${t('text-white', 'text-gray-900')}`}>R{selectedSet.price.toFixed(2)}</span>
+                <div className="border-t pt-6 border-gray-100">
+                  <span className="text-2xl md:text-3xl font-medium text-gray-900">R{formatPrice(selectedSet.price)}</span>
                 </div>
 
                 {/* CTA */}
-                <div className={`border-t pt-6 flex flex-col gap-4 ${t('border-white/[0.06]', 'border-gray-100')}`}>
+                <div className="border-t pt-6 flex flex-col gap-4 border-gray-100">
                   <button
                     onClick={openPack}
                     disabled={isOpening}
-                    className={`w-full py-3 text-sm font-medium rounded-full transition-colors ${t('bg-white hover:bg-white/90 disabled:bg-white/20 disabled:text-white/30 text-black', 'bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 text-white')}`}
+                    className="w-full py-3 text-sm font-medium rounded-full transition-colors bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 text-white"
                   >
                     {isOpening ? 'Opening...' : 'Open Pack'}
                   </button>
                 </div>
 
                 {/* Meta */}
-                <div className={`border-t pt-6 space-y-2.5 ${t('border-white/[0.06]', 'border-gray-100')}`}>
+                <div className="border-t pt-6 space-y-2.5 border-gray-100">
                   <div className="flex items-center text-sm">
-                    <span className={`w-28 ${t('text-white/25', 'text-gray-400')}`}>Cards in Set</span>
-                    <span className={t('text-white/60', 'text-gray-700')}>{selectedSet.total}</span>
+                    <span className="w-28 text-gray-400">Cards in Set</span>
+                    <span className="text-gray-700">{selectedSet.total}</span>
                   </div>
                   <div className="flex items-center text-sm">
-                    <span className={`w-28 ${t('text-white/25', 'text-gray-400')}`}>Per Pack</span>
-                    <span className={t('text-white/60', 'text-gray-700')}>{CARDS_PER_PACK} cards</span>
+                    <span className="w-28 text-gray-400">Per Pack</span>
+                    <span className="text-gray-700">{CARDS_PER_PACK} cards</span>
                   </div>
                   <div className="flex items-center text-sm">
-                    <span className={`w-28 ${t('text-white/25', 'text-gray-400')}`}>Series</span>
-                    <span className={t('text-white/60', 'text-gray-700')}>{selectedSet.series}</span>
+                    <span className="w-28 text-gray-400">Series</span>
+                    <span className="text-gray-700">{selectedSet.series}</span>
                   </div>
                   <div className="flex items-start text-sm">
-                    <span className={`w-28 shrink-0 ${t('text-white/25', 'text-gray-400')}`}>Pull Rates</span>
+                    <span className="w-28 shrink-0 text-gray-400">Pull Rates</span>
                     <div className="flex flex-wrap gap-1.5">
                       {PULL_RATES.map((rate) => (
-                        <span key={rate} className={`text-[11px] px-2 py-0.5 rounded-full ${t('text-white/30 bg-white/[0.04]', 'text-gray-500 bg-gray-100')}`}>{rate}</span>
+                        <span key={rate} className="text-[11px] px-2 py-0.5 rounded-full text-gray-500 bg-gray-100">{rate}</span>
                       ))}
                     </div>
                   </div>
@@ -452,7 +628,7 @@ const PackOpening = () => {
 
       {/* ═══ LOADING ═══ */}
       {phase === 'loading' && (
-        <div className="pack-bg flex flex-col items-center justify-center h-screen" style={{ background: '#111111' }}>
+        <div className="pack-bg flex flex-col items-center justify-center h-screen bg-black">
           <div className="pack-ring" />
           <div className="pack-ring-sm" />
           <div className="w-8 h-8 border-2 rounded-full animate-spin border-white/10 border-t-white/60" style={{ zIndex: 1 }} />
@@ -462,19 +638,7 @@ const PackOpening = () => {
 
       {/* ═══ CARDS ═══ */}
       {phase === 'cards' && (
-        <div className={`pack-bg relative flex flex-col items-center justify-center h-screen ${shaking ? 'screen-shake' : ''}`} style={{ background: '#111111', touchAction: 'none', overflow: 'hidden', position: 'fixed', inset: 0 }}>
-          <div className="pack-particles">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="pack-particle" style={{
-                left: `${8 + (i * 7.5) % 85}%`,
-                width: `${2 + (i % 3)}px`,
-                height: `${2 + (i % 3)}px`,
-                background: ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.12)', 'rgba(255,255,255,0.08)'][i % 4],
-                animationDuration: `${8 + (i % 5) * 3}s`,
-                animationDelay: `${(i * 1.7) % 10}s`,
-              }} />
-            ))}
-          </div>
+        <div className={`pack-bg relative flex flex-col items-center justify-center h-screen ${shaking ? 'screen-shake' : ''}`} style={{ background: '#000', touchAction: 'none', overflow: 'hidden', position: 'fixed', inset: 0 }}>
           <div className="pack-ring" />
           <div className="pack-ring-sm" />
           {/* Card stack with 3D tilt */}
@@ -485,7 +649,11 @@ const PackOpening = () => {
             onPointerMove={handlePointerMove}
             onPointerLeave={handlePointerLeave}
             onTouchMove={(e) => e.preventDefault()}
-            style={{ cursor: 'pointer', perspective: '800px', touchAction: 'none' }}
+            style={{
+              cursor: 'pointer', perspective: '800px', touchAction: 'none',
+              transform: zoomPunch ? 'scale(1.08)' : 'scale(1)',
+              transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
           >
             {packCards.map((card, i) => {
               if (i < currentIdx) return null;
@@ -502,17 +670,20 @@ const PackOpening = () => {
                 <div
                   key={`${card.id}-${i}`}
                   className={`card-stack-item ${isActive && cardState === 'swiping' ? 'card-swiping' : ''}`}
-                  style={{
-                    ...offset,
-                    ...tiltStyle,
-                  }}
+                  style={{ ...offset, ...tiltStyle }}
                 >
                   <div className="flip-scene">
                     <div className={`flip-inner ${isActive && (cardState === 'flipped' || cardState === 'swiping') ? 'is-flipped' : ''}`}>
                       <div className="flip-face shadow-lg">
                         <img src={CARD_BACK} alt="Card back" className="w-full h-full object-cover rounded-[10px]" draggable={false} />
                       </div>
-                      <div className={`flip-face flip-face-reveal shadow-lg relative ${isActive && cardState === 'flipped' && card.rarity === 'ultra_rare' ? 'holo-shimmer' : ''}`}>
+                      <div
+                        className={`flip-face flip-face-reveal shadow-lg relative ${isActive && cardState === 'flipped' && card.rarity === 'ultra_rare' ? 'holo-shimmer' : ''}`}
+                        style={isActive && cardState === 'flipped' && borderGlow ? {
+                          boxShadow: `0 0 20px ${borderGlow}66, 0 0 60px ${borderGlow}33`,
+                          transition: 'box-shadow 0.4s ease-out',
+                        } : {}}
+                      >
                         <img
                           src={card.imageLarge || card.image}
                           alt={card.name}
@@ -544,116 +715,132 @@ const PackOpening = () => {
           </div>
 
           {/* Card price overlay above card */}
-          {cardState === 'flipped' && packCards[currentIdx] && packCards[currentIdx].priceZar != null && (
-            <div className="absolute left-0 right-0 text-center fade-up" style={{ bottom: 'calc(50% + clamp(220px, 52vw, 250px))' }}>
-              <p className="text-3xl font-medium text-white">R{packCards[currentIdx].priceZar.toFixed(2)}</p>
+          {/* Floating +value pill on flip */}
+          {cardValuePopup && (
+            <div className="absolute left-0 right-0 flex justify-center bottom-10 md:bottom-14" style={{ zIndex: 10 }}>
+              <div key={cardValuePopup.key} className="card-value-float px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
+                <p className="text-sm text-white/80 tabular-nums font-medium">
+                  +R{formatPrice(cardValuePopup.value)}
+                </p>
+              </div>
             </div>
           )}
+
 
         </div>
       )}
 
       {/* ═══ DONE ═══ */}
-      {phase === 'done' && (
-        <div className="pack-bg flex flex-col min-h-screen fade-up" style={{ background: '#111111' }}>
-          <div className="pack-particles">
-            {[...Array(12)].map((_, i) => (
-              <div key={i} className="pack-particle" style={{
-                left: `${8 + (i * 7.5) % 85}%`,
-                width: `${2 + (i % 3)}px`,
-                height: `${2 + (i % 3)}px`,
-                background: ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.12)', 'rgba(255,255,255,0.08)'][i % 4],
-                animationDuration: `${8 + (i % 5) * 3}s`,
-                animationDelay: `${(i * 1.7) % 10}s`,
-              }} />
-            ))}
-          </div>
-          <div className="pack-ring" />
-          <div className="pack-ring-sm" />
+      {phase === 'done' && (() => {
+        const realCards = packCards.filter(c => !c.isCodeCard);
+        const bestIdx = realCards.reduce((best, card, i) => (card.priceZar || 0) > (realCards[best].priceZar || 0) ? i : best, 0);
+        const bestPull = realCards[bestIdx];
+        const otherCards = realCards.filter((_, i) => i !== bestIdx);
+        const RARITY_LABELS = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', ultra_rare: 'Ultra Rare' };
 
-          {/* Main content area */}
-          <div className="flex-1 flex flex-col items-center justify-center px-4 py-8" style={{ zIndex: 1 }}>
-
-            {/* Cards row */}
-            <div className="relative w-full mb-8">
-              {canScrollLeft && (
-                <button onClick={() => scrollRef.current?.scrollBy({ left: -200 })} className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/70 border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors backdrop-blur-sm">
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-              )}
-              {canScrollRight && (
-                <button onClick={() => scrollRef.current?.scrollBy({ left: 200 })} className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/70 border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors backdrop-blur-sm">
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              )}
-              <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4" style={{ scrollBehavior: 'smooth' }}>
-                {/* Code card - always first, always face-up */}
-                <div className="done-card flex-shrink-0" style={{ width: 'clamp(140px, 28vw, 200px)' }}>
-                  <div className="w-full aspect-[2.5/3.5] rounded-xl overflow-hidden shadow-lg shadow-black/40">
-                    <img src={codeCardImg} alt="Code Card" className="w-full h-full object-cover" />
-                  </div>
-                </div>
-                {packCards.filter(c => !c.isCodeCard).map((card, i) => (
-                  <div key={i} className="done-card flex-shrink-0" style={{ width: 'clamp(140px, 28vw, 200px)' }}>
-                    <div className="w-full aspect-[2.5/3.5]">
-                      <div className={`done-card-inner ${flippedCards.includes(i) ? 'flipped' : ''}`}>
-                        <div className="done-card-front shadow-lg shadow-black/40 relative">
-                          <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
-                          {card.priceZar != null && (
-                            <div className="absolute bottom-2 md:bottom-3 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-full">
-                              <p className="text-[11px] md:text-xs text-white/90 whitespace-nowrap font-medium">R{card.priceZar.toFixed(2)}</p>
-                            </div>
-                          )}
-                        </div>
-                        <div className="done-card-back shadow-lg shadow-black/40">
-                          <img src={CARD_BACK} alt="Card back" className="w-full h-full object-cover" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Value + Actions */}
-            <div className="w-full max-w-[340px] flex flex-col items-center gap-5">
-              {/* Total value */}
-              {totalValue > 0 && (
-                <div className="text-center scale-in">
-                  <p className="text-4xl md:text-5xl font-medium text-white tracking-tight">R{totalValue.toFixed(2)}</p>
-                  <p className="text-[11px] mt-1 text-white/25 uppercase tracking-widest">Total Value</p>
+        return (
+        <div
+          className="pack-bg flex flex-col min-h-screen overflow-hidden transition-colors duration-1000"
+          style={{
+            background: '#000',
+          }}
+        >
+          {/* ── Best Pull ── */}
+          {bestPull && (
+            <div
+              className="flex-1 flex flex-col items-center justify-center px-4 cursor-pointer"
+              style={{ zIndex: 2 }}
+              onClick={() => !showDoneModal && setShowDoneModal(true)}
+            >
+              {bestPull.priceZar != null && (
+                <div className="best-info-fade mb-6">
+                  <p className="text-4xl md:text-5xl font-medium text-white tracking-tight">R{formatPrice(bestPull.priceZar)}</p>
                 </div>
               )}
-
-              {/* Buttons */}
-              <div className="w-full flex flex-col gap-2">
-                <button onClick={openAnother} className="w-full py-3 text-sm font-medium rounded-full transition-all bg-white hover:bg-white/90 text-gray-900 active:scale-[0.98]">
-                  Open Another Pack
-                </button>
-                <div className="flex gap-2">
-                  <button className="flex-1 py-2.5 text-[13px] font-medium rounded-full transition-all border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20 active:scale-[0.98]">
-                    Store Credit
-                  </button>
-                  <button className="flex-1 py-2.5 text-[13px] font-medium rounded-full transition-all border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20 active:scale-[0.98]">
-                    Ship Cards
-                  </button>
+              <div className="best-pull-reveal relative" style={{ width: 'clamp(220px, 55vw, 300px)' }}>
+                {bestColors && (
+                  <div className="absolute inset-0 rounded-xl" style={{
+                    boxShadow: `0 0 100px 30px rgba(${bestColors.color1.r},${bestColors.color1.g},${bestColors.color1.b},0.22)`,
+                  }} />
+                )}
+                <div className="relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden">
+                  <img src={bestPull.imageLarge || bestPull.image} alt={bestPull.name} className="w-full h-full object-cover" />
                 </div>
               </div>
-
-              {packsOpened > 1 && <p className="text-[10px] text-white/15">{packsOpened} packs opened this session</p>}
+              {!showDoneModal && (
+                <div className="best-info-fade flex gap-3 mt-8">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowDoneModal(true); }}
+                    className="px-6 py-2.5 text-sm font-medium rounded-full transition-all bg-white text-black hover:bg-white/90 active:scale-[0.98]"
+                  >
+                    Inventory
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); navigate('/elite-rips'); }}
+                    className="px-6 py-2.5 text-sm font-medium rounded-full transition-all bg-white/15 text-white/70 hover:bg-white/20 active:scale-[0.98]"
+                  >
+                    Shop
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
+          )}
+
+          {/* ── Action modal ── */}
+          {showDoneModal && (
+            <>
+              {/* Backdrop */}
+              <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70]" onClick={() => setShowDoneModal(false)} />
+
+              {/* Modal — bottom sheet on mobile, centered on desktop */}
+              <div className="fixed z-[80] inset-x-0 bottom-0 md:bottom-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-sm md:w-full">
+                <div className="bg-[#1a1a1a] rounded-t-2xl md:rounded-2xl px-6 pt-6 pb-8 md:pb-6 shadow-2xl border border-white/[0.06]">
+                  {/* Drag handle — mobile only */}
+                  <div className="w-10 h-1 rounded-full bg-white/15 mx-auto mb-5 md:hidden" />
+
+                  <p className="text-white/80 text-sm font-medium text-center mb-1">What would you like to do?</p>
+                  <p className="text-white/30 text-[11px] text-center mb-6">
+                    {realCards.length} cards &middot; R{formatPrice(totalValue)} total value
+                  </p>
+
+                  <div className="flex flex-col gap-2.5">
+                    <button
+                      onClick={() => navigate('/elite-rips/checkout', { state: { cards: realCards, setName: selectedSet.name, setId: selectedSet.id } })}
+                      className="w-full py-3 text-sm font-medium rounded-xl transition-all bg-white text-black hover:bg-white/90 active:scale-[0.98]"
+                    >
+                      <Truck size={15} className="inline-block mr-2 -mt-0.5" />
+                      Ship Cards
+                    </button>
+                    <button
+                      className="w-full py-3 text-sm font-medium rounded-xl transition-all bg-white/10 text-white/70 hover:bg-white/15 active:scale-[0.98]"
+                    >
+                      <CreditCard size={15} className="inline-block mr-2 -mt-0.5" />
+                      Store Credit
+                    </button>
+                    <button
+                      onClick={openAnother}
+                      className="w-full py-3 text-sm font-medium rounded-xl transition-all bg-white/10 text-white/70 hover:bg-white/15 active:scale-[0.98]"
+                    >
+                      <RotateCcw size={15} className="inline-block mr-2 -mt-0.5" />
+                      Open Another Pack
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Provably fair footer */}
           {fairness && (
-            <div className="w-full px-3 py-2 flex items-center justify-center bg-white/[0.03]">
+            <div className="w-full px-3 py-2 flex items-center justify-center bg-white/[0.03] shrink-0">
               <p className="text-[9px] font-mono truncate text-white/15">
                 {fairness.serverSeedHash?.slice(0, 16)}... n:{fairness.nonce}
               </p>
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 };
