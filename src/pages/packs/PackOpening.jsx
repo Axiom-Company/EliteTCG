@@ -268,15 +268,21 @@ const PackOpening = () => {
     if (phase === 'loading' || phase === 'cards' || phase === 'done') {
       document.body.classList.add('pack-immersive');
       document.body.style.overflow = 'hidden';
+      document.body.style.background = '#000';
+      document.documentElement.style.background = '#000';
       if (themeColor) themeColor.setAttribute('content', '#000000');
     } else {
       document.body.classList.remove('pack-immersive');
       document.body.style.overflow = '';
+      document.body.style.background = '';
+      document.documentElement.style.background = '';
       if (themeColor) themeColor.setAttribute('content', '#ffffff');
     }
     return () => {
       document.body.classList.remove('pack-immersive');
       document.body.style.overflow = '';
+      document.body.style.background = '';
+      document.documentElement.style.background = '';
       if (themeColor) themeColor.setAttribute('content', '#ffffff');
     };
   }, [phase]);
@@ -643,7 +649,7 @@ const PackOpening = () => {
 
       {/* ═══ CARDS ═══ */}
       {phase === 'cards' && (
-        <div className={`relative flex flex-col items-center justify-center h-screen ${shaking ? 'screen-shake' : ''}`} style={{ background: '#000', touchAction: 'none', overflow: 'hidden', position: 'fixed', inset: 0 }}>
+        <div className={`relative flex flex-col items-center justify-center ${shaking ? 'screen-shake' : ''}`} style={{ background: '#000', touchAction: 'none', overflow: 'visible', position: 'fixed', inset: 0 }}>
           {/* Card stack with 3D tilt */}
           <div
             ref={stackRef}
@@ -719,7 +725,7 @@ const PackOpening = () => {
 
           {/* Running total pill + floating +value */}
           {runningTotal > 0 && (
-            <div className="absolute left-0 right-0 flex flex-col items-center bottom-10 md:bottom-14" style={{ zIndex: 10 }}>
+            <div className="fixed left-0 right-0 flex flex-col items-center md:bottom-14" style={{ zIndex: 10, bottom: 'max(16px, env(safe-area-inset-bottom, 16px))' }}>
               {/* Floating +value that drifts up and fades */}
               {cardValuePopup && (
                 <p key={cardValuePopup.key} className="text-xs text-white/50 tabular-nums font-medium card-value-float mb-1">
