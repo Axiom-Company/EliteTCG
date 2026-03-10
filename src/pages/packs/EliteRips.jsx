@@ -13,21 +13,34 @@ import sv2Pack from '../../assets/packs/Paldea-Evolved.png';
 import swsh8Pack from '../../assets/packs/fusion-strike.png';
 import swsh7Pack from '../../assets/packs/evolving-skies.png';
 import swsh6Pack from '../../assets/packs/Chilling-Reign.png';
+import sv10Pack from '../../assets/packs/destinedrivals.png';
+import sv10pt5bPack from '../../assets/packs/black-bolt.png';
+import sv10pt5wPack from '../../assets/packs/white-flare.png';
+import me01Pack from '../../assets/packs/mega-evolution.png';
+import me02Pack from '../../assets/packs/phantasmal-flames.png';
+import me02pt5Pack from '../../assets/packs/ascended-heroes.png';
 
 const PACK_SETS = [
-  { id: 'sv9',    name: 'Journey Together',     series: 'Scarlet & Violet', total: 167, releaseDate: '2025/03/28', img: sv9Pack,    price: 24.99 },
-  { id: 'sv8pt5', name: 'Prismatic Evolutions', series: 'Scarlet & Violet', total: 175, releaseDate: '2025/01/17', img: sv8pt5Pack, price: 29.99 },
-  { id: 'sv8',    name: 'Surging Sparks',       series: 'Scarlet & Violet', total: 191, releaseDate: '2024/11/08', img: sv8Pack,    price: 24.99 },
-  { id: 'sv4pt5', name: 'Paldean Fates',        series: 'Scarlet & Violet', total: 245, releaseDate: '2024/01/26', img: sv4pt5Pack, price: 29.99 },
-  { id: 'sv3pt5', name: '151',                  series: 'Scarlet & Violet', total: 207, releaseDate: '2023/09/22', img: sv3pt5Pack, price: 34.99 },
-  { id: 'sv2',    name: 'Paldea Evolved',       series: 'Scarlet & Violet', total: 193, releaseDate: '2023/06/09', img: sv2Pack,    price: 24.99 },
-  { id: 'swsh8',  name: 'Fusion Strike',        series: 'Sword & Shield',   total: 264, releaseDate: '2021/11/12', img: swsh8Pack,  price: 29.99 },
-  { id: 'swsh7',  name: 'Evolving Skies',       series: 'Sword & Shield',   total: 203, releaseDate: '2021/08/27', img: swsh7Pack,  price: 39.99 },
-  { id: 'swsh6',  name: 'Chilling Reign',       series: 'Sword & Shield',   total: 198, releaseDate: '2021/06/18', img: swsh6Pack,  price: 29.99 },
+  { id: 'me02pt5', name: 'Ascended Heroes',      series: 'Mega Evolution',   total: 295, releaseDate: '2026/01/30', img: me02pt5Pack, price: 29.99 },
+  { id: 'me02',    name: 'Phantasmal Flames',     series: 'Mega Evolution',   total: 130, releaseDate: '2025/11/14', img: me02Pack,    price: 29.99 },
+  { id: 'me01',    name: 'Mega Evolution',        series: 'Mega Evolution',   total: 188, releaseDate: '2025/09/26', img: me01Pack,    price: 29.99 },
+  { id: 'sv10pt5b', name: 'Black Bolt',           series: 'Scarlet & Violet', total: 172, releaseDate: '2025/07/17', img: sv10pt5bPack, price: 29.99 },
+  { id: 'sv10pt5w', name: 'White Flare',          series: 'Scarlet & Violet', total: 173, releaseDate: '2025/07/17', img: sv10pt5wPack, price: 29.99 },
+  { id: 'sv10',    name: 'Destined Rivals',       series: 'Scarlet & Violet', total: 244, releaseDate: '2025/05/30', img: sv10Pack,    price: 24.99 },
+  { id: 'sv9',     name: 'Journey Together',      series: 'Scarlet & Violet', total: 167, releaseDate: '2025/03/28', img: sv9Pack,     price: 24.99 },
+  { id: 'sv8pt5',  name: 'Prismatic Evolutions',  series: 'Scarlet & Violet', total: 175, releaseDate: '2025/01/17', img: sv8pt5Pack,  price: 29.99 },
+  { id: 'sv8',     name: 'Surging Sparks',        series: 'Scarlet & Violet', total: 191, releaseDate: '2024/11/08', img: sv8Pack,     price: 24.99 },
+  { id: 'sv4pt5',  name: 'Paldean Fates',         series: 'Scarlet & Violet', total: 245, releaseDate: '2024/01/26', img: sv4pt5Pack,  price: 29.99 },
+  { id: 'sv3pt5',  name: '151',                   series: 'Scarlet & Violet', total: 207, releaseDate: '2023/09/22', img: sv3pt5Pack,  price: 34.99 },
+  { id: 'sv2',     name: 'Paldea Evolved',        series: 'Scarlet & Violet', total: 193, releaseDate: '2023/06/09', img: sv2Pack,     price: 24.99 },
+  { id: 'swsh8',   name: 'Fusion Strike',         series: 'Sword & Shield',   total: 264, releaseDate: '2021/11/12', img: swsh8Pack,   price: 29.99 },
+  { id: 'swsh7',   name: 'Evolving Skies',        series: 'Sword & Shield',   total: 203, releaseDate: '2021/08/27', img: swsh7Pack,   price: 39.99 },
+  { id: 'swsh6',   name: 'Chilling Reign',        series: 'Sword & Shield',   total: 198, releaseDate: '2021/06/18', img: swsh6Pack,   price: 29.99 },
 ];
 
 const seriesOptions = [
   { value: '', label: 'All Series' },
+  { value: 'Mega Evolution', label: 'Mega Evolution' },
   { value: 'Scarlet & Violet', label: 'Scarlet & Violet' },
   { value: 'Sword & Shield', label: 'Sword & Shield' },
 ];

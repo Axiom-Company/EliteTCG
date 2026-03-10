@@ -58,7 +58,9 @@
       "Bash(kill 29914:*)",
       "Bash(sips:*)",
       "Bash(nslookup:*)",
-      "Bash(dig:*)"
+      "Bash(dig:*)",
+      "WebFetch(domain:api.tcgdex.net)",
+      "WebFetch(domain:assets.tcgdex.net)"
     ]
   }
 }

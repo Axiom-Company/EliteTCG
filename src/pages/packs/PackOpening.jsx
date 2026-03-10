@@ -18,6 +18,12 @@ import sv2Pack from '../../assets/packs/Paldea-Evolved.png';
 import swsh8Pack from '../../assets/packs/fusion-strike.png';
 import swsh7Pack from '../../assets/packs/evolving-skies.png';
 import swsh6Pack from '../../assets/packs/Chilling-Reign.png';
+import sv10Pack from '../../assets/packs/destinedrivals.png';
+import sv10pt5bPack from '../../assets/packs/black-bolt.png';
+import sv10pt5wPack from '../../assets/packs/white-flare.png';
+import me01Pack from '../../assets/packs/mega-evolution.png';
+import me02Pack from '../../assets/packs/phantasmal-flames.png';
+import me02pt5Pack from '../../assets/packs/ascended-heroes.png';
 
 /* ─── Set logos (for confirm screen) ─── */
 import sv9Logo from '../../assets/images/sets/sv9.png';
@@ -29,18 +35,30 @@ import sv2Logo from '../../assets/images/sets/sv2.png';
 import swsh8Logo from '../../assets/images/sets/swsh8.png';
 import swsh7Logo from '../../assets/images/sets/swsh7.png';
 import swsh6Logo from '../../assets/images/sets/swsh6.png';
+import sv10Logo from '../../assets/images/sets/sv10.png';
+import sv10pt5bLogo from '../../assets/images/sets/sv10pt5b.png';
+import sv10pt5wLogo from '../../assets/images/sets/sv10pt5w.png';
+import me01Logo from '../../assets/images/sets/me01.png';
+import me02Logo from '../../assets/images/sets/me02.png';
+import me02pt5Logo from '../../assets/images/sets/me02pt5.png';
 
 /* ─── Set catalogue ─── */
 const PACK_SETS = [
-  { id: 'sv9',    name: 'Journey Together',     series: 'Scarlet & Violet', total: 167, releaseDate: '2025/03/28', img: sv9Pack,    logo: sv9Logo,    price: 24.99 },
-  { id: 'sv8pt5', name: 'Prismatic Evolutions', series: 'Scarlet & Violet', total: 175, releaseDate: '2025/01/17', img: sv8pt5Pack, logo: sv8pt5Logo, price: 29.99 },
-  { id: 'sv8',    name: 'Surging Sparks',       series: 'Scarlet & Violet', total: 191, releaseDate: '2024/11/08', img: sv8Pack,    logo: sv8Logo,    price: 24.99 },
-  { id: 'sv4pt5', name: 'Paldean Fates',        series: 'Scarlet & Violet', total: 245, releaseDate: '2024/01/26', img: sv4pt5Pack, logo: sv4pt5Logo, price: 29.99 },
-  { id: 'sv3pt5', name: '151',                  series: 'Scarlet & Violet', total: 207, releaseDate: '2023/09/22', img: sv3pt5Pack, logo: sv3pt5Logo, price: 34.99 },
-  { id: 'sv2',    name: 'Paldea Evolved',       series: 'Scarlet & Violet', total: 193, releaseDate: '2023/06/09', img: sv2Pack,    logo: sv2Logo,    price: 24.99 },
-  { id: 'swsh8',  name: 'Fusion Strike',        series: 'Sword & Shield',   total: 264, releaseDate: '2021/11/12', img: swsh8Pack,  logo: swsh8Logo,  price: 29.99 },
-  { id: 'swsh7',  name: 'Evolving Skies',       series: 'Sword & Shield',   total: 203, releaseDate: '2021/08/27', img: swsh7Pack,  logo: swsh7Logo,  price: 39.99 },
-  { id: 'swsh6',  name: 'Chilling Reign',       series: 'Sword & Shield',   total: 198, releaseDate: '2021/06/18', img: swsh6Pack,  logo: swsh6Logo,  price: 29.99 },
+  { id: 'me02pt5',  name: 'Ascended Heroes',      series: 'Mega Evolution',   total: 295, releaseDate: '2026/01/30', img: me02pt5Pack,  logo: me02pt5Logo,  price: 29.99 },
+  { id: 'me02',     name: 'Phantasmal Flames',     series: 'Mega Evolution',   total: 130, releaseDate: '2025/11/14', img: me02Pack,     logo: me02Logo,     price: 29.99 },
+  { id: 'me01',     name: 'Mega Evolution',        series: 'Mega Evolution',   total: 188, releaseDate: '2025/09/26', img: me01Pack,     logo: me01Logo,     price: 29.99 },
+  { id: 'sv10pt5b', name: 'Black Bolt',            series: 'Scarlet & Violet', total: 172, releaseDate: '2025/07/17', img: sv10pt5bPack, logo: sv10pt5bLogo, price: 29.99 },
+  { id: 'sv10pt5w', name: 'White Flare',           series: 'Scarlet & Violet', total: 173, releaseDate: '2025/07/17', img: sv10pt5wPack, logo: sv10pt5wLogo, price: 29.99 },
+  { id: 'sv10',     name: 'Destined Rivals',       series: 'Scarlet & Violet', total: 244, releaseDate: '2025/05/30', img: sv10Pack,     logo: sv10Logo,     price: 24.99 },
+  { id: 'sv9',      name: 'Journey Together',      series: 'Scarlet & Violet', total: 167, releaseDate: '2025/03/28', img: sv9Pack,      logo: sv9Logo,      price: 24.99 },
+  { id: 'sv8pt5',   name: 'Prismatic Evolutions',  series: 'Scarlet & Violet', total: 175, releaseDate: '2025/01/17', img: sv8pt5Pack,   logo: sv8pt5Logo,   price: 29.99 },
+  { id: 'sv8',      name: 'Surging Sparks',        series: 'Scarlet & Violet', total: 191, releaseDate: '2024/11/08', img: sv8Pack,      logo: sv8Logo,      price: 24.99 },
+  { id: 'sv4pt5',   name: 'Paldean Fates',         series: 'Scarlet & Violet', total: 245, releaseDate: '2024/01/26', img: sv4pt5Pack,   logo: sv4pt5Logo,   price: 29.99 },
+  { id: 'sv3pt5',   name: '151',                   series: 'Scarlet & Violet', total: 207, releaseDate: '2023/09/22', img: sv3pt5Pack,   logo: sv3pt5Logo,   price: 34.99 },
+  { id: 'sv2',      name: 'Paldea Evolved',        series: 'Scarlet & Violet', total: 193, releaseDate: '2023/06/09', img: sv2Pack,      logo: sv2Logo,      price: 24.99 },
+  { id: 'swsh8',    name: 'Fusion Strike',         series: 'Sword & Shield',   total: 264, releaseDate: '2021/11/12', img: swsh8Pack,    logo: swsh8Logo,    price: 29.99 },
+  { id: 'swsh7',    name: 'Evolving Skies',        series: 'Sword & Shield',   total: 203, releaseDate: '2021/08/27', img: swsh7Pack,    logo: swsh7Logo,    price: 39.99 },
+  { id: 'swsh6',    name: 'Chilling Reign',        series: 'Sword & Shield',   total: 198, releaseDate: '2021/06/18', img: swsh6Pack,    logo: swsh6Logo,    price: 29.99 },
 ];
 
 const CARDS_PER_PACK = 8;
@@ -286,7 +304,7 @@ const PackOpening = () => {
   // Redirect if invalid set ID
   if (!selectedSet) {
     return (
-      <div className="fixed inset-0 z-30 flex flex-col items-center justify-center" style={{ background: '#0c1222' }}>
+      <div className="fixed inset-0 z-30 flex flex-col items-center justify-center" style={{ background: '#111111' }}>
         <p className="text-white/60 text-sm mb-4">Pack not found</p>
         <Link to="/elite-rips" className="text-white/40 text-sm hover:text-white/60 transition-colors">← Back to Elite Rips</Link>
       </div>
@@ -434,7 +452,7 @@ const PackOpening = () => {
 
       {/* ═══ LOADING ═══ */}
       {phase === 'loading' && (
-        <div className="pack-bg flex flex-col items-center justify-center h-screen" style={{ background: '#0c1222' }}>
+        <div className="pack-bg flex flex-col items-center justify-center h-screen" style={{ background: '#111111' }}>
           <div className="pack-ring" />
           <div className="pack-ring-sm" />
           <div className="w-8 h-8 border-2 rounded-full animate-spin border-white/10 border-t-white/60" style={{ zIndex: 1 }} />
@@ -444,14 +462,14 @@ const PackOpening = () => {
 
       {/* ═══ CARDS ═══ */}
       {phase === 'cards' && (
-        <div className={`pack-bg relative flex flex-col items-center justify-center h-screen ${shaking ? 'screen-shake' : ''}`} style={{ background: '#0c1222', touchAction: 'none', overflow: 'hidden', position: 'fixed', inset: 0 }}>
+        <div className={`pack-bg relative flex flex-col items-center justify-center h-screen ${shaking ? 'screen-shake' : ''}`} style={{ background: '#111111', touchAction: 'none', overflow: 'hidden', position: 'fixed', inset: 0 }}>
           <div className="pack-particles">
             {[...Array(12)].map((_, i) => (
               <div key={i} className="pack-particle" style={{
                 left: `${8 + (i * 7.5) % 85}%`,
                 width: `${2 + (i % 3)}px`,
                 height: `${2 + (i % 3)}px`,
-                background: ['rgba(59,130,246,0.3)', 'rgba(168,85,247,0.3)', 'rgba(34,211,238,0.3)', 'rgba(236,72,153,0.25)'][i % 4],
+                background: ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.12)', 'rgba(255,255,255,0.08)'][i % 4],
                 animationDuration: `${8 + (i % 5) * 3}s`,
                 animationDelay: `${(i * 1.7) % 10}s`,
               }} />
@@ -537,14 +555,14 @@ const PackOpening = () => {
 
       {/* ═══ DONE ═══ */}
       {phase === 'done' && (
-        <div className="pack-bg flex flex-col min-h-screen fade-up" style={{ background: '#0c1222' }}>
+        <div className="pack-bg flex flex-col min-h-screen fade-up" style={{ background: '#111111' }}>
           <div className="pack-particles">
             {[...Array(12)].map((_, i) => (
               <div key={i} className="pack-particle" style={{
                 left: `${8 + (i * 7.5) % 85}%`,
                 width: `${2 + (i % 3)}px`,
                 height: `${2 + (i % 3)}px`,
-                background: ['rgba(59,130,246,0.3)', 'rgba(168,85,247,0.3)', 'rgba(34,211,238,0.3)', 'rgba(236,72,153,0.25)'][i % 4],
+                background: ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.12)', 'rgba(255,255,255,0.08)'][i % 4],
                 animationDuration: `${8 + (i % 5) * 3}s`,
                 animationDelay: `${(i * 1.7) % 10}s`,
               }} />
