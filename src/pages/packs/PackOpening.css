@@ -8,19 +8,6 @@
   overflow: hidden;
 }
 
-.pack-bg::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    /* Large soft orbs */
-    radial-gradient(ellipse 600px 600px at 10% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 70%),
-    radial-gradient(ellipse 500px 500px at 85% 75%, rgba(255, 255, 255, 0.025) 0%, transparent 70%),
-    radial-gradient(ellipse 400px 400px at 50% 10%, rgba(255, 255, 255, 0.02) 0%, transparent 70%),
-    radial-gradient(ellipse 350px 350px at 70% 40%, rgba(255, 255, 255, 0.02) 0%, transparent 70%);
-}
 
 
 /* Ash particles */

@@ -468,7 +468,7 @@ const PackOpening = () => {
   const isImmersive = phase === 'loading' || phase === 'cards' || phase === 'done';
 
   return (
-    <div className={`${isImmersive ? 'fixed inset-0 z-30' : 'min-h-screen'} overflow-y-auto transition-colors duration-300 ${isImmersive ? 'bg-black' : 'bg-white'}`}>
+    <div className={`${isImmersive ? 'fixed inset-0 z-30' : ''} overflow-y-auto transition-colors duration-300 ${isImmersive ? 'bg-black' : 'bg-white'}`} style={isImmersive ? {} : { minHeight: '100dvh' }}>
       <SEO title={`${selectedSet.name} – Elite Rips`} description={`Open a ${selectedSet.name} pack and discover rare cards.`} path={`/elite-rips/${setId}`} noindex />
 
       {flash && (
@@ -635,9 +635,7 @@ const PackOpening = () => {
 
       {/* ═══ LOADING ═══ */}
       {phase === 'loading' && (
-        <div className="pack-bg flex flex-col items-center justify-center h-screen bg-black">
-          <div className="pack-ring" />
-          <div className="pack-ring-sm" />
+        <div className="flex flex-col items-center justify-center bg-black" style={{ height: '100dvh' }}>
           <div className="w-8 h-8 border-2 rounded-full animate-spin border-white/10 border-t-white/60" style={{ zIndex: 1 }} />
           <p className="text-sm mt-4 text-white/30" style={{ zIndex: 1 }}>Pulling cards...</p>
         </div>
@@ -645,9 +643,7 @@ const PackOpening = () => {
 
       {/* ═══ CARDS ═══ */}
       {phase === 'cards' && (
-        <div className={`pack-bg relative flex flex-col items-center justify-center h-screen ${shaking ? 'screen-shake' : ''}`} style={{ background: '#000', touchAction: 'none', overflow: 'hidden', position: 'fixed', inset: 0 }}>
-          <div className="pack-ring" />
-          <div className="pack-ring-sm" />
+        <div className={`relative flex flex-col items-center justify-center h-screen ${shaking ? 'screen-shake' : ''}`} style={{ background: '#000', touchAction: 'none', overflow: 'hidden', position: 'fixed', inset: 0 }}>
           {/* Card stack with 3D tilt */}
           <div
             ref={stackRef}
@@ -753,9 +749,10 @@ const PackOpening = () => {
 
         return (
         <div
-          className="pack-bg flex flex-col min-h-screen overflow-hidden transition-colors duration-1000"
+          className="flex flex-col overflow-hidden"
           style={{
             background: '#000',
+            minHeight: '100dvh',
           }}
         >
           {/* ── Best Pull ── */}
