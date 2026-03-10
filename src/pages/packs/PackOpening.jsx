@@ -262,16 +262,23 @@ const PackOpening = () => {
 
   const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  // Hide navbar only during immersive phases (loading, cards, done)
+  // Hide navbar + black status bar during immersive phases (loading, cards, done)
   useEffect(() => {
+    const themeColor = document.querySelector('meta[name="theme-color"]');
     if (phase === 'loading' || phase === 'cards' || phase === 'done') {
       document.body.classList.add('pack-immersive');
       document.body.style.overflow = 'hidden';
+      if (themeColor) themeColor.setAttribute('content', '#000000');
     } else {
       document.body.classList.remove('pack-immersive');
       document.body.style.overflow = '';
+      if (themeColor) themeColor.setAttribute('content', '#ffffff');
     }
-    return () => { document.body.classList.remove('pack-immersive'); document.body.style.overflow = ''; };
+    return () => {
+      document.body.classList.remove('pack-immersive');
+      document.body.style.overflow = '';
+      if (themeColor) themeColor.setAttribute('content', '#ffffff');
+    };
   }, [phase]);
 
   useEffect(() => {
@@ -714,13 +721,19 @@ const PackOpening = () => {
             )}
           </div>
 
-          {/* Card price overlay above card */}
-          {/* Floating +value pill on flip */}
-          {cardValuePopup && (
-            <div className="absolute left-0 right-0 flex justify-center bottom-10 md:bottom-14" style={{ zIndex: 10 }}>
-              <div key={cardValuePopup.key} className="card-value-float px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
-                <p className="text-sm text-white/80 tabular-nums font-medium">
+          {/* Running total pill + floating +value */}
+          {runningTotal > 0 && (
+            <div className="absolute left-0 right-0 flex flex-col items-center bottom-10 md:bottom-14" style={{ zIndex: 10 }}>
+              {/* Floating +value that drifts up and fades */}
+              {cardValuePopup && (
+                <p key={cardValuePopup.key} className="text-xs text-white/50 tabular-nums font-medium card-value-float mb-1">
                   +R{formatPrice(cardValuePopup.value)}
+                </p>
+              )}
+              {/* Total pill */}
+              <div className="px-5 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
+                <p className="text-sm text-white/80 tabular-nums font-medium">
+                  <CountingPrice value={runningTotal} />
                 </p>
               </div>
             </div>
@@ -753,7 +766,7 @@ const PackOpening = () => {
               onClick={() => !showDoneModal && setShowDoneModal(true)}
             >
               {bestPull.priceZar != null && (
-                <div className="best-info-fade mb-6">
+                <div className="best-info-fade mb-6" style={{ marginTop: -50 }}>
                   <p className="text-4xl md:text-5xl font-medium text-white tracking-tight">R{formatPrice(bestPull.priceZar)}</p>
                 </div>
               )}
@@ -768,7 +781,7 @@ const PackOpening = () => {
                 </div>
               </div>
               {!showDoneModal && (
-                <div className="best-info-fade flex gap-3 mt-8">
+                <div className="best-info-fade flex gap-3" style={{ marginTop: 82 }}>
                   <button
                     onClick={(e) => { e.stopPropagation(); setShowDoneModal(true); }}
                     className="px-6 py-2.5 text-sm font-medium rounded-full transition-all bg-white text-black hover:bg-white/90 active:scale-[0.98]"
