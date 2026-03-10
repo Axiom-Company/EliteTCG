@@ -61,7 +61,7 @@ const PULL_RATES = [
 const fanOffset = (stackPos, total) => {
   const x = stackPos * -14;
   const y = stackPos * -12;
-  const rot = stackPos * -2.5;
+  const rot = 0;
   const scale = 1 - stackPos * 0.03;
   return {
     transform: `translate(${x}px, ${y}px) rotate(${rot}deg) scale(${scale})`,
@@ -469,7 +469,7 @@ const PackOpening = () => {
             {packCards.map((card, i) => {
               if (i < currentIdx) return null;
               const stackPos = i - currentIdx;
-              if (stackPos > 8) return null;
+              if (stackPos > 4) return null;
 
               const isActive = i === currentIdx;
               const offset = fanOffset(stackPos, remaining);
