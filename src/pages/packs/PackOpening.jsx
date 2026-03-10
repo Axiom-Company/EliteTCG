@@ -4,6 +4,7 @@ import { RotateCcw, CreditCard, Truck, ChevronLeft, ChevronRight } from 'lucide-
 import SEO from '../../components/SEO/SEO';
 import { ELITE_API_URL } from '../../config/api';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
 import './PackOpening.css';
 import codeCardImg from '../../assets/images/code_card.jpg';
 
@@ -84,20 +85,25 @@ const preloadImages = (urls) =>
     img.src = url;
   })));
 
-const api = async (path, opts = {}) => {
-  const res = await fetch(`${ELITE_API_URL}/api/packs${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...opts,
-  });
-  if (!res.ok) throw new Error(`API error ${res.status}`);
-  return res.json();
-};
-
 /* ─── Main Component ─── */
 const PackOpening = () => {
   const { setId } = useParams();
   const navigate = useNavigate();
   const selectedSet = PACK_SETS.find(s => s.id === setId);
+  const { getToken } = useAuth();
+
+  const api = async (path, opts = {}) => {
+    const token = await getToken();
+    const res = await fetch(`${ELITE_API_URL}/api/packs${path}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      ...opts,
+    });
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    return res.json();
+  };
 
   const [phase, setPhase] = useState('confirm');
   const [selectedImage, setSelectedImage] = useState(0);
