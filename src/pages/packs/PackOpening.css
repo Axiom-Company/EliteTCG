@@ -124,8 +124,8 @@ body:not(.pack-immersive) .sticky.top-0 {
 
 .card-stack-lg {
   position: relative;
-  width: clamp(200px, 48vw, 240px);
-  height: clamp(280px, 67vw, 336px);
+  width: clamp(260px, 65vw, 300px);
+  height: clamp(364px, 91vw, 420px);
 }
 
 .card-stack-item {

@@ -137,10 +137,12 @@ const PackOpening = () => {
   useEffect(() => {
     if (phase === 'loading' || phase === 'cards' || phase === 'done') {
       document.body.classList.add('pack-immersive');
+      document.body.style.overflow = 'hidden';
     } else {
       document.body.classList.remove('pack-immersive');
+      document.body.style.overflow = '';
     }
-    return () => document.body.classList.remove('pack-immersive');
+    return () => { document.body.classList.remove('pack-immersive'); document.body.style.overflow = ''; };
   }, [phase]);
 
   useEffect(() => {
@@ -442,7 +444,7 @@ const PackOpening = () => {
 
       {/* ═══ CARDS ═══ */}
       {phase === 'cards' && (
-        <div className={`pack-bg relative flex flex-col items-center justify-center h-screen ${shaking ? 'screen-shake' : ''}`} style={{ background: '#0c1222' }}>
+        <div className={`pack-bg relative flex flex-col items-center justify-center h-screen ${shaking ? 'screen-shake' : ''}`} style={{ background: '#0c1222', touchAction: 'none', overflow: 'hidden', position: 'fixed', inset: 0 }}>
           <div className="pack-particles">
             {[...Array(12)].map((_, i) => (
               <div key={i} className="pack-particle" style={{
@@ -464,7 +466,8 @@ const PackOpening = () => {
             onClick={handleCardClick}
             onPointerMove={handlePointerMove}
             onPointerLeave={handlePointerLeave}
-            style={{ cursor: 'pointer', perspective: '800px' }}
+            onTouchMove={(e) => e.preventDefault()}
+            style={{ cursor: 'pointer', perspective: '800px', touchAction: 'none' }}
           >
             {packCards.map((card, i) => {
               if (i < currentIdx) return null;
@@ -522,9 +525,9 @@ const PackOpening = () => {
             )}
           </div>
 
-          {/* Card price overlay below card */}
+          {/* Card price overlay above card */}
           {cardState === 'flipped' && packCards[currentIdx] && packCards[currentIdx].priceZar != null && (
-            <div className="absolute left-0 right-0 text-center fade-up" style={{ top: 'calc(50% + clamp(174px, 37vw, 205px))' }}>
+            <div className="absolute left-0 right-0 text-center fade-up" style={{ bottom: 'calc(50% + clamp(220px, 52vw, 250px))' }}>
               <p className="text-3xl font-medium text-white">R{packCards[currentIdx].priceZar.toFixed(2)}</p>
             </div>
           )}
@@ -534,7 +537,7 @@ const PackOpening = () => {
 
       {/* ═══ DONE ═══ */}
       {phase === 'done' && (
-        <div className="pack-bg flex flex-col items-center justify-between min-h-screen px-6 pt-12 pb-0 fade-up" style={{ background: '#0c1222' }}>
+        <div className="pack-bg flex flex-col min-h-screen fade-up" style={{ background: '#0c1222' }}>
           <div className="pack-particles">
             {[...Array(12)].map((_, i) => (
               <div key={i} className="pack-particle" style={{
@@ -549,38 +552,42 @@ const PackOpening = () => {
           </div>
           <div className="pack-ring" />
           <div className="pack-ring-sm" />
-          <div className="w-full max-w-[1200px] flex-1 flex flex-col justify-center" style={{ zIndex: 1 }}>
-            {/* Header */}
-            <div className="text-center mb-6 scale-in">
-              <p className="text-xs mb-1 text-white/30">Pack Complete</p>
-              {totalValue > 0 && (
-                <p className="text-5xl font-medium text-white">R{totalValue.toFixed(2)}</p>
-              )}
-              <p className="text-[11px] mt-0.5 text-white/20">Total Pack Value</p>
-            </div>
 
-            {/* Cards */}
-            <div className="relative">
-              <div ref={scrollRef} className="flex gap-3 mb-6 overflow-x-auto scrollbar-hide" style={{ scrollBehavior: 'smooth' }}>
+          {/* Main content area */}
+          <div className="flex-1 flex flex-col items-center justify-center px-4 py-8" style={{ zIndex: 1 }}>
+
+            {/* Cards row */}
+            <div className="relative w-full mb-8">
+              {canScrollLeft && (
+                <button onClick={() => scrollRef.current?.scrollBy({ left: -200 })} className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/70 border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors backdrop-blur-sm">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+              )}
+              {canScrollRight && (
+                <button onClick={() => scrollRef.current?.scrollBy({ left: 200 })} className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-black/70 border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors backdrop-blur-sm">
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              )}
+              <div ref={scrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4" style={{ scrollBehavior: 'smooth' }}>
                 {/* Code card - always first, always face-up */}
-                <div className="done-card flex-shrink-0" style={{ width: 'calc((100% - 8 * 0.75rem) / 9)', minWidth: '90px' }}>
-                  <div className="w-full aspect-[2.5/3.5] rounded-lg overflow-hidden shadow-lg">
+                <div className="done-card flex-shrink-0" style={{ width: 'clamp(140px, 28vw, 200px)' }}>
+                  <div className="w-full aspect-[2.5/3.5] rounded-xl overflow-hidden shadow-lg shadow-black/40">
                     <img src={codeCardImg} alt="Code Card" className="w-full h-full object-cover" />
                   </div>
                 </div>
                 {packCards.filter(c => !c.isCodeCard).map((card, i) => (
-                  <div key={i} className="done-card flex-shrink-0" style={{ width: 'calc((100% - 8 * 0.75rem) / 9)', minWidth: '90px' }}>
+                  <div key={i} className="done-card flex-shrink-0" style={{ width: 'clamp(140px, 28vw, 200px)' }}>
                     <div className="w-full aspect-[2.5/3.5]">
                       <div className={`done-card-inner ${flippedCards.includes(i) ? 'flipped' : ''}`}>
-                        <div className="done-card-front shadow-lg relative">
+                        <div className="done-card-front shadow-lg shadow-black/40 relative">
                           <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
                           {card.priceZar != null && (
-                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-sm px-2 py-0.5 rounded-full">
-                              <p className="text-[10px] text-white/80 whitespace-nowrap">R{card.priceZar.toFixed(2)}</p>
+                            <div className="absolute bottom-2 md:bottom-3 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                              <p className="text-[11px] md:text-xs text-white/90 whitespace-nowrap font-medium">R{card.priceZar.toFixed(2)}</p>
                             </div>
                           )}
                         </div>
-                        <div className="done-card-back shadow-lg">
+                        <div className="done-card-back shadow-lg shadow-black/40">
                           <img src={CARD_BACK} alt="Card back" className="w-full h-full object-cover" />
                         </div>
                       </div>
@@ -588,37 +595,41 @@ const PackOpening = () => {
                   </div>
                 ))}
               </div>
-              {canScrollLeft && (
-                <button onClick={() => scrollRef.current?.scrollBy({ left: -200 })} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 w-8 h-8 rounded-full bg-black/80 border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors">
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-              )}
-              {canScrollRight && (
-                <button onClick={() => scrollRef.current?.scrollBy({ left: 200 })} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 w-8 h-8 rounded-full bg-black/80 border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors">
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              )}
             </div>
 
-            <div className="flex flex-col items-center gap-2.5 mt-2">
-              <button onClick={openAnother} className="py-2.5 text-[13px] font-medium rounded-xl transition-colors bg-white hover:bg-white/90 text-black" style={{ width: 'calc(18rem + 0.625rem)' }}>
-                Open Another Pack
-              </button>
-              <div className="flex gap-2.5">
-                <button className="w-36 py-2.5 border text-[13px] font-medium rounded-xl transition-colors border-white/10 text-white/40 hover:bg-white/5">
-                  Store Credit
+            {/* Value + Actions */}
+            <div className="w-full max-w-[340px] flex flex-col items-center gap-5">
+              {/* Total value */}
+              {totalValue > 0 && (
+                <div className="text-center scale-in">
+                  <p className="text-4xl md:text-5xl font-medium text-white tracking-tight">R{totalValue.toFixed(2)}</p>
+                  <p className="text-[11px] mt-1 text-white/25 uppercase tracking-widest">Total Value</p>
+                </div>
+              )}
+
+              {/* Buttons */}
+              <div className="w-full flex flex-col gap-2">
+                <button onClick={openAnother} className="w-full py-3 text-sm font-medium rounded-full transition-all bg-white hover:bg-white/90 text-gray-900 active:scale-[0.98]">
+                  Open Another Pack
                 </button>
-                <button className="w-36 py-2.5 border text-[13px] font-medium rounded-xl transition-colors border-white/10 text-white/40 hover:bg-white/5">
-                  Ship Cards
-                </button>
+                <div className="flex gap-2">
+                  <button className="flex-1 py-2.5 text-[13px] font-medium rounded-full transition-all border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20 active:scale-[0.98]">
+                    Store Credit
+                  </button>
+                  <button className="flex-1 py-2.5 text-[13px] font-medium rounded-full transition-all border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20 active:scale-[0.98]">
+                    Ship Cards
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {packsOpened > 1 && <p className="text-[10px] mt-4 text-center text-white/15">{packsOpened} packs opened this session</p>}
+              {packsOpened > 1 && <p className="text-[10px] text-white/15">{packsOpened} packs opened this session</p>}
+            </div>
           </div>
+
+          {/* Provably fair footer */}
           {fairness && (
-            <div className="w-screen px-3 py-2 flex items-center justify-center bg-white/5" style={{ marginLeft: 'calc(-50vw + 50%)', marginRight: 'calc(-50vw + 50%)' }}>
-              <p className="text-[9px] font-mono truncate text-white/20">
+            <div className="w-full px-3 py-2 flex items-center justify-center bg-white/[0.03]">
+              <p className="text-[9px] font-mono truncate text-white/15">
                 {fairness.serverSeedHash?.slice(0, 16)}... n:{fairness.nonce}
               </p>
             </div>
