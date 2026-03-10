@@ -154,7 +154,7 @@ const HomePage = () => {
 };
 
 const StickyHeader = () => (
-  <div className="sticky top-0 z-40">
+  <div className="sticky top-0 z-[100]">
     <Navbar />
     <AnnouncementBar />
   </div>
