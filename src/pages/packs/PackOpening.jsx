@@ -43,7 +43,8 @@ const PACK_SETS = [
 ];
 
 const CARDS_PER_PACK = 8;
-const CARD_BACK = 'https://images.pokemontcg.io/back/high.png';
+import cardBackImg from '../../assets/images/card_back.jpg';
+const CARD_BACK = cardBackImg;
 
 const PULL_RATES = [
   'Holo Rare',
