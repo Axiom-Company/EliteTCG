@@ -9,10 +9,8 @@ const sections = [
   { id: 'seed-system', label: 'Seed & Nonce System' },
   { id: 'rng-algorithm', label: 'RNG Algorithm' },
   { id: 'verification', label: 'Independent Verification' },
-  { id: 'pull-rates', label: 'Pull Rates & Odds' },
   { id: 'card-pricing', label: 'Card Pricing & Valuation' },
-  { id: 'card-data', label: 'Card Data Sources' },
-  { id: 'digital-vs-physical', label: 'Digital vs Physical' },
+  { id: 'shipping', label: 'Shipping & Fulfilment' },
   { id: 'no-gambling', label: 'Not Gambling' },
   { id: 'eligibility', label: 'Eligibility' },
   { id: 'refunds', label: 'Refund Policy' },
@@ -31,17 +29,17 @@ const Code = ({ children }) => (
 const EliteRipsPolicy = () => (
   <LegalLayout
     title="Elite Rips Policy"
-    lastUpdated="9 March 2026"
+    lastUpdated="12 March 2026"
     seo={{ title: 'Elite Rips Policy – How It Works', path: '/elite-rips-policy' }}
     sections={sections}
   >
     <section id="overview">
       <h2 className="text-base font-medium text-gray-900 mb-3">1. Overview</h2>
       <p>
-        This policy explains exactly how Elite Rips works, including the technology behind it, the
-        randomness system, pull rates, pricing methodology, and your rights as a user. We believe
-        in full transparency — every outcome is cryptographically verifiable and no element of the
-        system is hidden from you.
+        This policy explains exactly how Elite Rips works, including how real packs are sourced,
+        the provably fair pack selection system, pricing methodology, shipping, and your rights
+        as a user. We believe in full transparency — every pack assignment is cryptographically
+        verifiable and no element of the system is hidden from you.
       </p>
       <p className="mt-2">
         By using Elite Rips, you agree to the terms outlined in this policy, in addition to our
@@ -54,16 +52,15 @@ const EliteRipsPolicy = () => (
     <section id="what-is-elite-rips">
       <h2 className="text-base font-medium text-gray-900 mb-3">2. What Is Elite Rips</h2>
       <p>
-        Elite Rips is a digital pack opening experience that simulates the experience of opening a
-        Pokémon Trading Card Game booster pack. When you open a pack, you receive 5 randomly
-        selected cards from the chosen set's card pool. The randomness is powered by a{' '}
-        <strong>provably fair</strong> cryptographic system — the same standard used by
-        transparent online platforms worldwide.
+        Elite Rips is a real pack opening experience. We physically purchase sealed Pokémon TCG
+        booster packs, open them on camera, and record every card inside. When you open a pack
+        on Elite Rips, the provably fair system assigns you one of these real, pre-opened packs
+        at random — you receive the exact cards that were inside.
       </p>
       <p className="mt-2">
-        Each pack costs a fixed price in South African Rand (ZAR). The cards you receive are
-        digital representations of real Pokémon TCG cards, with market-based valuations sourced
-        from Cardmarket (Europe's largest TCG marketplace).
+        Each pack costs a fixed price in South African Rand (ZAR). After your cards are revealed,
+        you can choose to have them shipped to you or open another pack. Card values displayed are
+        sourced from Cardmarket (Europe's largest TCG marketplace) for reference.
       </p>
     </section>
 
@@ -71,26 +68,27 @@ const EliteRipsPolicy = () => (
       <h2 className="text-base font-medium text-gray-900 mb-3">3. How It Works — Step by Step</h2>
       <ol className="list-decimal pl-5 space-y-2">
         <li>
+          <strong>We open packs on camera:</strong> Our team purchases sealed booster packs, opens
+          them on video, and records every card. Each pack and its contents are logged in our
+          inventory system with a unique pack number.
+        </li>
+        <li>
           <strong>Choose a set:</strong> Browse available Pokémon TCG sets on the{' '}
-          <Link to="/elite-rips" className="underline">Elite Rips</Link> page. Each set
-          displays its name, card count, and price.
+          <Link to="/elite-rips" className="underline">Elite Rips</Link> page. Sets with available
+          inventory are shown as in stock.
         </li>
         <li>
-          <strong>Confirm your pack:</strong> Review the set details, pull rate categories,
-          and price. You can view the provably fair seed information before opening.
+          <strong>Open the pack:</strong> When you click "Open Pack", the provably fair system
+          generates a random number to select which real pack from the available inventory you
+          receive. The pack is marked as sold and assigned to you.
         </li>
         <li>
-          <strong>Open the pack:</strong> The server generates 5 cards using the provably fair
-          RNG system. Cards are sorted by rarity (common → ultra rare) so the best card is
-          revealed last.
+          <strong>Reveal your cards:</strong> The cards from your assigned pack are presented one
+          by one. Tap each card to flip and reveal it. Rare cards trigger visual effects.
         </li>
         <li>
-          <strong>Reveal cards:</strong> Click each card to flip it over. Rare cards trigger
-          visual effects (sparkles, screen shake for ultra rares).
-        </li>
-        <li>
-          <strong>View results:</strong> After all 5 cards are revealed, you see a summary
-          with each card's name, image, and market value in ZAR.
+          <strong>Ship or continue:</strong> After all cards are revealed, you can choose to have
+          the physical cards shipped to your address, or go back and open another pack.
         </li>
       </ol>
     </section>
@@ -98,13 +96,13 @@ const EliteRipsPolicy = () => (
     <section id="provably-fair">
       <h2 className="text-base font-medium text-gray-900 mb-3">4. Provably Fair System</h2>
       <p>
-        Elite Rips uses <strong>HMAC-SHA512</strong> provably fair cryptography — a system that
-        allows you to independently verify that every pack outcome was determined fairly and was
-        not manipulated after the fact. Here is how it works:
+        Elite Rips uses <strong>HMAC-SHA512</strong> provably fair cryptography to determine which
+        pack you receive. This system allows you to independently verify that pack assignment was
+        random and was not manipulated after the fact. Here is how it works:
       </p>
       <ol className="list-decimal pl-5 space-y-2 mt-3">
         <li>
-          <strong>Before any rolls:</strong> The server generates a random{' '}
+          <strong>Before any packs are opened:</strong> The server generates a random{' '}
           <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">server_seed</code> (64
           hex characters / 256 bits of entropy) and shows you its{' '}
           <strong>SHA-256 hash</strong>. This hash is a commitment — it proves the server seed
@@ -114,19 +112,24 @@ const EliteRipsPolicy = () => (
           <strong>Client seed:</strong> You are assigned a{' '}
           <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">client_seed</code>{' '}
           (your username if logged in, or a random 16-hex string). You can change this at any
-          time via the API. The client seed ensures the server cannot predict outcomes alone.
+          time. The client seed ensures the server cannot predict outcomes alone.
         </li>
         <li>
           <strong>Nonce:</strong> Each pack opening uses a unique{' '}
           <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">nonce</code> that
-          combines a timestamp (SSMMHHDDMMYYYY format) with a sequential counter. This ensures
-          every roll is unique even if seeds are identical.
+          combines a timestamp with a sequential counter. This ensures every pack selection is
+          unique even if seeds are identical.
+        </li>
+        <li>
+          <strong>Pack selection:</strong> The HMAC-SHA512 output is converted to a number between
+          0 and 1, then multiplied by the number of available packs for that set. The result
+          determines which specific pack you receive.
         </li>
         <li>
           <strong>After seed rotation:</strong> When you rotate your server seed, the{' '}
           <strong>unhashed previous server seed</strong> is revealed. You can then hash it
-          yourself and confirm it matches the hash you were shown before any rolls — proving
-          the outcomes were pre-determined and fair.
+          yourself and confirm it matches the hash you were shown before — proving the pack
+          selection was pre-determined and fair.
         </li>
       </ol>
     </section>
@@ -169,147 +172,81 @@ const EliteRipsPolicy = () => (
     </section>
 
     <section id="rng-algorithm">
-      <h2 className="text-base font-medium text-gray-900 mb-3">6. RNG Algorithm — Source Code</h2>
+      <h2 className="text-base font-medium text-gray-900 mb-3">6. RNG Algorithm — Pack Selection</h2>
       <p>
-        Each card in a pack is determined by a separate HMAC-SHA512 computation. Here is the exact
-        code:
+        When you open a pack, a single HMAC-SHA512 computation determines which pack from the
+        available inventory you receive. Here is the exact code:
       </p>
 
-      <p className="mt-3 mb-1 text-xs font-medium text-gray-500">Generating rolls for a 5-card pack:</p>
-      <Code>{`function generatePackRolls(serverSeed, clientSeed, nonce, count) {
-  const rolls = [];
-  for (let i = 0; i < count; i++) {
-    const message = \`\${clientSeed}:\${nonce}:\${i}\`;
-    const hmac = crypto.createHmac('sha512', serverSeed)
-      .update(message)
-      .digest('hex');
-    // First 8 hex chars → 32-bit integer → float in [0, 1)
-    const int = parseInt(hmac.substring(0, 8), 16);
-    rolls.push(int / 0x100000000); // divide by 2^32
-  }
-  return rolls;
+      <p className="mt-3 mb-1 text-xs font-medium text-gray-500">Generating a roll to select a pack:</p>
+      <Code>{`function generateRoll(serverSeed, clientSeed, nonce) {
+  const message = \`\${clientSeed}:\${nonce}\`;
+  const hmac = crypto.createHmac('sha512', serverSeed)
+    .update(message)
+    .digest('hex');
+  // First 8 hex chars → 32-bit integer → float in [0, 1)
+  const int = parseInt(hmac.substring(0, 8), 16);
+  return int / 0x100000000; // divide by 2^32
 }`}</Code>
 
-      <p className="mt-3 mb-1 text-xs font-medium text-gray-500">Mapping a roll to a rarity tier:</p>
-      <Code>{`function rollToRarity(roll, weights) {
-  const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
-  let cumulative = 0;
-  for (const { rarity, weight } of weights) {
-    cumulative += weight / totalWeight;
-    if (roll < cumulative) return rarity;
-  }
-  return weights[weights.length - 1].rarity;
-}`}</Code>
+      <p className="mt-3 mb-1 text-xs font-medium text-gray-500">Selecting a pack from available inventory:</p>
+      <Code>{`// roll is a float in [0, 1)
+const packIndex = Math.floor(roll * availablePacks.length);
+const selectedPack = availablePacks[packIndex];
 
-      <p className="mt-3 mb-1 text-xs font-medium text-gray-500">Selecting a specific card from the rarity pool:</p>
-      <Code>{`function rollToCardIndex(roll, cardCount) {
-  return Math.floor(roll * cardCount);
-}`}</Code>
+// Mark pack as sold with optimistic lock
+await db.update('opened_packs')
+  .set({ status: 'sold', assigned_to: userId })
+  .where({ id: selectedPack.id, status: 'available' });`}</Code>
 
       <p className="mt-2">
         The <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">HMAC-SHA512</code> function
         is a keyed hash function from Node.js's built-in{' '}
-        <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">crypto</code> module. It is a
-        deterministic function — given the same inputs, it always produces the same output. This
-        is what makes verification possible.
+        <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">crypto</code> module. It is
+        deterministic — given the same inputs, it always produces the same output. This is what
+        makes verification possible.
+      </p>
+      <p className="mt-2">
+        <strong>Optimistic locking</strong> ensures that if two users try to claim the same pack
+        simultaneously, only one succeeds. The other user is prompted to try again, at which point
+        a new pack is selected from the remaining inventory.
       </p>
     </section>
 
     <section id="verification">
       <h2 className="text-base font-medium text-gray-900 mb-3">7. Independent Verification</h2>
       <p>
-        After rotating your server seed, you can verify any previous pack opening yourself. Here
-        is the verification function (also available via our API at{' '}
-        <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">POST /api/packs/verify</code>):
+        After rotating your server seed, you can verify any previous pack selection yourself.
+        The verification endpoint is available at{' '}
+        <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">POST /api/packs/verify</code>:
       </p>
 
-      <Code>{`function verifyRoll(serverSeed, clientSeed, nonce, cardIndex) {
-  const message = \`\${clientSeed}:\${nonce}:\${cardIndex}\`;
-  const hmac = crypto.createHmac('sha512', serverSeed)
-    .update(message)
-    .digest('hex');
-  const int = parseInt(hmac.substring(0, 8), 16);
-  return {
-    hmac,
-    int,
-    roll: int / 0x100000000,
-  };
-}`}</Code>
+      <Code>{`// Verify a pack selection
+const message = \`\${clientSeed}:\${nonce}\`;
+const hmac = crypto.createHmac('sha512', serverSeed)
+  .update(message)
+  .digest('hex');
+const int = parseInt(hmac.substring(0, 8), 16);
+const roll = int / 0x100000000;
+// roll * totalAvailablePacks = the pack index you received`}</Code>
 
-      <p className="mt-2"><strong>To verify a roll yourself:</strong></p>
+      <p className="mt-2"><strong>To verify a pack selection yourself:</strong></p>
       <ol className="list-decimal pl-5 space-y-1 mt-2">
         <li>Note the <strong>server seed hash</strong>, <strong>client seed</strong>, and <strong>nonce</strong> shown before opening.</li>
-        <li>Open packs as normal.</li>
+        <li>Open packs as normal. Each pack response includes the <strong>packIndex</strong> and <strong>totalAvailable</strong> count.</li>
         <li>Rotate your server seed — the <strong>previous unhashed server seed</strong> is revealed.</li>
         <li>Hash the revealed server seed with SHA-256 and confirm it matches the hash from step 1.</li>
-        <li>Run the HMAC-SHA512 computation above with the revealed server seed, your client seed, the nonce, and each card index (0–4).</li>
-        <li>Confirm the resulting rolls match the cards you received.</li>
+        <li>Run the HMAC-SHA512 computation above with the revealed server seed, your client seed, and the nonce.</li>
+        <li>Confirm that <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">floor(roll * totalAvailable)</code> equals the packIndex you received.</li>
       </ol>
       <p className="mt-2">
         You can perform this verification in any programming language, any online HMAC calculator,
-        or via our <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs">POST /api/packs/verify</code>{' '}
-        API endpoint. The algorithm is standard and not proprietary.
-      </p>
-    </section>
-
-    <section id="pull-rates">
-      <h2 className="text-base font-medium text-gray-900 mb-3">8. Pull Rates & Odds</h2>
-      <p>
-        Each 5-card pack has a fixed slot structure. The exact weights used in our system are:
-      </p>
-
-      <div className="mt-3 border border-gray-200 rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 text-left">
-              <th className="px-4 py-2.5 font-medium text-gray-900">Slot</th>
-              <th className="px-4 py-2.5 font-medium text-gray-900">Rarity</th>
-              <th className="px-4 py-2.5 font-medium text-gray-900">Weight</th>
-              <th className="px-4 py-2.5 font-medium text-gray-900">Probability</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            <tr><td className="px-4 py-2">1</td><td className="px-4 py-2">Common</td><td className="px-4 py-2">100</td><td className="px-4 py-2">100%</td></tr>
-            <tr><td className="px-4 py-2">2</td><td className="px-4 py-2">Common</td><td className="px-4 py-2">100</td><td className="px-4 py-2">100%</td></tr>
-            <tr><td className="px-4 py-2">3</td><td className="px-4 py-2">Common</td><td className="px-4 py-2">100</td><td className="px-4 py-2">100%</td></tr>
-            <tr><td className="px-4 py-2">4</td><td className="px-4 py-2">Uncommon</td><td className="px-4 py-2">100</td><td className="px-4 py-2">100%</td></tr>
-            <tr>
-              <td className="px-4 py-2">5</td>
-              <td className="px-4 py-2">Rare / Ultra Rare</td>
-              <td className="px-4 py-2">88 / 12</td>
-              <td className="px-4 py-2">88% Rare, 12% Ultra Rare</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <p className="mt-3">
-        This means approximately <strong>1 in 8 packs</strong> will contain an ultra rare card
-        (Illustration Rare, Full Art, Alt Art, Special Art Rare, Secret Rare, etc.). These rates
-        are fixed in our server code and are not dynamically adjusted.
-      </p>
-
-      <p className="mt-3 mb-1 text-xs font-medium text-gray-500">Exact slot weights in code:</p>
-      <Code>{`const SLOT_WEIGHTS = [
-  [{ rarity: 'common',    weight: 100 }],  // Slot 1
-  [{ rarity: 'common',    weight: 100 }],  // Slot 2
-  [{ rarity: 'common',    weight: 100 }],  // Slot 3
-  [{ rarity: 'uncommon',  weight: 100 }],  // Slot 4
-  [                                         // Slot 5
-    { rarity: 'rare',       weight: 88 },
-    { rarity: 'ultra_rare', weight: 12 },
-  ],
-];`}</Code>
-
-      <p className="mt-2">
-        <strong>Duplicate protection:</strong> No two cards in the same pack will be identical.
-        If a duplicate is rolled, the system re-rolls with an incremented sub-nonce (up to 20
-        attempts) to select a different card from the same rarity pool.
+        or via our API endpoint. The algorithm is standard and not proprietary.
       </p>
     </section>
 
     <section id="card-pricing">
-      <h2 className="text-base font-medium text-gray-900 mb-3">9. Card Pricing & Valuation</h2>
+      <h2 className="text-base font-medium text-gray-900 mb-3">8. Card Pricing & Valuation</h2>
       <p>
         Card values displayed in Elite Rips are sourced from{' '}
         <strong>Cardmarket</strong> (cardmarket.com), Europe's largest trading card marketplace,
@@ -322,73 +259,49 @@ const EliteRipsPolicy = () => (
       </ol>
       <p className="mt-2">
         Prices are in EUR and converted to ZAR using live exchange rates from the Open Exchange
-        Rates API, refreshed every hour. Card prices are cached for 30 minutes to ensure
-        up-to-date valuations.
+        Rates API, refreshed every hour.
       </p>
       <p className="mt-2">
         <strong>Important:</strong> Displayed values are indicative market prices for reference
         only. They represent the approximate value of the physical card on Cardmarket and do not
-        constitute a guarantee of resale value, buyback offer, or redeemable credit.
+        constitute a guarantee of resale value or buyback offer.
       </p>
     </section>
 
-    <section id="card-data">
-      <h2 className="text-base font-medium text-gray-900 mb-3">10. Card Data Sources</h2>
+    <section id="shipping">
+      <h2 className="text-base font-medium text-gray-900 mb-3">9. Shipping & Fulfilment</h2>
       <p>
-        Card information (names, images, rarity, set membership) is sourced from:
+        After opening a pack, you can request the physical cards to be shipped to you:
       </p>
       <ul className="list-disc pl-5 space-y-1 mt-2">
-        <li><strong>TCGdex API</strong> (api.tcgdex.net) — primary source for card data, rarity classifications, and Cardmarket pricing.</li>
-        <li><strong>PokemonTCG.io</strong> (images.pokemontcg.io) — fallback image CDN for card artwork.</li>
+        <li>Cards are stored securely in our facility after being opened on camera.</li>
+        <li>Shipping is available within South Africa. A shipping fee is calculated based on your delivery address.</li>
+        <li>Cards are shipped in protective sleeves and top-loaders to prevent damage during transit.</li>
+        <li>Tracking information is provided once your order is dispatched.</li>
       </ul>
       <p className="mt-2">
-        Card rarity is determined by the official rarity classification from these APIs and mapped
-        to our internal system (Common, Uncommon, Rare, Ultra Rare). The full rarity mapping is
-        publicly documented in our server code.
-      </p>
-    </section>
-
-    <section id="digital-vs-physical">
-      <h2 className="text-base font-medium text-gray-900 mb-3">11. Digital vs Physical Cards</h2>
-      <p>
-        Cards received through Elite Rips are <strong>digital representations</strong> of real
-        Pokémon TCG cards. When you open a pack:
-      </p>
-      <ul className="list-disc pl-5 space-y-1 mt-2">
-        <li>You receive a digital reveal experience showing which cards were randomly selected.</li>
-        <li>The "Store Credit" and "Ship Cards" options are features under development and may not be available at all times.</li>
-        <li>Card images are sourced from official Pokémon TCG databases and represent authentic card designs.</li>
-      </ul>
-      <p className="mt-2">
-        Elite Rips is an entertainment product. The primary value is the experience of opening
-        packs with provably fair randomness and seeing which cards you pull.
+        If you do not request shipping, the cards remain in your account and can be shipped at a
+        later date.
       </p>
     </section>
 
     <section id="no-gambling">
-      <h2 className="text-base font-medium text-gray-900 mb-3">12. Not Gambling</h2>
+      <h2 className="text-base font-medium text-gray-900 mb-3">10. Not Gambling</h2>
       <p>
         Elite Rips is <strong>not gambling</strong> under South African law (National Gambling Act
-        7 of 2004). Gambling requires the possibility of winning money or money's worth as a
-        prize. Elite Rips is a digital entertainment product where:
+        7 of 2004). Elite Rips is the sale of real, physical Pokémon TCG trading cards where:
       </p>
       <ul className="list-disc pl-5 space-y-1 mt-2">
-        <li>You pay a fixed price for a digital pack opening experience.</li>
-        <li>You always receive exactly 5 cards — there is no possibility of receiving nothing.</li>
-        <li>Cards are digital representations with indicative market values for reference only.</li>
-        <li>There is no cash-out, no monetary prize, and no mechanism to convert digital results into money.</li>
-        <li>The experience is analogous to purchasing a physical booster pack where contents vary.</li>
+        <li>You pay a fixed price and always receive a full pack of real cards — there is no possibility of receiving nothing.</li>
+        <li>The cards are real, physical products that can be shipped to you.</li>
+        <li>Every pack was physically opened and its contents recorded before being made available.</li>
+        <li>The provably fair system determines which pre-opened pack you receive, not whether you win or lose.</li>
+        <li>This is functionally identical to buying a sealed booster pack from a shop — the only difference is we open it on camera first.</li>
       </ul>
-      <p className="mt-2">
-        This is functionally identical to buying a physical Pokémon TCG booster pack — you pay a
-        fixed price and receive random cards. The randomised element is inherent to trading card
-        products and is not classified as gambling in any jurisdiction where physical booster packs
-        are legally sold.
-      </p>
     </section>
 
     <section id="eligibility">
-      <h2 className="text-base font-medium text-gray-900 mb-3">13. Eligibility</h2>
+      <h2 className="text-base font-medium text-gray-900 mb-3">11. Eligibility</h2>
       <p>
         You must be at least <strong>18 years of age</strong> to use Elite Rips. By opening a
         pack, you confirm that you are 18 or older. We reserve the right to request age
@@ -397,14 +310,14 @@ const EliteRipsPolicy = () => (
     </section>
 
     <section id="refunds">
-      <h2 className="text-base font-medium text-gray-900 mb-3">14. Refund Policy for Elite Rips</h2>
+      <h2 className="text-base font-medium text-gray-900 mb-3">12. Refund Policy for Elite Rips</h2>
       <p>
-        Because pack openings involve randomised digital content that is delivered instantly:
+        Because pack openings assign a specific real pack to you instantly:
       </p>
       <ul className="list-disc pl-5 space-y-1 mt-2">
         <li><strong>Before opening:</strong> If a technical error prevents the pack from opening, you will not be charged or will receive a full refund.</li>
-        <li><strong>After opening:</strong> Once cards have been revealed, the transaction is complete and refunds are not available, as the digital content has been fully delivered.</li>
-        <li>This is consistent with Section 44 of the Consumer Protection Act (CPA) regarding digital goods that have been accessed or consumed.</li>
+        <li><strong>After opening:</strong> Once a pack has been assigned and cards revealed, the transaction is complete and refunds are not available, as the physical pack has been allocated to you.</li>
+        <li><strong>Shipping issues:</strong> If cards are damaged or lost in transit, contact us for a resolution.</li>
       </ul>
       <p className="mt-2">
         If you experience a technical issue (e.g., the page crashes mid-opening and cards are not
@@ -414,7 +327,7 @@ const EliteRipsPolicy = () => (
     </section>
 
     <section id="ip">
-      <h2 className="text-base font-medium text-gray-900 mb-3">15. Intellectual Property</h2>
+      <h2 className="text-base font-medium text-gray-900 mb-3">13. Intellectual Property</h2>
       <p>
         Pokémon, Pokémon TCG, and all related names, logos, and card designs are trademarks and
         copyrights of The Pokémon Company International, Nintendo, and Game Freak. Elite TCG is
@@ -422,22 +335,21 @@ const EliteRipsPolicy = () => (
         Nintendo, or Game Freak.
       </p>
       <p className="mt-2">
-        Card images are sourced from public APIs (TCGdex, PokemonTCG.io) and are used for
-        identification and reference purposes in connection with the sale of authentic
-        Pokémon TCG products and digital entertainment services.
+        Card images are sourced from public APIs and are used for identification and reference
+        purposes in connection with the sale of authentic Pokémon TCG products.
       </p>
     </section>
 
     <section id="liability">
-      <h2 className="text-base font-medium text-gray-900 mb-3">16. Limitation of Liability</h2>
+      <h2 className="text-base font-medium text-gray-900 mb-3">14. Limitation of Liability</h2>
       <p>
         To the fullest extent permitted by South African law, Elite TCG (Pty) Ltd shall not be
         liable for:
       </p>
       <ul className="list-disc pl-5 space-y-1 mt-2">
-        <li>The specific cards received in any pack opening (outcomes are random and verifiable).</li>
+        <li>The specific pack assigned in any pack opening (outcomes are random and verifiable).</li>
         <li>Fluctuations in card market values after a pack is opened.</li>
-        <li>Service interruptions, API outages from third-party providers (TCGdex, exchange rate APIs), or temporary unavailability.</li>
+        <li>Service interruptions or temporary unavailability.</li>
         <li>Any indirect, incidental, or consequential damages arising from the use of Elite Rips.</li>
       </ul>
       <p className="mt-2">
@@ -447,7 +359,7 @@ const EliteRipsPolicy = () => (
     </section>
 
     <section id="changes">
-      <h2 className="text-base font-medium text-gray-900 mb-3">17. Changes to This Policy</h2>
+      <h2 className="text-base font-medium text-gray-900 mb-3">15. Changes to This Policy</h2>
       <p>
         We may update this policy from time to time to reflect changes in our service, technology,
         or legal requirements. Material changes will be announced on the Site. The "Last updated"
@@ -457,7 +369,7 @@ const EliteRipsPolicy = () => (
     </section>
 
     <section id="contact">
-      <h2 className="text-base font-medium text-gray-900 mb-3">18. Contact Us</h2>
+      <h2 className="text-base font-medium text-gray-900 mb-3">16. Contact Us</h2>
       <p>
         If you have questions about this policy, the provably fair system, or need help verifying
         a pack opening, contact us:

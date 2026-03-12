@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X, ChevronRight, ChevronDown, Package, SlidersHorizontal } from 'lucide-react';
+import { ELITE_API_URL } from '../../config/api';
 import SEO from '../../components/SEO/SEO';
 
 /* ─── Pack art images ─── */
@@ -58,6 +59,16 @@ const EliteRips = () => {
   const [sortOpen, setSortOpen] = useState(false);
   const [seriesOpen, setSeriesOpen] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [availability, setAvailability] = useState({});
+  const [availabilityLoaded, setAvailabilityLoaded] = useState(false);
+
+  // Fetch available pack counts per set
+  useEffect(() => {
+    fetch(`${ELITE_API_URL}/api/packs/availability`)
+      .then(r => r.json())
+      .then(data => { setAvailability(data); setAvailabilityLoaded(true); })
+      .catch(() => setAvailabilityLoaded(true));
+  }, []);
 
   useEffect(() => {
     if (mobileFilterOpen) {
@@ -118,6 +129,13 @@ const EliteRips = () => {
       break;
   }
 
+  // In-stock items first
+  sets = [...sets].sort((a, b) => {
+    const aStock = (availability[a.id] || 0) > 0 ? 0 : 1;
+    const bStock = (availability[b.id] || 0) > 0 ? 0 : 1;
+    return aStock - bStock;
+  });
+
   // Close dropdowns on outside click
   useEffect(() => {
     if (!sortOpen && !seriesOpen) return;
@@ -149,11 +167,11 @@ const EliteRips = () => {
         {/* Hero */}
         <div className="mb-8">
           <h1 className="text-3xl font-medium text-gray-900 mb-2">Elite Rips</h1>
-          <p className="text-sm text-gray-500 max-w-2xl leading-relaxed">
-            Open digital Pokémon TCG booster packs with provably fair randomness.
-            Every outcome is cryptographically verifiable — you can independently confirm
-            that no result was manipulated.
-            All pull rates, algorithms, and source code are publicly documented in our{' '}
+          <p className="text-sm text-gray-500 max-w-5xl leading-relaxed">
+            Real Pokémon TCG packs, physically opened on camera. Every pack is recorded and its contents
+            verified — when you rip a pack, you're assigned a real one from our inventory using a provably
+            fair system. Ship your cards or open another.
+            Full details in our{' '}
             <Link to="/elite-rips-policy" className="text-primary hover:text-primary-dark underline transition-colors">
               Elite Rips Policy
             </Link>.
@@ -260,12 +278,26 @@ const EliteRips = () => {
         </div>
 
         {/* Results count */}
-        {sets.length > 0 && (
+        {availabilityLoaded && sets.length > 0 && (
           <p className="text-xs text-gray-400 mb-4">{sets.length} pack{sets.length !== 1 ? 's' : ''}</p>
         )}
 
-        {/* Pack Grid */}
-        {sets.length === 0 ? (
+        {/* Skeleton loading */}
+        {!availabilityLoaded ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex flex-col bg-white border border-gray-200 overflow-hidden animate-pulse">
+                <div className="aspect-square bg-gray-100" />
+                <div className="p-2 md:p-5 flex flex-col gap-2.5">
+                  <div className="h-2.5 w-16 bg-gray-100 rounded" />
+                  <div className="h-4 w-28 bg-gray-100 rounded" />
+                  <div className="h-2.5 w-14 bg-gray-100 rounded" />
+                  <div className="h-5 w-20 bg-gray-100 rounded mt-1" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : sets.length === 0 ? (
           <div className="py-24 text-center">
             <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
               <Package className="w-7 h-7 text-gray-300" />
@@ -287,28 +319,52 @@ const EliteRips = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {sets.map((set) => (
-              <Link
-                key={set.id}
-                to={`/elite-rips/${set.id}`}
-                className="group flex flex-col bg-white overflow-hidden"
-              >
-                <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">
-                  <img
-                    src={set.img}
-                    alt={set.name}
-                    style={{ width: '60%', height: '60%' }}
-                    className="object-contain"
-                  />
-                </div>
-                <div className="p-2 md:p-5 flex flex-col gap-1">
-                  <p className="text-[11px] text-gray-400">{set.series}</p>
-                  <h3 className="text-sm text-gray-900 line-clamp-2 leading-snug">{set.name}</h3>
-                  <p className="text-[11px] text-gray-400">{set.total} cards</p>
-                  <span className="text-lg font-medium text-gray-900 mt-1">R{set.price.toFixed(2)}</span>
-                </div>
-              </Link>
-            ))}
+            {sets.map((set) => {
+              const available = availability[set.id] || 0;
+              const soldOut = available === 0;
+
+              const content = (
+                <>
+                  <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-white">
+                    <img
+                      src={set.img}
+                      alt={set.name}
+                      style={{ width: '60%', height: '60%' }}
+                      className={`object-contain ${soldOut ? 'opacity-50' : ''}`}
+                    />
+                    {soldOut && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                          Sold Out
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-2 md:p-5 flex flex-col gap-1">
+                    <p className="text-[11px] text-gray-400">{set.series}</p>
+                    <h3 className="text-base font-medium text-gray-900 line-clamp-2 leading-snug">{set.name}</h3>
+                    <p className="text-[11px] text-gray-400">{set.total} cards</p>
+                    {!soldOut && (
+                      <span className="text-lg font-medium text-gray-900 mt-1">R{set.price.toFixed(2)}</span>
+                    )}
+                  </div>
+                </>
+              );
+
+              if (soldOut) {
+                return (
+                  <div key={set.id} className="flex flex-col bg-white border border-gray-200 overflow-hidden cursor-not-allowed">
+                    {content}
+                  </div>
+                );
+              }
+
+              return (
+                <Link key={set.id} to={`/elite-rips/${set.id}`} className="group flex flex-col bg-white border border-gray-200 hover:border-gray-300 transition-colors overflow-hidden">
+                  {content}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

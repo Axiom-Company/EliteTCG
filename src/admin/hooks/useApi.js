@@ -266,6 +266,23 @@ export const webhookApi = {
   test: (id) => fastApiFetch(`/admin/webhooks/${id}/test`, { method: 'POST' }),
 };
 
+// Pack Inventory API (admin — real pack management)
+export const packInventoryApi = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/pack-inventory${query ? `?${query}` : ''}`);
+  },
+  getStats: () => apiFetch('/pack-inventory/stats'),
+  get: (id) => apiFetch(`/pack-inventory/${id}`),
+  create: (data) => apiFetch('/pack-inventory', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/pack-inventory/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  updateCards: (id, cards) => apiFetch(`/pack-inventory/${id}/cards`, { method: 'PUT', body: JSON.stringify({ cards }) }),
+  delete: (id) => apiFetch(`/pack-inventory/${id}`, { method: 'DELETE' }),
+  getKnownSets: () => apiFetch('/pack-inventory/known-sets'),
+  getNextPackNumber: (setId) => apiFetch(`/pack-inventory/next-pack-number/${setId}`),
+  getCardCatalog: (setId) => apiFetch(`/pack-inventory/card-catalog/${setId}`),
+};
+
 // Page Access API
 export const pageAccessApi = {
   getAll: () => apiFetch('/page-access'),

@@ -1,38 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { RotateCcw, CreditCard, Truck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { RotateCcw, Truck } from 'lucide-react';
 import SEO from '../../components/SEO/SEO';
 import { ELITE_API_URL } from '../../config/api';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import './PackOpening.css';
-import codeCardImg from '../../assets/images/code_card.jpg';
 
 const formatPrice = (n) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-/* ─── Counting price display ─── */
-const CountingPrice = ({ value, duration = 600 }) => {
-  const [display, setDisplay] = useState(0);
-  const frameRef = useRef(null);
-
-  useEffect(() => {
-    if (value == null) return;
-    const start = performance.now();
-    const from = 0;
-    const to = value;
-    const tick = (now) => {
-      const t = Math.min((now - start) / duration, 1);
-      // Ease out cubic
-      const eased = 1 - Math.pow(1 - t, 3);
-      setDisplay(from + (to - from) * eased);
-      if (t < 1) frameRef.current = requestAnimationFrame(tick);
-    };
-    frameRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameRef.current);
-  }, [value, duration]);
-
-  return <>R{formatPrice(display)}</>;
-};
 
 /* ─── Extract two contrasting colors from card image via hue wheel ─── */
 const getCardColors = (imgSrc) => new Promise((resolve) => {
@@ -242,8 +217,7 @@ const PackOpening = () => {
   const [shaking, setShaking] = useState(false);
   const [zoomPunch, setZoomPunch] = useState(false);
   const [borderGlow, setBorderGlow] = useState(null); // color string
-  const [runningTotal, setRunningTotal] = useState(0);
-  const [cardValuePopup, setCardValuePopup] = useState(null); // { value, key }
+  const [cardGlowColors, setCardGlowColors] = useState(null); // { color1, color2 } for current card
   const { dark } = useTheme();
 
   // Theme helpers — d = dark value, l = light value
@@ -255,10 +229,7 @@ const PackOpening = () => {
   const busyRef = useRef(false);
   const stackRef = useRef(null);
   const scrollRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
   const [flippedCards, setFlippedCards] = useState([]);
-  const [showDoneModal, setShowDoneModal] = useState(false);
 
   const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -315,20 +286,6 @@ const PackOpening = () => {
     return () => timers.forEach(clearTimeout);
   }, [phase, packCards]);
 
-  // Scroll arrows for done phase
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const check = () => {
-      setCanScrollLeft(el.scrollLeft > 2);
-      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
-    };
-    check();
-    el.addEventListener('scroll', check);
-    window.addEventListener('resize', check);
-    return () => { el.removeEventListener('scroll', check); window.removeEventListener('resize', check); };
-  }, [phase, packCards]);
-
   // 3D tilt on card stack
   const handlePointerMove = useCallback((e) => {
     if (!stackRef.current) return;
@@ -359,15 +316,13 @@ const PackOpening = () => {
       const imageUrls = data.cards.flatMap(c => [c.image, c.imageLarge].filter(Boolean));
       await preloadImages(imageUrls);
 
-      const codeCard = { id: 'code-card', name: 'Code Card', image: codeCardImg, imageLarge: codeCardImg, priceZar: null, rarity: 'common', isCodeCard: true };
-      setPackCards([codeCard, ...data.cards]);
+      setPackCards(data.cards);
       setFairness(data.fairness);
       setCurrentIdx(0);
       setCardState('idle');
       setRevealedCards([]);
       setSparkles([]);
-      setRunningTotal(0);
-      setCardValuePopup(null);
+      setCardGlowColors(null);
 
       setPhase('cards');
       setPacksOpened(p => p + 1);
@@ -382,44 +337,49 @@ const PackOpening = () => {
   const flipCard = useCallback(() => {
     if (cardState !== 'idle' || phase !== 'cards' || busyRef.current) return;
     busyRef.current = true;
-    setCardState('flipped');
 
     const card = packCards[currentIdx];
-    // Add card value to running total and show popup
-    if (card.priceZar != null) {
-      setCardValuePopup({ value: card.priceZar, key: `${card.id}-${Date.now()}` });
-      setRunningTotal(prev => prev + card.priceZar);
-    }
+    // Extract glow colors from the card image
+    getCardColors(card.imageLarge || card.image).then(colors => {
+      setCardGlowColors(colors);
+      const c = colors.color1;
+      setBorderGlow(`rgb(${c.r},${c.g},${c.b})`);
+    });
 
     if (card.rarity === 'ultra_rare') {
-      setFlash('gold'); setSparkles(makeSparkles('#D4AF37', 20));
-      setTimeout(() => setFlash(null), 450);
-      // Screen shake
-      setShaking(true);
-      setTimeout(() => setShaking(false), 400);
-      // Zoom punch
-      setZoomPunch(true);
-      setTimeout(() => setZoomPunch(false), 500);
-      // Rarity banner
-      // Border glow
-      setBorderGlow('#D4AF37');
-    } else if (card.rarity === 'rare') {
-      setFlash('blue'); setSparkles(makeSparkles('#2563EB', 12));
-      setTimeout(() => setFlash(null), 300);
-      // Zoom punch (subtle)
-      setZoomPunch(true);
-      setTimeout(() => setZoomPunch(false), 500);
-      // Rarity banner
-      // Border glow
-      setBorderGlow('#2563EB');
-    } else if (card.rarity === 'uncommon') {
-      setSparkles(makeSparkles('#16A34A', 8));
-      setBorderGlow(null);
+      setCardState('flipped');
+
+      // Effects fire when the spin lands (~1.4s)
+      setTimeout(() => {
+        setFlash('white');
+        setTimeout(() => { setFlash('gold'); }, 150);
+        setTimeout(() => setFlash(null), 600);
+        setSparkles(makeSparkles('#D4AF37', 35));
+        setTimeout(() => setSparkles(prev => [...prev, ...makeSparkles('#FFFBE6', 20)]), 200);
+        setShaking(true);
+        setTimeout(() => setShaking(false), 600);
+        setZoomPunch(true);
+        setTimeout(() => setZoomPunch(false), 600);
+      }, 1400);
     } else {
-      setSparkles([]);
-      setBorderGlow(null);
+      setCardState('flipped');
     }
-    setTimeout(() => { busyRef.current = false; }, 600);
+
+    if (card.rarity !== 'ultra_rare') {
+      if (card.rarity === 'rare') {
+        setFlash('blue'); setSparkles(makeSparkles('#2563EB', 12));
+        setTimeout(() => setFlash(null), 300);
+        setZoomPunch(true);
+        setTimeout(() => setZoomPunch(false), 500);
+      } else if (card.rarity === 'uncommon') {
+        setSparkles(makeSparkles('#16A34A', 8));
+      } else {
+        setSparkles([]);
+      }
+    }
+    const unlockDelay = card.rarity === 'ultra_rare' ? 2600 : 600;
+
+    setTimeout(() => { busyRef.current = false; }, unlockDelay);
   }, [cardState, phase, packCards, currentIdx]);
 
   const nextCard = useCallback(() => {
@@ -428,6 +388,7 @@ const PackOpening = () => {
     setCardState('swiping');
     setSparkles([]);
     setBorderGlow(null);
+    setCardGlowColors(null);
     setZoomPunch(false);
 
     setTimeout(() => {
@@ -455,7 +416,6 @@ const PackOpening = () => {
     setCardState('idle');
     setRevealedCards([]);
     setSparkles([]);
-    setShowDoneModal(false);
   }, []);
 
   const remaining = packCards.length - currentIdx;
@@ -589,7 +549,7 @@ const PackOpening = () => {
                   </span>
                   <h1 className="text-xl md:text-3xl font-medium mt-2 leading-snug text-gray-900">{selectedSet.name}</h1>
                   <p className="text-sm leading-relaxed mt-3 text-gray-500">
-                    Open a digital {selectedSet.name} booster pack and reveal {CARDS_PER_PACK} randomly selected cards from a pool of {selectedSet.total}. Every outcome is cryptographically verifiable.
+                    Open a real {selectedSet.name} booster pack — physically opened on camera with the contents recorded. You're assigned a random pack from our inventory using a provably fair system.
                   </p>
                 </div>
 
@@ -641,7 +601,7 @@ const PackOpening = () => {
 
       {/* ═══ LOADING ═══ */}
       {phase === 'loading' && (
-        <div className="flex flex-col items-center justify-center bg-black" style={{ height: '100dvh' }}>
+        <div className="flex flex-col items-center justify-center" style={{ height: '100dvh', background: 'radial-gradient(ellipse at 50% 40%, #0a0a1a 0%, #050508 60%, #000 100%)' }}>
           <div className="w-8 h-8 border-2 rounded-full animate-spin border-white/10 border-t-white/60" style={{ zIndex: 1 }} />
           <p className="text-sm mt-4 text-white/30" style={{ zIndex: 1 }}>Pulling cards...</p>
         </div>
@@ -649,7 +609,14 @@ const PackOpening = () => {
 
       {/* ═══ CARDS ═══ */}
       {phase === 'cards' && (
-        <div className={`relative flex flex-col items-center justify-center ${shaking ? 'screen-shake' : ''}`} style={{ background: '#000', touchAction: 'none', overflow: 'visible', position: 'fixed', inset: 0 }}>
+        <div className={`relative flex flex-col items-center justify-center ${shaking ? 'screen-shake' : ''}`} style={{ background: 'radial-gradient(ellipse at 50% 40%, #0a0a1a 0%, #050508 60%, #000 100%)', touchAction: 'none', overflow: 'visible', position: 'fixed', inset: 0 }}>
+          {/* Ambient glow from current card colors */}
+          {cardGlowColors && cardState === 'flipped' && (
+            <div className="absolute inset-0 pointer-events-none transition-opacity duration-700" style={{
+              background: `radial-gradient(ellipse at 50% 45%, rgba(${cardGlowColors.color1.r},${cardGlowColors.color1.g},${cardGlowColors.color1.b},0.08) 0%, rgba(${cardGlowColors.color2.r},${cardGlowColors.color2.g},${cardGlowColors.color2.b},0.03) 40%, transparent 70%)`,
+              zIndex: 1,
+            }} />
+          )}
           {/* Card stack with 3D tilt */}
           <div
             ref={stackRef}
@@ -682,7 +649,7 @@ const PackOpening = () => {
                   style={{ ...offset, ...tiltStyle }}
                 >
                   <div className="flip-scene">
-                    <div className={`flip-inner ${isActive && (cardState === 'flipped' || cardState === 'swiping') ? 'is-flipped' : ''}`}>
+                    <div className={`flip-inner ${isActive && (cardState === 'flipped' || cardState === 'swiping') ? (card.rarity === 'ultra_rare' ? 'is-flipped-ur' : 'is-flipped') : ''}`}>
                       <div className="flip-face shadow-lg">
                         <img src={CARD_BACK} alt="Card back" className="w-full h-full object-cover rounded-[10px]" draggable={false} />
                       </div>
@@ -714,6 +681,11 @@ const PackOpening = () => {
               );
             })}
 
+            {/* Ultra rare gold aura */}
+            {packCards[currentIdx]?.rarity === 'ultra_rare' && cardState === 'flipped' && (
+              <div className="ur-aura" style={{ background: 'radial-gradient(ellipse, rgba(212,175,55,0.25) 0%, rgba(212,175,55,0.08) 50%, transparent 70%)', zIndex: -1 }} />
+            )}
+
             {sparkles.length > 0 && cardState === 'flipped' && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 50 }}>
                 {sparkles.map(s => (
@@ -723,23 +695,14 @@ const PackOpening = () => {
             )}
           </div>
 
-          {/* Running total pill + floating +value */}
-          {runningTotal > 0 && (
-            <div className="fixed left-0 right-0 flex flex-col items-center md:bottom-14" style={{ zIndex: 10, bottom: 'max(16px, env(safe-area-inset-bottom, 16px))' }}>
-              {/* Floating +value that drifts up and fades */}
-              {cardValuePopup && (
-                <p key={cardValuePopup.key} className="text-xs text-white/50 tabular-nums font-medium card-value-float mb-1">
-                  +R{formatPrice(cardValuePopup.value)}
-                </p>
-              )}
-              {/* Total pill */}
-              <div className="px-5 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10">
-                <p className="text-sm text-white/80 tabular-nums font-medium">
-                  <CountingPrice value={runningTotal} />
-                </p>
-              </div>
+          {/* Card counter */}
+          <div className="fixed left-0 right-0 flex justify-center md:bottom-14" style={{ zIndex: 10, bottom: 'max(16px, env(safe-area-inset-bottom, 16px))' }}>
+            <div className="px-4 py-1.5 rounded-full bg-white/[0.06] backdrop-blur-md">
+              <p className="text-xs text-white/30 tabular-nums">
+                {currentIdx + 1} / {packCards.length}
+              </p>
             </div>
-          )}
+          </div>
 
 
         </div>
@@ -755,105 +718,134 @@ const PackOpening = () => {
 
         return (
         <div
-          className="flex flex-col overflow-hidden"
-          style={{
-            background: '#000',
-            minHeight: '100dvh',
-          }}
+          className="flex flex-col items-center overflow-y-auto relative"
+          style={{ background: 'radial-gradient(ellipse at 50% 30%, #0a0a1a 0%, #050508 50%, #000 100%)', minHeight: '100dvh' }}
         >
-          {/* ── Best Pull ── */}
+          {/* Ambient background glow from best pull */}
+          {bestColors && (
+            <div className="absolute inset-0 pointer-events-none" style={{
+              background: `radial-gradient(ellipse at 50% 25%, rgba(${bestColors.color1.r},${bestColors.color1.g},${bestColors.color1.b},0.1) 0%, rgba(${bestColors.color2.r},${bestColors.color2.g},${bestColors.color2.b},0.04) 35%, transparent 65%)`,
+            }} />
+          )}
+
+          {/* Spacer top */}
+          <div className="shrink-0" style={{ height: 'clamp(40px, 8vh, 80px)' }} />
+
+          {/* ── Best Pull hero ── */}
           {bestPull && (
-            <div
-              className="flex-1 flex flex-col items-center justify-center px-4 cursor-pointer"
-              style={{ zIndex: 2 }}
-              onClick={() => !showDoneModal && setShowDoneModal(true)}
-            >
-              {bestPull.priceZar != null && (
-                <div className="best-info-fade mb-6" style={{ marginTop: -50 }}>
-                  <p className="text-4xl md:text-5xl font-medium text-white tracking-tight">R{formatPrice(bestPull.priceZar)}</p>
-                </div>
-              )}
-              <div className="best-pull-reveal relative" style={{ width: 'clamp(220px, 55vw, 300px)' }}>
+            <div className="flex flex-col items-center px-4" style={{ zIndex: 2 }}>
+              {/* Best pull label + price for ultra rare */}
+              <div className="best-info-fade mb-4 text-center">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">Best Pull</p>
+                {bestPull.rarity === 'ultra_rare' && bestPull.priceZar != null && bestColors && (
+                  <p className="ur-card-price text-3xl font-semibold tracking-tight mt-2" style={{
+                    background: `linear-gradient(90deg, rgb(${bestColors.color1.r},${bestColors.color1.g},${bestColors.color1.b}), rgba(255,255,255,0.95), rgb(${bestColors.color2.r},${bestColors.color2.g},${bestColors.color2.b}), rgba(255,255,255,0.95), rgb(${bestColors.color1.r},${bestColors.color1.g},${bestColors.color1.b}))`,
+                    backgroundSize: '300% 100%',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}>R{formatPrice(bestPull.priceZar)}</p>
+                )}
+              </div>
+
+              {/* Card */}
+              <div className="best-pull-reveal relative" style={{ width: 'clamp(200px, 48vw, 260px)' }}>
                 {bestColors && (
-                  <div className="absolute inset-0 rounded-xl" style={{
-                    boxShadow: `0 0 100px 30px rgba(${bestColors.color1.r},${bestColors.color1.g},${bestColors.color1.b},0.22)`,
+                  <div className={`absolute rounded-3xl ${bestPull.rarity === 'ultra_rare' ? '-inset-12 ur-aura' : '-inset-8'}`} style={{
+                    background: bestPull.rarity === 'ultra_rare'
+                      ? `radial-gradient(ellipse at 50% 50%, rgba(${bestColors.color1.r},${bestColors.color1.g},${bestColors.color1.b},0.35) 0%, rgba(${bestColors.color2.r},${bestColors.color2.g},${bestColors.color2.b},0.12) 40%, transparent 70%)`
+                      : `radial-gradient(ellipse at 50% 50%, rgba(${bestColors.color1.r},${bestColors.color1.g},${bestColors.color1.b},0.3) 0%, rgba(${bestColors.color2.r},${bestColors.color2.g},${bestColors.color2.b},0.1) 40%, transparent 70%)`,
+                    filter: bestPull.rarity === 'ultra_rare' ? 'blur(25px)' : 'blur(20px)',
                   }} />
                 )}
                 <div className="relative w-full aspect-[2.5/3.5] rounded-xl overflow-hidden">
                   <img src={bestPull.imageLarge || bestPull.image} alt={bestPull.name} className="w-full h-full object-cover" />
                 </div>
               </div>
-              {!showDoneModal && (
-                <div className="best-info-fade flex gap-3" style={{ marginTop: 82 }}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setShowDoneModal(true); }}
-                    className="px-6 py-2.5 text-sm font-medium rounded-full transition-all bg-white text-black hover:bg-white/90 active:scale-[0.98]"
-                  >
-                    Inventory
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); navigate('/elite-rips'); }}
-                    className="px-6 py-2.5 text-sm font-medium rounded-full transition-all bg-white/15 text-white/70 hover:bg-white/20 active:scale-[0.98]"
-                  >
-                    Shop
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
 
-          {/* ── Action modal ── */}
-          {showDoneModal && (
-            <>
-              {/* Backdrop */}
-              <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70]" onClick={() => setShowDoneModal(false)} />
-
-              {/* Modal — bottom sheet on mobile, centered on desktop */}
-              <div className="fixed z-[80] inset-x-0 bottom-0 md:bottom-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-sm md:w-full">
-                <div className="bg-[#1a1a1a] rounded-t-2xl md:rounded-2xl px-6 pt-6 pb-8 md:pb-6 shadow-2xl border border-white/[0.06]">
-                  {/* Drag handle — mobile only */}
-                  <div className="w-10 h-1 rounded-full bg-white/15 mx-auto mb-5 md:hidden" />
-
-                  <p className="text-white/80 text-sm font-medium text-center mb-1">What would you like to do?</p>
-                  <p className="text-white/30 text-[11px] text-center mb-6">
-                    {realCards.length} cards &middot; R{formatPrice(totalValue)} total value
-                  </p>
-
-                  <div className="flex flex-col gap-2.5">
-                    <button
-                      onClick={() => navigate('/elite-rips/checkout', { state: { cards: realCards, setName: selectedSet.name, setId: selectedSet.id } })}
-                      className="w-full py-3 text-sm font-medium rounded-xl transition-all bg-white text-black hover:bg-white/90 active:scale-[0.98]"
-                    >
-                      <Truck size={15} className="inline-block mr-2 -mt-0.5" />
-                      Ship Cards
-                    </button>
-                    <button
-                      className="w-full py-3 text-sm font-medium rounded-xl transition-all bg-white/10 text-white/70 hover:bg-white/15 active:scale-[0.98]"
-                    >
-                      <CreditCard size={15} className="inline-block mr-2 -mt-0.5" />
-                      Store Credit
-                    </button>
-                    <button
-                      onClick={openAnother}
-                      className="w-full py-3 text-sm font-medium rounded-xl transition-all bg-white/10 text-white/70 hover:bg-white/15 active:scale-[0.98]"
-                    >
-                      <RotateCcw size={15} className="inline-block mr-2 -mt-0.5" />
-                      Open Another Pack
-                    </button>
-                  </div>
-                </div>
+              {/* Card info */}
+              <div className="best-info-fade mt-5 text-center">
+                {bestPull.rarity === 'ultra_rare' ? (
+                  <p className="text-white/30 text-xs">{RARITY_LABELS[bestPull.rarity] || bestPull.rarity}</p>
+                ) : (
+                  <>
+                    <p className="text-white/30 text-xs">{RARITY_LABELS[bestPull.rarity] || bestPull.rarity}</p>
+                    {bestPull.priceZar != null && (
+                      <p className="text-white text-2xl font-medium mt-2 tracking-tight">R{formatPrice(bestPull.priceZar)}</p>
+                    )}
+                  </>
+                )}
               </div>
-            </>
-          )}
-
-          {/* Provably fair footer */}
-          {fairness && (
-            <div className="w-full px-3 py-2 flex items-center justify-center bg-white/[0.03] shrink-0">
-              <p className="text-[9px] font-mono truncate text-white/15">
-                {fairness.serverSeedHash?.slice(0, 16)}... n:{fairness.nonce}
-              </p>
             </div>
           )}
+
+          {/* ── Other cards row ── */}
+          {otherCards.length > 0 && (
+            <div className="best-info-fade w-full mt-10 px-4">
+              <div
+                ref={scrollRef}
+                className="flex gap-2.5 overflow-x-auto pb-2 justify-center flex-wrap md:flex-nowrap"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {otherCards.map((card, i) => (
+                  <div
+                    key={card.id}
+                    className="shrink-0"
+                    style={{ width: 'clamp(80px, 18vw, 110px)', animationDelay: `${i * 0.06}s` }}
+                  >
+                    <img src={card.imageLarge || card.image} alt={card.name} className="w-full aspect-[2.5/3.5] object-cover rounded-lg" />
+                    {card.priceZar != null && (
+                      <p className="text-[9px] text-white/25 text-center mt-1.5 tabular-nums">R{formatPrice(card.priceZar)}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Total value + actions ── */}
+          <div className="best-info-fade w-full max-w-sm mx-auto px-6 mt-10 pb-8">
+            {/* Total */}
+            <div className="flex items-center justify-between py-3 border-t border-white/[0.06]">
+              <span className="text-xs text-white/30">Total Value</span>
+              <span className="text-sm text-white/80 font-medium tabular-nums">R{formatPrice(totalValue)}</span>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2.5 mt-4">
+              <button
+                onClick={() => navigate('/elite-rips/checkout', { state: { cards: realCards, setName: selectedSet.name, setId: selectedSet.id } })}
+                className="w-full py-3 text-sm font-medium rounded-full transition-all bg-white text-black hover:bg-white/90 active:scale-[0.98]"
+              >
+                <Truck size={15} className="inline-block mr-2 -mt-0.5" />
+                Ship Cards
+              </button>
+              <div className="flex gap-2.5">
+                <button
+                  onClick={openAnother}
+                  className="flex-1 py-3 text-sm font-medium rounded-full transition-all bg-white/10 text-white/60 hover:bg-white/15 active:scale-[0.98]"
+                >
+                  <RotateCcw size={14} className="inline-block mr-1.5 -mt-0.5" />
+                  Open Another
+                </button>
+                <button
+                  onClick={() => navigate('/elite-rips')}
+                  className="flex-1 py-3 text-sm font-medium rounded-full transition-all bg-white/10 text-white/60 hover:bg-white/15 active:scale-[0.98]"
+                >
+                  Back to Shop
+                </button>
+              </div>
+            </div>
+
+            {/* Provably fair */}
+            {fairness && (
+              <div className="mt-6 pt-4 border-t border-white/[0.04] text-center">
+                <p className="text-[9px] font-mono text-white/15 truncate">
+                  {fairness.serverSeedHash?.slice(0, 24)}... &middot; n:{fairness.nonce}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
         );
       })()}

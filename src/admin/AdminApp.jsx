@@ -7,6 +7,7 @@ import SellerApplications from './pages/SellerApplications';
 import Banners from './pages/Banners';
 import WebhookSettings from './pages/WebhookSettings';
 import PageAccess from './pages/PageAccess';
+import PackInventory from './pages/PackInventory';
 import SEO from '../components/SEO/SEO';
 
 // Placeholder pages for now
@@ -65,6 +66,8 @@ const AdminContent = () => {
         return <WebhookSettings />;
       case 'page-access':
         return <PageAccess />;
+      case 'pack-inventory':
+        return <PackInventory />;
       case 'settings':
         return <Settings />;
       default:
