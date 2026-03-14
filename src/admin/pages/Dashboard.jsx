@@ -1,18 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { dashboardApi } from '../hooks/useApi';
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip as ChartTooltip,
+  ArcElement,
   Legend,
-} from 'recharts';
+} from 'chart.js';
+import { Line, Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, ChartTooltip, ArcElement, Legend);
+
+// Global Chart.js defaults for dark theme
+ChartJS.defaults.color = '#6b6b6b';
+ChartJS.defaults.font.size = 11;
+ChartJS.defaults.font.family = 'Inter, system-ui, sans-serif';
 
 const STATUS_COLORS_MAP = {
   pending_payment: '#f59e0b',
@@ -65,60 +71,6 @@ const SkeletonChart = () => (
   </div>
 );
 
-const ChartTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-[#1c1c1c] px-3 py-2 rounded-lg border border-[#282828]">
-        <p className="text-xs text-[#6b6b6b]">{label}</p>
-        <p className="text-sm font-medium text-[#f1f1f1]">
-          {formatCurrency(payload[0].value)}
-        </p>
-        {payload[0].payload.order_count != null && (
-          <p className="text-xs text-[#4a4a4a]">
-            {payload[0].payload.order_count} order{payload[0].payload.order_count !== 1 ? 's' : ''}
-          </p>
-        )}
-      </div>
-    );
-  }
-  return null;
-};
-
-const PieTooltipContent = ({ active, payload }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-[#1c1c1c] px-3 py-2 rounded-lg border border-[#282828]">
-        <p className="text-xs text-[#6b6b6b] capitalize">
-          {(payload[0].name || '').replace(/_/g, ' ')}
-        </p>
-        <p className="text-sm font-medium text-[#f1f1f1]">
-          {payload[0].value} order{payload[0].value !== 1 ? 's' : ''}
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
-
-const renderLegend = (props) => {
-  const { payload } = props;
-  return (
-    <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-3">
-      {payload.map((entry, i) => (
-        <div key={i} className="flex items-center gap-1.5">
-          <div
-            className="w-2 h-2 rounded-full shrink-0"
-            style={{ backgroundColor: entry.color }}
-          />
-          <span className="text-[10px] text-[#6b6b6b] capitalize">
-            {(entry.value || '').replace(/_/g, ' ')}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 const StatusBadge = ({ status }) => (
   <span
     className={`inline-block px-2 py-0.5 text-[10px] font-medium rounded-full border capitalize ${
@@ -129,6 +81,164 @@ const StatusBadge = ({ status }) => (
   </span>
 );
 
+/* ── Revenue Line Chart ── */
+const RevenueChart = ({ data }) => {
+  const chartRef = useRef(null);
+
+  const labels = data.map((d) => formatChartDate(d.date));
+  const values = data.map((d) => d.revenue_zar || 0);
+
+  const chartData = {
+    labels,
+    datasets: [
+      {
+        data: values,
+        borderColor: '#3ECF8E',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointBackgroundColor: '#3ECF8E',
+        pointBorderColor: '#111111',
+        pointBorderWidth: 2,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#3ECF8E',
+        pointHoverBorderColor: '#111111',
+        pointHoverBorderWidth: 2,
+        fill: true,
+        backgroundColor: (ctx) => {
+          const chart = ctx.chart;
+          const { ctx: canvasCtx, chartArea } = chart;
+          if (!chartArea) return 'transparent';
+          const gradient = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          gradient.addColorStop(0, 'rgba(62, 207, 142, 0.12)');
+          gradient.addColorStop(1, 'rgba(62, 207, 142, 0)');
+          return gradient;
+        },
+        tension: 0.35,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1c1c1c',
+        borderColor: '#282828',
+        borderWidth: 1,
+        titleColor: '#6b6b6b',
+        titleFont: { size: 11, weight: 'normal' },
+        bodyColor: '#f1f1f1',
+        bodyFont: { size: 13, weight: '500' },
+        padding: { top: 8, bottom: 8, left: 12, right: 12 },
+        cornerRadius: 8,
+        displayColors: false,
+        callbacks: {
+          title: (items) => items[0]?.label || '',
+          label: (item) => {
+            const d = data[item.dataIndex];
+            const lines = [formatCurrency(item.raw)];
+            if (d?.order_count != null) {
+              lines.push(`${d.order_count} order${d.order_count !== 1 ? 's' : ''}`);
+            }
+            return lines;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        border: { display: false },
+        ticks: {
+          maxTicksLimit: 7,
+          maxRotation: 0,
+          color: '#6b6b6b',
+          font: { size: 10 },
+        },
+      },
+      y: {
+        grid: {
+          color: '#1e1e1e',
+          drawBorder: false,
+        },
+        border: { display: false },
+        ticks: {
+          color: '#6b6b6b',
+          font: { size: 10 },
+          callback: (v) => (v >= 1000 ? `R${(v / 1000).toFixed(0)}k` : `R${v}`),
+        },
+        beginAtZero: true,
+      },
+    },
+  };
+
+  return <Line ref={chartRef} data={chartData} options={options} />;
+};
+
+/* ── Status Doughnut Chart ── */
+const StatusChart = ({ data }) => {
+  const chartData = {
+    labels: data.map((d) => (d.status || '').replace(/_/g, ' ')),
+    datasets: [
+      {
+        data: data.map((d) => d.count),
+        backgroundColor: data.map((d) => STATUS_COLORS_MAP[d.status] || '#4a4a4a'),
+        borderColor: '#111111',
+        borderWidth: 2,
+        hoverBorderColor: '#111111',
+        hoverOffset: 4,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '60%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          color: '#6b6b6b',
+          font: { size: 10 },
+          boxWidth: 8,
+          boxHeight: 8,
+          borderRadius: 4,
+          useBorderRadius: true,
+          padding: 12,
+        },
+      },
+      tooltip: {
+        backgroundColor: '#1c1c1c',
+        borderColor: '#282828',
+        borderWidth: 1,
+        titleColor: '#6b6b6b',
+        titleFont: { size: 11, weight: 'normal' },
+        bodyColor: '#f1f1f1',
+        bodyFont: { size: 13, weight: '500' },
+        padding: { top: 8, bottom: 8, left: 12, right: 12 },
+        cornerRadius: 8,
+        displayColors: true,
+        boxWidth: 8,
+        boxHeight: 8,
+        callbacks: {
+          title: (items) => items[0]?.label || '',
+          label: (item) => ` ${item.raw} order${item.raw !== 1 ? 's' : ''}`,
+        },
+      },
+    },
+  };
+
+  return <Doughnut data={chartData} options={options} />;
+};
+
+/* ── Main Dashboard ── */
 const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -150,10 +260,7 @@ const Dashboard = () => {
   }, []);
 
   const stats = data?.stats || {};
-  const revenueByDay = (data?.revenue_by_day || []).map((d) => ({
-    ...d,
-    label: formatChartDate(d.date),
-  }));
+  const revenueByDay = data?.revenue_by_day || [];
   const statusBreakdown = data?.status_breakdown || [];
   const recentOrders = (data?.recent_orders || []).slice(0, 5);
 
@@ -222,7 +329,7 @@ const Dashboard = () => {
         <p className="text-sm text-[#6b6b6b] mt-0.5">Sales overview</p>
       </div>
 
-      {/* Stat cards — 2 cols on mobile, 4 on sm+ */}
+      {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {statCards.map(({ label, value, sub }) => (
           <div
@@ -238,9 +345,9 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Charts — stacked on mobile, side by side on sm+ */}
+      {/* Charts */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-        {/* Revenue Area Chart */}
+        {/* Revenue Chart */}
         <div className="bg-[#111111] border border-[#282828] rounded-xl p-4 sm:p-5">
           <p className="text-sm text-[#f1f1f1]">Revenue</p>
           <p className="text-xs text-[#6b6b6b] mt-0.5 mb-4">Last 30 days</p>
@@ -250,44 +357,12 @@ const Dashboard = () => {
                 No revenue data
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={revenueByDay} margin={{ top: 5, right: 5, left: -10, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3ECF8E" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#3ECF8E" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e1e1e" vertical={false} />
-                  <XAxis
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#6b6b6b', fontSize: 10 }}
-                    interval="preserveStartEnd"
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#6b6b6b', fontSize: 10 }}
-                    tickFormatter={(v) => `R${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
-                  />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue_zar"
-                    stroke="#3ECF8E"
-                    strokeWidth={1.5}
-                    fillOpacity={1}
-                    fill="url(#colorRevenue)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <RevenueChart data={revenueByDay} />
             )}
           </div>
         </div>
 
-        {/* Status Pie Chart */}
+        {/* Status Chart */}
         <div className="bg-[#111111] border border-[#282828] rounded-xl p-4 sm:p-5">
           <p className="text-sm text-[#f1f1f1]">Order Status</p>
           <p className="text-xs text-[#6b6b6b] mt-0.5 mb-4">Breakdown</p>
@@ -297,35 +372,13 @@ const Dashboard = () => {
                 No order data
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={statusBreakdown}
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={40}
-                    outerRadius={65}
-                    paddingAngle={2}
-                    dataKey="count"
-                    nameKey="status"
-                  >
-                    {statusBreakdown.map((entry, i) => (
-                      <Cell
-                        key={i}
-                        fill={STATUS_COLORS_MAP[entry.status] || '#4a4a4a'}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<PieTooltipContent />} />
-                  <Legend content={renderLegend} />
-                </PieChart>
-              </ResponsiveContainer>
+              <StatusChart data={statusBreakdown} />
             )}
           </div>
         </div>
       </div>
 
-      {/* Recent Orders — card layout on mobile, table on sm+ */}
+      {/* Recent Orders */}
       <div className="bg-[#111111] border border-[#282828] rounded-xl overflow-hidden">
         <div className="px-4 sm:px-5 py-3.5 border-b border-[#282828]">
           <p className="text-sm text-[#f1f1f1]">Recent Orders</p>
