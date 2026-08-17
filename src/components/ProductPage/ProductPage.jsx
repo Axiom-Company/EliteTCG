@@ -9,6 +9,7 @@ import SEO from '../SEO/SEO';
 import { buildProductJsonLd } from '../../config/seo';
 import PayflexPriceSplitter from '../Payflex/PayflexPriceSplitter';
 import ProductCard from '../ProductCard/ProductCard';
+import { sideConfetti } from '../../lib/confetti';
 
 const HeartIcon = ({ filled }) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -514,10 +515,15 @@ const ProductPage = () => {
                 {stockStatus.text === 'Coming Soon' ? 'Coming Soon' : 'Add to Cart'}
               </button>
               <button
-                onClick={() => product && toggleWishlist(product.id)}
+                onClick={() => {
+                  if (!product) return;
+                  const wasWishlisted = isWishlisted(product.id);
+                  toggleWishlist(product.id);
+                  if (!wasWishlisted) sideConfetti();
+                }}
                 className={`w-full py-3 border text-sm font-medium rounded-full transition-colors cursor-pointer ${
                   product && isWishlisted(product.id)
-                    ? 'border-gray-900 text-gray-900 hover:bg-gray-50'
+                    ? 'bg-gray-200 border-gray-200 text-gray-500'
                     : 'border-gray-300 text-gray-700 hover:border-gray-900 hover:text-gray-900'
                 }`}
               >
