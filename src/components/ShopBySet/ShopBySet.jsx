@@ -83,7 +83,7 @@ const ShopBySet = () => {
         ) : (
           <div className="relative">
             <button
-              className={`absolute top-1/2 -left-5 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 z-10 transition-all duration-150 hover:border-gray-300 hover:text-gray-900 ${!canScrollLeft ? 'opacity-40 cursor-not-allowed' : ''}`}
+              className={`absolute top-1/2 -left-5 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 z-10 transition-all duration-150 hover:bg-gray-900 hover:border-gray-900 hover:text-white ${!canScrollLeft ? 'opacity-40 cursor-not-allowed' : ''}`}
               onClick={() => scroll('left')}
               disabled={!canScrollLeft}
               aria-label="Scroll left"
@@ -129,7 +129,7 @@ const ShopBySet = () => {
             </div>
 
             <button
-              className={`absolute top-1/2 -right-5 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 z-10 transition-all duration-150 hover:border-gray-300 hover:text-gray-900 ${!canScrollRight ? 'opacity-40 cursor-not-allowed' : ''}`}
+              className={`absolute top-1/2 -right-5 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 z-10 transition-all duration-150 hover:bg-gray-900 hover:border-gray-900 hover:text-white ${!canScrollRight ? 'opacity-40 cursor-not-allowed' : ''}`}
               onClick={() => scroll('right')}
               disabled={!canScrollRight}
               aria-label="Scroll right"
@@ -142,7 +142,7 @@ const ShopBySet = () => {
         <div className="flex justify-center mt-8" style={{ paddingBottom: '3px' }}>
           <Link
             to="/sets"
-            className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-white text-gray-900 border border-gray-300 hover:border-primary hover:text-primary transition-all duration-250"
+            className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-white text-gray-900 border border-gray-300 hover:bg-primary hover:border-primary hover:text-white transition-all duration-250"
           >
             View All Sets
           </Link>

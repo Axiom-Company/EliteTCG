@@ -146,14 +146,6 @@ const Navbar = () => {
           </div>
 
           <Link
-            to="/elite-rips"
-            className="text-sm font-medium text-primary hover:text-primary-dark transition-colors"
-            onClick={closeAll}
-          >
-            Elite Rips
-          </Link>
-
-          <Link
             to="/#preorders"
             className="text-sm font-medium text-gray-900 hover:text-black transition-colors"
             onClick={closeAll}
@@ -200,6 +192,13 @@ const Navbar = () => {
                     </p>
                   </div>
                   <div className="p-1.5">
+                    <Link
+                      to="/account"
+                      className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                      onClick={() => setIsUserOpen(false)}
+                    >
+                      My Account
+                    </Link>
                     <Link
                       to="/orders"
                       className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
@@ -309,14 +308,6 @@ const Navbar = () => {
             </div>
 
             <Link
-              to="/elite-rips"
-              className="px-4 py-3 text-sm font-medium text-primary hover:text-primary-dark hover:bg-red-50 rounded-lg transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Elite Rips
-            </Link>
-
-            <Link
               to="/wishlist"
               className="px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
               onClick={() => setIsMenuOpen(false)}
@@ -342,6 +333,13 @@ const Navbar = () => {
                   <div className="px-4 py-3 text-sm text-gray-500">
                     {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : session?.user?.email}
                   </div>
+                  <Link
+                    to="/account"
+                    className="block px-4 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    My Account
+                  </Link>
                   {isSeller && (
                     <Link
                       to="/seller/dashboard"

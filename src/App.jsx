@@ -65,8 +65,6 @@ import FeaturedProducts from './components/FeaturedProducts/FeaturedProducts';
 import PreOrders from './components/PreOrders/PreOrders';
 import MarketplaceCTA from './components/MarketplaceCTA/MarketplaceCTA';
 import TrustSection from './components/TrustSection/TrustSection';
-import StatsSection from './components/StatsSection/StatsSection';
-import PaymentStrip from './components/PaymentStrip/PaymentStrip';
 import Footer from './components/Footer/Footer';
 import ProductPage from './components/ProductPage/ProductPage';
 
@@ -104,16 +102,12 @@ import OrderDetail from './pages/orders/OrderDetail';
 import TermsOfService from './pages/legal/TermsOfService';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
 import RefundPolicy from './pages/legal/RefundPolicy';
-import EliteRipsPolicy from './pages/legal/EliteRipsPolicy';
 
 // Community pages
 import ChatPage from './pages/community/ChatPage';
 
-// Pack Opening
-import EliteRips from './pages/packs/EliteRips';
-import PackOpening from './pages/packs/PackOpening';
-import PackCheckout from './pages/packs/PackCheckout';
-import ProtectedPage from './components/ProtectedPage/ProtectedPage';
+// Account
+import Account from './pages/account/Account';
 
 // Cart Provider and Components
 import { CartProvider } from './contexts/CartContext';
@@ -148,8 +142,6 @@ const HomePage = () => {
     <ShopByCategory />
     <FeaturedProducts />
     <PreOrders />
-    <PaymentStrip />
-    <StatsSection />
   </>
   );
 };
@@ -216,10 +208,7 @@ function App() {
           <Route path="/terms-of-service" element={<MainLayout><TermsOfService /></MainLayout>} />
           <Route path="/privacy-policy" element={<MainLayout><PrivacyPolicy /></MainLayout>} />
           <Route path="/refund-policy" element={<MainLayout><RefundPolicy /></MainLayout>} />
-          <Route path="/elite-rips-policy" element={<MainLayout><EliteRipsPolicy /></MainLayout>} />
-          <Route path="/elite-rips" element={<MainLayout><ProtectedPage pagePath="/elite-rips"><EliteRips /></ProtectedPage></MainLayout>} />
-          <Route path="/elite-rips/checkout" element={<NavbarLayout><ProtectedPage pagePath="/elite-rips"><PackCheckout /></ProtectedPage></NavbarLayout>} />
-          <Route path="/elite-rips/:setId" element={<MainLayout><ProtectedPage pagePath="/elite-rips"><PackOpening /></ProtectedPage></MainLayout>} />
+          <Route path="/account" element={<NavbarLayout><Account /></NavbarLayout>} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/chat/:channelSlug" element={<ChatPage />} />
           <Route path="/admin/*" element={<AdminApp />} />

@@ -13,14 +13,12 @@ const SITE_PAGES = [
   { path: '/orders', label: 'My Orders' },
   { path: '/track', label: 'Track Order' },
   { path: '/marketplace', label: 'Marketplace' },
-  { path: '/elite-rips', label: 'Elite Rips' },
   { path: '/chat', label: 'Chat' },
   { path: '/login', label: 'Login' },
   { path: '/register', label: 'Register' },
   { path: '/terms-of-service', label: 'Terms of Service' },
   { path: '/privacy-policy', label: 'Privacy Policy' },
   { path: '/refund-policy', label: 'Refund Policy' },
-  { path: '/elite-rips-policy', label: 'Elite Rips Policy' },
 ];
 
 const PageAccess = () => {

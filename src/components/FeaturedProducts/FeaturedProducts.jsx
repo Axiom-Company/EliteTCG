@@ -61,7 +61,7 @@ const FeaturedProducts = () => {
         <div className="flex justify-center mt-10" style={{ paddingBottom: '3px' }}>
           <Link
             to="/products"
-            className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-white text-gray-900 border border-gray-300 hover:border-primary hover:text-primary transition-all duration-250"
+            className="inline-flex items-center justify-center gap-2 py-3 px-6 text-sm font-medium rounded-full bg-white text-gray-900 border border-gray-300 hover:bg-primary hover:border-primary hover:text-white transition-all duration-250"
           >
             View All Products
           </Link>

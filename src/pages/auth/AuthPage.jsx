@@ -268,7 +268,7 @@ const LoginForm = ({ onFlipToRegister }) => {
   };
 
   return (
-    <div className="w-full max-w-[420px]">
+    <div className="w-full max-w-[460px]">
       <h1 className="text-[32px] font-semibold text-gray-900 mb-2 tracking-tight text-center">
         Welcome back
       </h1>
@@ -407,7 +407,7 @@ const RegisterForm = ({ onFlipToLogin }) => {
   };
 
   return (
-    <div className="w-full max-w-[420px]">
+    <div className="w-full max-w-[460px]">
       {/* Step progress */}
       <div className="flex items-center justify-center gap-3 mb-10">
         {REG_STEPS.map((_, i) => (
@@ -696,7 +696,7 @@ const AuthPage = () => {
       <div
         className="w-full lg:w-[55%] flex items-center justify-center px-8 py-20 lg:px-16 xl:px-24 order-2"
       >
-        <div className="w-full max-w-[460px]">
+        <div className="w-full max-w-[500px]">
           {mode === 'login' ? (
             <LoginForm onFlipToRegister={() => handleFlip('register')} />
           ) : (

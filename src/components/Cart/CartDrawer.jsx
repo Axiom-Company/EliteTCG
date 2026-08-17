@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import CartItem from './CartItem';
@@ -11,17 +11,26 @@ const CartDrawer = () => {
     subtotal,
   } = useCart();
 
-  // Prevent body scroll when drawer is open
+  const [mounted, setMounted] = useState(false); // kept in DOM through exit animation
+  const [shown, setShown]     = useState(false); // drives the enter/exit transition
+
+  // Mount on open, then animate in; animate out before unmounting on close
   useEffect(() => {
     if (isCartOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+      setMounted(true);
+      const id = requestAnimationFrame(() => setShown(true));
+      return () => cancelAnimationFrame(id);
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
+    setShown(false);
+    const t = setTimeout(() => setMounted(false), 300); // match transition duration
+    return () => clearTimeout(t);
   }, [isCartOpen]);
+
+  // Prevent body scroll while the drawer is present
+  useEffect(() => {
+    document.body.style.overflow = mounted ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mounted]);
 
   // Close on escape key
   useEffect(() => {
@@ -32,18 +41,18 @@ const CartDrawer = () => {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [closeCart]);
 
-  if (!isCartOpen) return null;
+  if (!mounted) return null;
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 z-50 transition-opacity"
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[10000] transition-opacity duration-300 ${shown ? 'opacity-100' : 'opacity-0'}`}
         onClick={closeCart}
       />
 
       {/* Drawer */}
-      <div className="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col">
+      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white z-[10001] shadow-2xl flex flex-col transition-transform duration-300 ease-out will-change-transform ${shown ? 'translate-x-0' : 'translate-x-full'}`}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-medium text-gray-900">Your Cart</h2>

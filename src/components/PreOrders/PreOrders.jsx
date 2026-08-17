@@ -46,9 +46,9 @@ const PreOrders = () => {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="flex flex-wrap justify-center gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="animate-pulse rounded-xl border border-gray-100 overflow-hidden">
+              <div key={i} className="w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)] animate-pulse rounded-xl border border-gray-100 overflow-hidden">
                 <div className="h-48 bg-gray-100" />
                 <div className="p-4 flex flex-col items-center gap-2">
                   <div className="h-3 w-3/4 bg-gray-100 rounded-full" />
@@ -59,12 +59,12 @@ const PreOrders = () => {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="flex flex-wrap justify-center gap-4">
             {preorders.map((item) => (
               <Link
                 key={item.id}
                 to={`/product/${item.slug || item.id}`}
-                className="flex flex-col bg-white overflow-hidden transition-all duration-250 group cursor-pointer"
+                className="w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)] flex flex-col bg-white overflow-hidden transition-all duration-250 group cursor-pointer"
               >
                 <div className="relative h-48 bg-white flex items-center justify-center overflow-hidden p-3">
                   <img
@@ -81,8 +81,7 @@ const PreOrders = () => {
                 </div>
 
                 <div className="p-4 text-center flex-1 flex flex-col">
-                  <h3 className="text-sm font-medium text-gray-900 mb-1">{item.name}</h3>
-                  <p className="text-xs text-gray-500 mb-3 line-clamp-2">{item.description}</p>
+                  <h3 className="text-base font-medium text-gray-900 mb-3">{item.name}</h3>
 
                   <div className="mt-auto">
                     <span className="text-lg font-normal text-gray-900">
